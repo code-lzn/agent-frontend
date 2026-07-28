@@ -1,0 +1,26 @@
+.user-auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.user-auth-page .ant-pro-form-login-container {
+  background: #fff;
+  padding: 24px 32px;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 12%);
+}
+
+.user-auth-footer {
+  margin-block-end: 24px;
+  text-align: end;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 65%);
+}
+
+.user-auth-footer a {
+  margin-inline-start: 6px;
+  color: #1677ff;
+}

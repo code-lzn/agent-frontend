@@ -1,0 +1,34 @@
+{
+  "private": true,
+  "author": "18337713619 <3219085070@qq.com>",
+  "scripts": {
+    "build": "max build",
+    "dev": "max dev",
+    "format": "prettier --cache --write .",
+    "postinstall": "max setup",
+    "openapi": "tsx openapi.config.ts",
+    "setup": "max setup",
+    "start": "npm run dev"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.0.1",
+    "@ant-design/pro-components": "^2.4.4",
+    "@ant-design/pro-layout": "^7.22.7",
+    "@ant-design/pro-table": "^3.21.0",
+    "@umijs/max": "^4.6.74",
+    "antd": "^5.29.3",
+    "axios": "^1.18.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.33",
+    "@types/react-dom": "^18.0.11",
+    "@umijs/openapi": "^1.14.1",
+    "husky": "^9",
+    "lint-staged": "^13.2.0",
+    "prettier": "^2.8.7",
+    "prettier-plugin-organize-imports": "^3.2.2",
+    "prettier-plugin-packagejson": "^2.4.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.0.3"
+  }
+}
