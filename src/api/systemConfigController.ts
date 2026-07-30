@@ -26,16 +26,19 @@ export async function getInfo1(
   options?: { [key: string]: any },
 ) {
   const { id: param0, ...queryParams } = params;
-  return request<API.SystemConfig>(`/systemConfig/getInfo/${param0}`, {
-    method: 'GET',
-    params: { ...queryParams },
-    ...(options || {}),
-  });
+  return request<API.BaseResponseSystemConfig>(
+    `/systemConfig/getInfo/${param0}`,
+    {
+      method: 'GET',
+      params: { ...queryParams },
+      ...(options || {}),
+    },
+  );
 }
 
 /** 此处后端没有提供注释 GET /systemConfig/list */
 export async function list1(options?: { [key: string]: any }) {
-  return request<API.SystemConfig[]>('/systemConfig/list', {
+  return request<API.BaseResponseListSystemConfig>('/systemConfig/list', {
     method: 'GET',
     ...(options || {}),
   });
@@ -47,7 +50,7 @@ export async function page5(
   params: API.page5Params,
   options?: { [key: string]: any },
 ) {
-  return request<API.PageSystemConfig>('/systemConfig/page', {
+  return request<API.BaseResponsePageSystemConfig>('/systemConfig/page', {
     method: 'GET',
     params: {
       ...params,

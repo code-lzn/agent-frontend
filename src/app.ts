@@ -1,6 +1,10 @@
 // 运行时配置
 
 import { getLoginUser } from '@/api/userController';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
+
+dayjs.locale('zh-cn');
 
 // 抑制 findDOMNode 弃用警告（来自 @ant-design/pro-components 内部依赖 rc-resize-observer）
 // React 18 开发模式下该警告通过 console.error 输出
@@ -35,7 +39,7 @@ export async function getInitialState() {
 
 export const layout = () => {
   return {
-    logo: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
+    logo: '🎬',
     menu: {
       locale: false,
     },

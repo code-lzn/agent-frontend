@@ -8,9 +8,10 @@ import {
   SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { history, Outlet, useLocation } from '@umijs/max';
-import { Layout, Menu } from 'antd';
-import React from 'react';
+import { history, Outlet, useLocation, useModel } from '@umijs/max';
+import { Layout, Menu, message, Modal } from 'antd';
+import React, { useLayoutEffect } from 'react';
+import { userLogout } from '@/api/userController';
 import './index.css';
 
 const { Header, Sider, Content } = Layout;
@@ -37,6 +38,8 @@ const pageTitleMap: Record<string, string> = {
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
+  const { setInitialState, initialState } = useModel('@@initialState');
+  const currentUser = initialState?.currentUser;
   const selectedKey = '/' + location.pathname.split('/').slice(1, 3).join('/');
   const pageTitle = pageTitleMap[selectedKey] || '后台管理';
 
@@ -47,37 +50,67 @@ const AdminLayout: React.FC = () => {
     weekday: 'long',
   });
 
+  // 未登录时重定向到登录页（同步执行，不会闪现）
+  useLayoutEffect(() => {
+    if (initialState && !currentUser) {
+      history.replace('/user/login?redirect=' + encodeURIComponent(location.pathname));
+    }
+  }, [initialState, currentUser, location.pathname]);
+
+  const handleLogout = () => {
+    Modal.confirm({
+      title: '确认退出',
+      content: '确定要退出登录吗？',
+      onOk: async () => {
+        try {
+          await userLogout();
+          setInitialState((prev: any) => ({ ...prev, currentUser: undefined }));
+          message.success('已退出');
+          history.push('/user/login');
+        } catch {
+          message.error('退出失败');
+        }
+      },
+    });
+  };
+
   return (
     <Layout className="admin-layout">
       {/* 侧边栏 */}
       <Sider width={240} className="admin-sider">
-        {/* Logo */}
-        <div className="sider-brand">
-          <div className="brand-icon">🎬</div>
-          <div className="brand-text">
-            <span className="brand-title">电影票智能体</span>
-            <span className="brand-badge">管理</span>
-          </div>
-        </div>
-
-        {/* 菜单 */}
-        <Menu
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={menuItems}
-          onClick={({ key }) => history.push(key)}
-          className="sider-menu"
-        />
-
-        {/* 底部用户 */}
-        <div className="sider-footer">
-          <div className="sider-user">
-            <div className="user-avatar">管</div>
-            <div className="user-meta">
-              <div className="user-name">管理员</div>
-              <div className="user-role">后台管理</div>
+        <div className="sider-inner">
+          {/* Logo */}
+          <div className="sider-brand">
+            <div className="brand-icon">🎬</div>
+            <div className="brand-text">
+              <span className="brand-title">电影票智能体</span>
+              <span className="brand-badge">管理</span>
             </div>
-            <LogoutOutlined className="user-logout" />
+          </div>
+
+          {/* 菜单 */}
+          <Menu
+            mode="inline"
+            selectedKeys={[selectedKey]}
+            items={menuItems}
+            onClick={({ key }) => history.push(key)}
+            className="sider-menu"
+          />
+
+          {/* 底部用户 */}
+          <div className="sider-footer">
+            <div className="sider-user">
+              <div className="user-avatar">
+                {currentUser?.userName ? currentUser.userName.charAt(0).toUpperCase() : '管'}
+              </div>
+              <div className="user-meta">
+                <div className="user-name">{currentUser?.userName || '管理员'}</div>
+                <div className="user-role">
+                  {currentUser?.userRole === 'admin' ? '后台管理' : currentUser?.userRole || '用户'}
+                </div>
+              </div>
+              <LogoutOutlined className="user-logout" onClick={handleLogout} />
+            </div>
           </div>
         </div>
       </Sider>

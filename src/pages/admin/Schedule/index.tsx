@@ -2,7 +2,7 @@ import { listAll2 } from '@/api/filmController';
 import { list4 } from '@/api/cinemaController';
 import { list3 } from '@/api/hallController';
 import { listAll1, remove3 } from '@/api/scheduleController';
-import { DeleteOutlined, ExclamationCircleOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CalendarOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history } from '@umijs/max';
 import {
   Badge,
@@ -38,26 +38,28 @@ const ScheduleListPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [scheduleRes, filmRes, cinemaRes] = await Promise.all([
+      const [scheduleRes, filmRes, cinemaRes, hallRes] = await Promise.all([
         listAll1(),
         listAll2(),
         list4(),
+        list3(),
       ]);
-      setSchedules(scheduleRes.data || []);
+      const schedules = (scheduleRes as any)?.data || scheduleRes || [];
+      setSchedules(schedules);
 
       const fMap: Record<number, API.Film> = {};
-      (filmRes.data || []).forEach((f) => { if (f.id) fMap[f.id] = f; });
+      const films: API.Film[] = (filmRes as any)?.data || filmRes || [];
+      films.forEach((f) => { if (f.id) fMap[f.id] = f; });
       setFilmMap(fMap);
 
       const cMap: Record<number, API.Cinema> = {};
-      (cinemaRes.data || []).forEach((c) => { if (c.id) cMap[c.id] = c; });
+      const cinemas: API.Cinema[] = (cinemaRes as any)?.data || cinemaRes || [];
+      cinemas.forEach((c) => { if (c.id) cMap[c.id] = c; });
       setCinemaMap(cMap);
 
-      // 加载所有影厅
-      const hallRes = await list3();
-      const allHalls = (hallRes.data as any)?.data || hallRes.data || [];
       const hMap: Record<number, API.Hall> = {};
-      (allHalls as API.Hall[]).forEach((h) => { if (h.id) hMap[h.id] = h; });
+      const halls: API.Hall[] = (hallRes as any)?.data || hallRes || [];
+      halls.forEach((h) => { if (h.id) hMap[h.id] = h; });
       setHallMap(hMap);
     } catch {
       message.error('加载场次列表失败');
@@ -161,6 +163,9 @@ const ScheduleListPage: React.FC = () => {
             <Tooltip title="刷新">
               <Button icon={<ReloadOutlined />} onClick={loadData} />
             </Tooltip>
+            <Button icon={<CalendarOutlined />} onClick={() => history.push('/admin/schedule/batch')}>
+              批量新增
+            </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => history.push('/admin/schedule/add')}>
               新增场次
             </Button>
@@ -172,7 +177,12 @@ const ScheduleListPage: React.FC = () => {
           dataSource={schedules}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 15, showTotal: (t) => `共 ${t} 场` }}
+          pagination={{
+            pageSize: 15,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 场`,
+            pageSizeOptions: ['15', '30', '50'],
+          }}
           scroll={{ x: 1000 }}
           locale={{
             emptyText: (

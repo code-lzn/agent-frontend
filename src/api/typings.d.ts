@@ -3,10 +3,19 @@ declare namespace API {
     id: number;
   };
 
+  type adminDetailParams = {
+    id: number;
+  };
+
   type adminListParams = {
     pageNum?: number;
     pageSize?: number;
     status?: string;
+    orderNo?: string;
+    userId?: number;
+    filmName?: string;
+    cinemaName?: string;
+    hallName?: string;
   };
 
   type BaseResponseBoolean = {
@@ -18,6 +27,12 @@ declare namespace API {
   type BaseResponseChatHistory = {
     code?: number;
     data?: ChatHistory;
+    message?: string;
+  };
+
+  type BaseResponseCinema = {
+    code?: number;
+    data?: Cinema;
     message?: string;
   };
 
@@ -33,6 +48,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseHall = {
+    code?: number;
+    data?: Hall;
+    message?: string;
+  };
+
   type BaseResponseInteger = {
     code?: number;
     data?: number;
@@ -42,6 +63,12 @@ declare namespace API {
   type BaseResponseListChatHistory = {
     code?: number;
     data?: ChatHistory[];
+    message?: string;
+  };
+
+  type BaseResponseListCinema = {
+    code?: number;
+    data?: Cinema[];
     message?: string;
   };
 
@@ -75,6 +102,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListSystemConfig = {
+    code?: number;
+    data?: SystemConfig[];
+    message?: string;
+  };
+
   type BaseResponseLoginUserVO = {
     code?: number;
     data?: LoginUserVO;
@@ -99,9 +132,21 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponsePageCinema = {
+    code?: number;
+    data?: PageCinema;
+    message?: string;
+  };
+
   type BaseResponsePageFilm = {
     code?: number;
     data?: PageFilm;
+    message?: string;
+  };
+
+  type BaseResponsePageHall = {
+    code?: number;
+    data?: PageHall;
     message?: string;
   };
 
@@ -126,6 +171,12 @@ declare namespace API {
   type BaseResponsePageSeat = {
     code?: number;
     data?: PageSeat;
+    message?: string;
+  };
+
+  type BaseResponsePageSystemConfig = {
+    code?: number;
+    data?: PageSystemConfig;
     message?: string;
   };
 
@@ -181,6 +232,12 @@ declare namespace API {
     code?: number;
     data?: UserVO;
     message?: string;
+  };
+
+  type ChangePasswordRequest = {
+    oldPassword?: string;
+    newPassword?: string;
+    checkPassword?: string;
   };
 
   type ChatHistory = {
@@ -258,7 +315,18 @@ declare namespace API {
     id?: number;
   };
 
-  type doChatParams = {
+  type doChat1Params = {
+    message: string;
+    conversationId: string;
+  };
+
+  type doChatGetParams = {
+    message: string;
+    conversationId: string;
+    userId?: number;
+  };
+
+  type doChatStream1Params = {
     message: string;
     conversationId: string;
   };
@@ -266,6 +334,7 @@ declare namespace API {
   type doChatStreamParams = {
     message: string;
     conversationId: string;
+    userId?: number;
   };
 
   type Film = {
@@ -410,6 +479,18 @@ declare namespace API {
     userRole?: string;
     createTime?: string;
     updateTime?: string;
+    needSetPassword?: boolean;
+  };
+
+  type MailLoginRequest = {
+    email?: string;
+    code?: string;
+  };
+
+  type MovieChatRequest = {
+    message?: string;
+    conversationId?: string;
+    userId?: number;
   };
 
   type Order = {
@@ -420,7 +501,7 @@ declare namespace API {
     filmName?: string;
     cinemaName?: string;
     scheduleTime?: string;
-    hallname?: string;
+    hallName?: string;
     totalPrice?: number;
     count?: number;
     status?: string;
@@ -429,7 +510,7 @@ declare namespace API {
     alipayStatus?: string;
     paidAt?: string;
     expireAt?: string;
-    isDelete?: number;
+    isDelete?: boolean;
     createTime?: string;
     updateTime?: string;
   };
@@ -654,6 +735,17 @@ declare namespace API {
     id: number;
   };
 
+  type resetConversationParams = {
+    conversationId: string;
+  };
+
+  type ResetPasswordRequest = {
+    email?: string;
+    code?: string;
+    newPassword?: string;
+    checkPassword?: string;
+  };
+
   type Schedule = {
     id?: number;
     filmId?: number;
@@ -718,6 +810,18 @@ declare namespace API {
     price?: number;
     vipPrice?: number;
     seats?: Seat[];
+  };
+
+  type SendMailCodeRequest = {
+    email?: string;
+    captcha?: string;
+  };
+
+  type ServerSentEventString = true;
+
+  type SetPasswordRequest = {
+    newPassword?: string;
+    checkPassword?: string;
   };
 
   type SystemConfig = {

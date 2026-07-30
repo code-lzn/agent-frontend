@@ -1,18 +1,20 @@
 import { defineConfig } from '@umijs/max';
 
 export default defineConfig({
-  antd: {},
+  antd: {
+    locale: 'zh_CN',
+  },
   access: {},
   model: {},
   initialState: {},
   request: {},
   layout: {
-    title: '@umijs/max',
+    title: '妙语购票',
   },
   routes: [
     {
       path: '/',
-      redirect: '/film',
+      redirect: '/user/login',
     },
     {
       name: '影片',
@@ -58,6 +60,8 @@ export default defineConfig({
       name: '用户登录',
       path: '/user/login',
       component: '../app/user/login/page',
+      layout: false,
+      hideInMenu: true,
     },
     {
       name: '用户注册',
@@ -69,6 +73,7 @@ export default defineConfig({
       path: '/admin',
       component: '@/layouts/AdminLayout',
       layout: false,
+      access: 'canSeeAdmin',
       routes: [
         { path: '/admin', redirect: '/admin/dashboard' },
         {
@@ -113,6 +118,12 @@ export default defineConfig({
           name: '新增场次',
           path: '/admin/schedule/add',
           component: './admin/Schedule/form',
+        },
+        {
+          name: '批量新增',
+          path: '/admin/schedule/batch',
+          component: './admin/Schedule/batch',
+          hideInMenu: true,
         },
         {
           name: '订单管理',

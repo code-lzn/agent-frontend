@@ -11,7 +11,7 @@ import * as dashboardController from './dashboardController';
 import * as fileController from './fileController';
 import * as filmController from './filmController';
 import * as hallController from './hallController';
-import * as healthController from './healthController';
+import * as movieAgentController from './movieAgentController';
 import * as orderController from './orderController';
 import * as orderSeatController from './orderSeatController';
 import * as scheduleController from './scheduleController';
@@ -33,8 +33,8 @@ export default {
   userController,
   alipayController,
   orderController,
+  movieAgentController,
   fileController,
-  healthController,
   dashboardController,
   aiController,
 };

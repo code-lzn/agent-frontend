@@ -1,8 +1,10 @@
 import { deleteUser, listUserVoByPage, updateUser } from '@/api/userController';
-import { ExclamationCircleOutlined, ReloadOutlined, UserOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, PlusOutlined, ReloadOutlined, UserOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Badge, Button, Card, Form, message, Modal, Select, Space, Tooltip } from 'antd';
+import { Avatar, Badge, Button, Card, Form, Image, Input, message, Modal, Select, Space, Tooltip, Upload } from 'antd';
+import type { UploadChangeParam } from 'antd/es/upload';
+import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import './index.css';
@@ -18,10 +20,24 @@ const UserListPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const [editOpen, setEditOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<API.UserVO | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [editForm] = Form.useForm();
 
   const columns: ProColumns<API.UserVO>[] = [
     { title: 'ID', dataIndex: 'id', width: 70 },
+    {
+      title: '头像',
+      dataIndex: 'userAvatar',
+      width: 60,
+      render: (_, record) => (
+        <Avatar
+          src={record.userAvatar}
+          icon={<UserOutlined />}
+          size={32}
+          onError={() => true} // 加载失败时显示 icon
+        />
+      ),
+    },
     {
       title: '账号',
       dataIndex: 'userAccount',
@@ -63,11 +79,29 @@ const UserListPage: React.FC = () => {
     },
   ];
 
-  /** 编辑角色 */
+  /** 编辑用户 */
   const handleEdit = (record: API.UserVO) => {
     setEditingUser(record);
-    editForm.setFieldsValue({ userRole: record.userRole || 'user' });
+    setAvatarUrl(record.userAvatar || '');
+    editForm.setFieldsValue({
+      userName: record.userName,
+      userRole: record.userRole || 'user',
+      userAvatar: record.userAvatar,
+    });
     setEditOpen(true);
+  };
+
+  /** 头像上传回调 */
+  const handleAvatarChange = (info: UploadChangeParam<UploadFile>) => {
+    if (info.file.status === 'done') {
+      const url = info.file.response?.data;
+      if (url) {
+        setAvatarUrl(url);
+        editForm.setFieldValue('userAvatar', url);
+      }
+    } else if (info.file.status === 'error') {
+      message.error('头像上传失败');
+    }
   };
 
   /** 保存编辑 */
@@ -161,11 +195,59 @@ const UserListPage: React.FC = () => {
       <Modal
         title={`编辑用户 - ${editingUser?.userName || editingUser?.userAccount || ''}`}
         open={editOpen}
-        onCancel={() => setEditOpen(false)}
+        onCancel={() => {
+          setEditOpen(false);
+          setAvatarUrl('');
+        }}
         onOk={handleEditSave}
-        width={400}
+        width={480}
       >
         <Form form={editForm} layout="vertical">
+          {/* 头像上传 */}
+          <div>
+            <div style={{ marginBottom: 4, fontSize: 14, color: '#333' }}>头像</div>
+            <Space align="start" size={16}>
+              <Upload
+                name="file"
+                action="http://localhost:8123/api/file/upload"
+                data={{ biz: 'user_avatar' }}
+                withCredentials={true}
+                maxCount={1}
+                listType="picture-card"
+                showUploadList={false}
+                onChange={handleAvatarChange}
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+              >
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt="头像"
+                    width={80}
+                    height={80}
+                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                    preview={{ mask: '替换' }}
+                    fallback="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2780%27%20height%3D%2780%27%3E%3Crect%20fill%3D%27%23f0f0f0%27%20width%3D%2780%27%20height%3D%2780%27%2F%3E%3Ctext%20x%3D%2740%27%20y%3D%2742%27%20text-anchor%3D%27middle%27%20fill%3D%27%23999%27%20font-size%3D%2728%27%3E👤%3C%2Ftext%3E%3C%2Fsvg%3E"
+                  />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '12px 0' }}>
+                    <PlusOutlined style={{ fontSize: 20, color: '#999' }} />
+                    <span style={{ fontSize: 12, color: '#999' }}>上传头像</span>
+                  </div>
+                )}
+              </Upload>
+              {avatarUrl && (
+                <Button size="small" onClick={() => { setAvatarUrl(''); editForm.setFieldValue('userAvatar', ''); }}>
+                  移除
+                </Button>
+              )}
+            </Space>
+            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>支持 jpg/png/webp，不超过 1MB</div>
+          </div>
+          <Form.Item name="userAvatar" hidden />
+
+          <Form.Item name="userName" label="昵称">
+            <Input placeholder="用户昵称" maxLength={20} />
+          </Form.Item>
           <Form.Item name="userRole" label="角色" rules={[{ required: true, message: '请选择角色' }]}>
             <Select
               options={[

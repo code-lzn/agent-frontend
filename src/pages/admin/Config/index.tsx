@@ -50,16 +50,21 @@ const ConfigPage: React.FC = () => {
     setSaving(true);
     try {
       const values = form.getFieldsValue();
-      for (const [key, value] of Object.entries(values)) {
-        await updateByKey({
-          configKey: key,
-          configValue: JSON.stringify(value),
-        });
+      const entries = Object.entries(values);
+      const results = await Promise.allSettled(
+        entries.map(([key, value]) =>
+          updateByKey({ configKey: key, configValue: JSON.stringify(value) })
+        )
+      );
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length === 0) {
+        message.success('所有配置已保存');
+      } else {
+        message.warning(`保存完成，${failed.length}/${entries.length} 项失败`);
       }
-      message.success('所有配置已保存');
       loadConfigs();
-    } catch (e: any) {
-      message.error('保存失败：' + (e.message || ''));
+    } catch {
+      message.error('保存失败');
     } finally {
       setSaving(false);
     }

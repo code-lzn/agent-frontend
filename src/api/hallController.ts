@@ -9,7 +9,7 @@ export async function getInfo5(
   options?: { [key: string]: any },
 ) {
   const { id: param0, ...queryParams } = params;
-  return request<API.Hall>(`/hall/getInfo/${param0}`, {
+  return request<API.BaseResponseHall>(`/hall/getInfo/${param0}`, {
     method: 'GET',
     params: { ...queryParams },
     ...(options || {}),
@@ -18,7 +18,7 @@ export async function getInfo5(
 
 /** 此处后端没有提供注释 GET /hall/list */
 export async function list3(options?: { [key: string]: any }) {
-  return request<API.Hall[]>('/hall/list', {
+  return request<API.BaseResponseListHall>('/hall/list', {
     method: 'GET',
     ...(options || {}),
   });
@@ -44,7 +44,7 @@ export async function page7(
   params: API.page7Params,
   options?: { [key: string]: any },
 ) {
-  return request<API.PageHall>('/hall/page', {
+  return request<API.BaseResponsePageHall>('/hall/page', {
     method: 'GET',
     params: {
       ...params,

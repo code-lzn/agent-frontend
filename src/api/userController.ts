@@ -17,6 +17,21 @@ export async function addUser(
   });
 }
 
+/** 此处后端没有提供注释 POST /user/change-password */
+export async function changePassword(
+  body: API.ChangePasswordRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseString>('/user/change-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /user/delete */
 export async function deleteUser(
   body: API.DeleteRequest,
@@ -100,6 +115,29 @@ export async function userLogin(
   });
 }
 
+/** 此处后端没有提供注释 POST /user/login-by-mail */
+export async function mailLogin(
+  body: API.MailLoginRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseLoginUserVO>('/user/login-by-mail', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 POST /user/logout */
+export async function userLogout(options?: { [key: string]: any }) {
+  return request<API.BaseResponseBoolean>('/user/logout', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /user/register */
 export async function userRegister(
   body: API.UserRegisterRequest,
@@ -115,12 +153,72 @@ export async function userRegister(
   });
 }
 
+/** 此处后端没有提供注释 POST /user/reset-password */
+export async function resetPassword(
+  body: API.ResetPasswordRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseString>('/user/reset-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 POST /user/send-mail-code */
+export async function sendMailCode(
+  body: API.SendMailCodeRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseString>('/user/send-mail-code', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 POST /user/set-password */
+export async function setPassword(
+  body: API.SetPasswordRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseString>('/user/set-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /user/update */
 export async function updateUser(
   body: API.UserUpdateRequest,
   options?: { [key: string]: any },
 ) {
   return request<API.BaseResponseBoolean>('/user/update', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 POST /user/update/my */
+export async function updateMyProfile(
+  body: API.UserUpdateRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseLoginUserVO>('/user/update/my', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

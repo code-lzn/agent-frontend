@@ -1,91 +1,218 @@
-import { userLogin } from '@/api/userController';
-import logo from '@/assets/logo.jpg';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { LoginForm, ProForm, ProFormText } from '@ant-design/pro-components';
-import { Link, useLocation, useModel, useNavigate } from '@umijs/max';
-import { Image, message } from 'antd';
-import React from 'react';
+import { mailLogin, sendMailCode, userLogin } from '@/api/userController';
+import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
+import { history, useLocation, useModel } from '@umijs/max';
+import { Button, Form, Input, message, Tabs, Tooltip } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
 import './index.css';
 
-/**
- * 用户登录页面
- * @constructor
- */
 const UserLoginPage: React.FC = () => {
-  const [form] = ProForm.useForm();
-  const navigate = useNavigate();
+  const [codeForm] = Form.useForm();
+  const [pwdForm] = Form.useForm();
   const location = useLocation();
   const { setInitialState } = useModel('@@initialState');
 
-  // 获取登录后回跳地址
+  const [tab, setTab] = useState('code');
+  const [codeSending, setCodeSending] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+
   const searchParams = new URLSearchParams(location.search);
   const redirect = searchParams.get('redirect') || '/';
 
-  /**
-   * 提交
-   */
-  const doSubmit = async (values: API.UserLoginRequest) => {
+  // 清理定时器
+  useEffect(() => {
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  // 倒计时逻辑
+  useEffect(() => {
+    if (countdown > 0) {
+      timerRef.current = setInterval(() => {
+        setCountdown((c) => {
+          if (c <= 1) {
+            clearInterval(timerRef.current);
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timerRef.current);
+    }
+  }, [countdown]);
+
+  /** 更新全局用户状态 + 按角色跳转 */
+  const handleLoginSuccess = (user: any) => {
+    (setInitialState as any)((prev: any) => ({ ...prev, currentUser: user }));
+    message.success('登录成功');
+
+    // 根据角色跳转不同页面
+    const target = user.userRole === 'admin' ? '/admin/dashboard'
+      : redirect.startsWith('/admin') ? '/film'
+      : redirect === '/' ? '/film' : redirect;
+
+    setTimeout(() => {
+      history.push(target);
+    }, 100);
+    codeForm.resetFields();
+    pwdForm.resetFields();
+  };
+
+  /** 切换 Tab 时重置 */
+  const handleTabChange = (key: string) => {
+    setTab(key);
+    setCountdown(0);
+  };
+
+  /** 发送验证码 */
+  const handleSendCode = async () => {
+    const email = codeForm.getFieldValue('email');
+    if (!email || !email.includes('@')) {
+      message.warning('请输入正确的邮箱地址');
+      return;
+    }
+    setCodeSending(true);
     try {
-      const res = await userLogin(values);
-      if (res.data) {
-        message.success('登录成功');
-        // 更新全局登录用户状态
-        setInitialState((pre: any) => ({
-          ...pre,
-          currentUser: res.data,
-        }));
-        navigate(redirect, { replace: true });
-        form.resetFields();
-      }
+      await sendMailCode({ email });
+      message.success('验证码已发送');
+      setCountdown(60);
     } catch (e: any) {
-      message.error('登录失败，' + (e?.message ?? '请稍后重试'));
+      message.error(e.message || '发送失败');
+    } finally {
+      setCodeSending(false);
+    }
+  };
+
+  /** Tab1: 邮箱验证码登录 */
+  const handleCodeLogin = async (values: any) => {
+    if (!values.code || values.code.length < 4) {
+      message.warning('请输入验证码');
+      return;
+    }
+    try {
+      const res: any = await mailLogin({ email: values.email, code: values.code });
+      if (res.data) handleLoginSuccess(res.data);
+    } catch (e: any) {
+      message.error(e.message || '登录失败');
+    }
+  };
+
+  /** Tab2: 密码登录 */
+  const handlePwdLogin = async (values: any) => {
+    try {
+      const res: any = await userLogin(values);
+      if (res.data) handleLoginSuccess(res.data);
+    } catch (e: any) {
+      message.error(e.message || '登录失败');
     }
   };
 
   return (
-    <div id="userLoginPage" className="user-auth-page">
-      <LoginForm
-        form={form}
-        logo={
-          <Image src={logo} alt="HRMS" height={44} width={44} preview={false} />
-        }
-        title="HRMS 人力资源管理系统"
-        subTitle="欢迎登录"
-        onFinish={doSubmit}
-      >
-        <ProFormText
-          name="userAccount"
-          fieldProps={{
-            size: 'large',
-            prefix: <UserOutlined />,
-          }}
-          placeholder={'请输入用户账号'}
-          rules={[
-            {
-              required: true,
-              message: '请输入用户账号!',
-            },
-          ]}
-        />
-        <ProFormText.Password
-          name="userPassword"
-          fieldProps={{
-            size: 'large',
-            prefix: <LockOutlined />,
-          }}
-          placeholder={'请输入密码'}
-          rules={[
-            {
-              required: true,
-              message: '请输入密码！',
-            },
-          ]}
-        />
-        <div className="user-auth-footer">
-          还没有账号？
-          <Link to="/user/register">去注册</Link>
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-header">
+          <div className="login-logo">🎬</div>
+          <h1 className="login-title">妙语购票</h1>
+          <p className="login-subtitle">后台管理</p>
         </div>
-      </LoginForm>
+
+        <Tabs
+          activeKey={tab}
+          onChange={handleTabChange}
+          centered
+          items={[
+            {
+              key: 'code',
+              label: <span>📧 邮箱验证码登录</span>,
+              children: (
+                <Form form={codeForm} layout="vertical" onFinish={handleCodeLogin}>
+                  <Form.Item name="email" label="邮箱" rules={[
+                    { required: true, message: '请输入邮箱' },
+                    { type: 'email', message: '邮箱格式不正确' },
+                  ]}>
+                    <Input
+                      size="large"
+                      prefix={<MailOutlined />}
+                      placeholder="请输入邮箱地址"
+                      autoComplete="email"
+                    />
+                  </Form.Item>
+
+                  <div>
+                    <div style={{ marginBottom: 4, fontSize: 14, color: '#333' }}>验证码</div>
+                    <div className="code-row">
+                      <Form.Item name="code" noStyle rules={[
+                        { required: true, message: '请输入验证码' },
+                        { len: 6, message: '验证码为6位数字' },
+                      ]}>
+                        <Input
+                          size="large"
+                          placeholder="输入6位验证码"
+                          maxLength={6}
+                          autoComplete="one-time-code"
+                          className="code-input"
+                        />
+                      </Form.Item>
+                      <Tooltip title={countdown > 0 ? `${countdown}s 后可重新获取` : ''}>
+                        <Button
+                          size="large"
+                          onClick={handleSendCode}
+                          disabled={countdown > 0 || codeSending}
+                          loading={codeSending}
+                          className="code-btn"
+                        >
+                          {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                        </Button>
+                      </Tooltip>
+                    </div>
+                  </div>
+
+                  <Form.Item>
+                    <Button type="primary" htmlType="submit" size="large" block>
+                      登录 / 自动注册
+                    </Button>
+                    <div className="login-tip">新用户将自动创建账号</div>
+                  </Form.Item>
+                </Form>
+              ),
+            },
+            {
+              key: 'pwd',
+              label: <span>🔑 密码登录</span>,
+              children: (
+                <Form form={pwdForm} layout="vertical" onFinish={handlePwdLogin}>
+                  <Form.Item name="userAccount" label="账号 / 邮箱" rules={[
+                    { required: true, message: '请输入账号或邮箱' },
+                  ]}>
+                    <Input
+                      size="large"
+                      prefix={<UserOutlined />}
+                      placeholder="请输入账号或邮箱"
+                      autoComplete="username"
+                    />
+                  </Form.Item>
+
+                  <Form.Item name="userPassword" label="密码" rules={[
+                    { required: true, message: '请输入密码' },
+                  ]}>
+                    <Input.Password
+                      size="large"
+                      prefix={<LockOutlined />}
+                      placeholder="请输入密码"
+                      autoComplete="current-password"
+                    />
+                  </Form.Item>
+
+                  <Form.Item>
+                    <Button type="primary" htmlType="submit" size="large" block>
+                      登录
+                    </Button>
+                  </Form.Item>
+                </Form>
+              ),
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 };
