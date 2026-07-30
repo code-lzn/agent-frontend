@@ -1,0 +1,222 @@
+import { listAll2 } from '@/api/filmController';
+import { list4 } from '@/api/cinemaController';
+import { listByCinema } from '@/api/hallController';
+import { checkConflict, save3 } from '@/api/scheduleController';
+import { PageContainer } from '@ant-design/pro-components';
+import { useNavigate } from '@umijs/max';
+import {
+  Alert,
+  Button,
+  Card,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Select,
+  Space,
+  TimePicker,
+} from 'antd';
+import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
+
+/** 计算散场时间 */
+const calcEndTime = (start: dayjs.Dayjs | null, durationMin: number) => {
+  if (!start || !durationMin) return '';
+  return start.add(durationMin + 15, 'minute').format('HH:mm');
+};
+
+const ScheduleFormPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
+
+  const [films, setFilms] = useState<API.Film[]>([]);
+  const [cinemas, setCinemas] = useState<API.Cinema[]>([]);
+  const [allHalls, setAllHalls] = useState<API.Hall[]>([]);
+
+  const [selectedFilm, setSelectedFilm] = useState<API.Film | null>(null);
+  const [selectedCinemaId, setSelectedCinemaId] = useState<number>();
+  const [showConflict, setShowConflict] = useState(false);
+  const [conflictMsg, setConflictMsg] = useState('');
+
+  useEffect(() => {
+    loadOptions();
+  }, []);
+
+  const loadOptions = async () => {
+    const [filmRes, cinemaRes] = await Promise.all([listAll2(), list4()]);
+    setFilms(filmRes.data || []);
+    setCinemas(cinemaRes.data || []);
+  };
+
+  const handleCinemaChange = async (cinemaId: number) => {
+    setSelectedCinemaId(cinemaId);
+    try {
+      const res = await listByCinema({ cinemaId });
+      setAllHalls((res.data as any)?.data || res.data || []);
+    } catch {
+      setAllHalls([]);
+    }
+    form.setFieldValue('hallId', undefined);
+  };
+
+  const handleFilmChange = (filmId: number) => {
+    const film = films.find((f) => f.id === filmId) || null;
+    setSelectedFilm(film);
+    // 自动计算散场时间
+    const startTime = form.getFieldValue('startTime');
+    if (startTime) {
+      form.setFieldValue('endTime', calcEndTime(startTime, film?.duration || 0));
+    }
+  };
+
+  const handleStartTimeChange = (time: dayjs.Dayjs | null) => {
+    form.setFieldValue('endTime', calcEndTime(time, selectedFilm?.duration || 0));
+  };
+
+  // 冲突校验
+  const doCheckConflict = async (values: any): Promise<boolean> => {
+    try {
+      const res = await checkConflict({
+        hallId: values.hallId,
+        showDate: values.showDate.format('YYYY-MM-DD'),
+        startTime: values.startTime.format('HH:mm'),
+        endTime: values.endTime || calcEndTime(values.startTime, selectedFilm?.duration || 0),
+      });
+      const hasConflict = res.data === true;
+      if (hasConflict) {
+        setShowConflict(true);
+        setConflictMsg('该影厅在所选时段已有排期，请调整时间或选择其他影厅');
+        return true;
+      }
+      setShowConflict(false);
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleSubmit = async (values: any) => {
+    // 先检查冲突
+    const hasConflict = await doCheckConflict(values);
+    if (hasConflict) return;
+
+    setSubmitting(true);
+    try {
+      const params = {
+        filmId: values.filmId,
+        cinemaId: values.cinemaId,
+        hallId: values.hallId,
+        showDate: values.showDate.format('YYYY-MM-DD'),
+        startTime: values.startTime.format('HH:mm'),
+        endTime: values.endTime || calcEndTime(values.startTime, selectedFilm?.duration || 0),
+        price: values.price,
+        status: 'published',
+      };
+      await save3(params);
+      message.success('场次创建成功');
+      navigate('/admin/schedule');
+    } catch (e: any) {
+      message.error('创建失败：' + (e.message || ''));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <PageContainer
+      header={{
+        title: '新增场次',
+        onBack: () => navigate('/admin/schedule'),
+      }}
+    >
+      <Card style={{ maxWidth: 700 }}>
+        {showConflict && (
+          <Alert
+            message={conflictMsg}
+            type="error"
+            showIcon
+            closable
+            style={{ marginBottom: 16 }}
+            onClose={() => setShowConflict(false)}
+          />
+        )}
+
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item name="filmId" label="关联影片" rules={[{ required: true, message: '请选择影片' }]}>
+            <Select
+              showSearch
+              placeholder="搜索并选择影片"
+              optionFilterProp="label"
+              onChange={handleFilmChange}
+              options={films
+                .filter((f) => f.status === 'published' || f.status === 'draft')
+                .map((f) => ({
+                  label: `${f.name}（${f.duration}分钟）`,
+                  value: f.id,
+                }))}
+            />
+          </Form.Item>
+
+          <Form.Item name="cinemaId" label="关联影院" rules={[{ required: true, message: '请选择影院' }]}>
+            <Select
+              placeholder="选择影院"
+              onChange={handleCinemaChange}
+              options={cinemas.map((c) => ({ label: c.name, value: c.id }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="hallId"
+            label="关联影厅"
+            rules={[{ required: true, message: '请选择影厅' }]}
+            dependencies={['cinemaId']}
+          >
+            <Select
+              placeholder={selectedCinemaId ? '选择影厅' : '请先选择影院'}
+              disabled={!selectedCinemaId}
+              options={allHalls.map((h) => ({
+                label: `${h.name}（${h.hallType} · ${h.rowCount}×${h.colCount}）`,
+                value: h.id,
+              }))}
+            />
+          </Form.Item>
+
+          <Space size={16}>
+            <Form.Item name="showDate" label="放映日期" rules={[{ required: true, message: '请选择日期' }]}>
+              <DatePicker placeholder="选择日期" />
+            </Form.Item>
+            <Form.Item name="startTime" label="放映时间" rules={[{ required: true, message: '请选择时间' }]}>
+              <TimePicker format="HH:mm" minuteStep={5} placeholder="选择时间" onChange={handleStartTimeChange} />
+            </Form.Item>
+          </Space>
+
+          <Form.Item name="endTime" label="散场时间">
+            <Input disabled style={{ width: 200 }} placeholder="自动计算（开场+片长+15分钟）" />
+          </Form.Item>
+
+          <Space size={16}>
+            <Form.Item name="price" label="标准票价(元)" rules={[{ required: true, message: '请输入票价' }]}>
+              <InputNumber min={0} precision={2} placeholder="票价" />
+            </Form.Item>
+            <Form.Item name="vipPrice" label="VIP区票价(元)">
+              <InputNumber min={0} precision={2} placeholder="可选" />
+            </Form.Item>
+          </Space>
+
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" loading={submitting}>
+                创建场次
+              </Button>
+              <Button onClick={() => navigate('/admin/schedule')}>取消</Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Card>
+    </PageContainer>
+  );
+};
+
+export default ScheduleFormPage;

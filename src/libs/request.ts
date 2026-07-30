@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 创建 Axios 实例
 // 区分开发和生产环境
-const DEV_BASE_URL = 'http://localhost:8123';
+const DEV_BASE_URL = 'http://localhost:8123/api';
 const PROD_BASE_URL = 'http://xx.xx.xx.xx';
 const myAxios = axios.create({
   baseURL: process.env.NODE_ENV === 'production' ? PROD_BASE_URL : DEV_BASE_URL,

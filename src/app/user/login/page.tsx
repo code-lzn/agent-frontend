@@ -1,4 +1,4 @@
-import { userLoginUsingPost } from '@/api/userController';
+import { userLogin } from '@/api/userController';
 import logo from '@/assets/logo.jpg';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { LoginForm, ProForm, ProFormText } from '@ant-design/pro-components';
@@ -26,7 +26,7 @@ const UserLoginPage: React.FC = () => {
    */
   const doSubmit = async (values: API.UserLoginRequest) => {
     try {
-      const res = await userLoginUsingPost(values);
+      const res = await userLogin(values);
       if (res.data) {
         message.success('登录成功');
         // 更新全局登录用户状态

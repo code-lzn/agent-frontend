@@ -1,6 +1,6 @@
 // 运行时配置
 
-import { getLoginUserUsingGet } from '@/api/userController';
+import { getLoginUser } from '@/api/userController';
 
 // 抑制 findDOMNode 弃用警告（来自 @ant-design/pro-components 内部依赖 rc-resize-observer）
 // React 18 开发模式下该警告通过 console.error 输出
@@ -23,7 +23,7 @@ export async function getInitialState() {
     currentUser: undefined as API.LoginUserVO | undefined,
   };
   try {
-    const res = await getLoginUserUsingGet();
+    const res = await getLoginUser();
     if (res.data) {
       initialState.currentUser = res.data;
     }

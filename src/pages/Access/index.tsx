@@ -1,4 +1,4 @@
-import { healthUsingGet } from '@/api/testHealth';
+import { health } from '@/api/healthController';
 import { PageContainer } from '@ant-design/pro-components';
 import { Access, useAccess } from '@umijs/max';
 import { Button } from 'antd';
@@ -6,7 +6,7 @@ import { Button } from 'antd';
 const AccessPage: React.FC = () => {
   const access = useAccess();
   const test = async () => {
-    const res = await healthUsingGet();
+    const res = await health();
     console.log(res);
   };
   return (

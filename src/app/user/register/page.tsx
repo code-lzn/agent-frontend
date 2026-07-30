@@ -1,4 +1,4 @@
-import { userRegisterUsingPost } from '@/api/userController';
+import { userRegister } from '@/api/userController';
 import logo from '@/assets/logo.jpg';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { LoginForm, ProForm, ProFormText } from '@ant-design/pro-components';
@@ -20,7 +20,7 @@ const UserRegisterPage: React.FC = () => {
    */
   const doSubmit = async (values: API.UserRegisterRequest) => {
     try {
-      const res = await userRegisterUsingPost(values);
+      const res = await userRegister(values);
       if (res.data) {
         message.success('注册成功，请登录');
         // 前往登录页

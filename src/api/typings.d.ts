@@ -1,681 +1,816 @@
 declare namespace API {
-  type ApprovalActionRequest = {
-    comment?: string;
-    detailId?: number;
-    targetUserId?: number;
+  type adminCancelParams = {
+    id: number;
   };
 
-  type ApprovalDelegationVO = {
-    businessTypes?: string;
-    createTime?: string;
-    delegateName?: string;
-    delegatorName?: string;
-    endDate?: string;
-    id?: number;
-    startDate?: string;
-    status?: number;
-  };
-
-  type ApprovalDetailVO = {
-    applicantName?: string;
-    applyTime?: string;
-    businessId?: number;
-    businessType?: string;
-    businessTypeText?: string;
-    currentStep?: number;
-    finishedAt?: string;
-    nodeHistory?: NodeDetail[];
-    recordId?: number;
+  type adminListParams = {
+    pageNum?: number;
+    pageSize?: number;
     status?: string;
-    statusText?: string;
-    totalSteps?: number;
   };
 
-  type ApprovalPendingVO = {
-    applicantName?: string;
-    applyTime?: string;
-    businessId?: number;
-    businessType?: string;
-    businessTypeText?: string;
-    currentNodeName?: string;
-    detailId?: number;
-    recordId?: number;
-  };
-
-  type ApprovalRequest = {
-    comment?: string;
-    id?: number;
-    result?: number;
-  };
-
-  type AttendanceCalendarVO = {
-    dailyStatus?: Record<string, any>;
-    lateDays?: number;
-    leaveDays?: number;
-    makeupAvailableDates?: string[];
-    missingDays?: number;
-    month?: string;
-    normalDays?: number;
-  };
-
-  type AttendanceVO = {
-    attendanceDate?: string;
-    id?: number;
-    punchInTime?: string;
-    punchInType?: number;
-    punchOutTime?: string;
-    punchOutType?: number;
-    remark?: string;
-    status?: number;
-    statusText?: string;
-  };
-
-  type BaseResponseApprovalDetailVO_ = {
-    code?: number;
-    data?: ApprovalDetailVO;
-    message?: string;
-  };
-
-  type BaseResponseAttendanceCalendarVO_ = {
-    code?: number;
-    data?: AttendanceCalendarVO;
-    message?: string;
-  };
-
-  type BaseResponseAttendanceVO_ = {
-    code?: number;
-    data?: AttendanceVO;
-    message?: string;
-  };
-
-  type BaseResponseBoolean_ = {
+  type BaseResponseBoolean = {
     code?: number;
     data?: boolean;
     message?: string;
   };
 
-  type BaseResponseDepartmentMergeResultVO_ = {
+  type BaseResponseChatHistory = {
     code?: number;
-    data?: DepartmentMergeResultVO;
+    data?: ChatHistory;
     message?: string;
   };
 
-  type BaseResponseEmpProfileVO_ = {
+  type BaseResponseDashboardVO = {
     code?: number;
-    data?: EmpProfileVO;
+    data?: DashboardVO;
     message?: string;
   };
 
-  type BaseResponseLeaveProgressVO_ = {
+  type BaseResponseFilm = {
     code?: number;
-    data?: LeaveProgressVO;
+    data?: Film;
     message?: string;
   };
 
-  type BaseResponseLeaveVO_ = {
-    code?: number;
-    data?: LeaveVO;
-    message?: string;
-  };
-
-  type BaseResponseListApprovalDelegationVO_ = {
-    code?: number;
-    data?: ApprovalDelegationVO[];
-    message?: string;
-  };
-
-  type BaseResponseListApprovalPendingVO_ = {
-    code?: number;
-    data?: ApprovalPendingVO[];
-    message?: string;
-  };
-
-  type BaseResponseListAttendanceVO_ = {
-    code?: number;
-    data?: AttendanceVO[];
-    message?: string;
-  };
-
-  type BaseResponseListDepartmentTreeVO_ = {
-    code?: number;
-    data?: DepartmentTreeVO[];
-    message?: string;
-  };
-
-  type BaseResponseListLeaveVO_ = {
-    code?: number;
-    data?: LeaveVO[];
-    message?: string;
-  };
-
-  type BaseResponseListLoginLogVO_ = {
-    code?: number;
-    data?: LoginLogVO[];
-    message?: string;
-  };
-
-  type BaseResponseListMakeupPunchVO_ = {
-    code?: number;
-    data?: MakeupPunchVO[];
-    message?: string;
-  };
-
-  type BaseResponseListPositionVO_ = {
-    code?: number;
-    data?: PositionVO[];
-    message?: string;
-  };
-
-  type BaseResponseListSalarySlipVO_ = {
-    code?: number;
-    data?: SalarySlipVO[];
-    message?: string;
-  };
-
-  type BaseResponseListSalaryTrendVO_ = {
-    code?: number;
-    data?: SalaryTrendVO[];
-    message?: string;
-  };
-
-  type BaseResponseListSequenceLevelVO_ = {
-    code?: number;
-    data?: SequenceLevelVO[];
-    message?: string;
-  };
-
-  type BaseResponseLoginUserVO_ = {
-    code?: number;
-    data?: LoginUserVO;
-    message?: string;
-  };
-
-  type BaseResponseLong_ = {
+  type BaseResponseInteger = {
     code?: number;
     data?: number;
     message?: string;
   };
 
-  type BaseResponseMakeupPunchVO_ = {
+  type BaseResponseListChatHistory = {
     code?: number;
-    data?: MakeupPunchVO;
+    data?: ChatHistory[];
     message?: string;
   };
 
-  type BaseResponseMapStringLong_ = {
+  type BaseResponseListFilm = {
     code?: number;
-    data?: Record<string, any>;
+    data?: Film[];
     message?: string;
   };
 
-  type BaseResponsePageUser_ = {
+  type BaseResponseListHall = {
     code?: number;
-    data?: PageUser_;
+    data?: Hall[];
     message?: string;
   };
 
-  type BaseResponsePageUserVO_ = {
+  type BaseResponseListSchedule = {
     code?: number;
-    data?: PageUserVO_;
+    data?: Schedule[];
     message?: string;
   };
 
-  type BaseResponseSalarySlipDetailVO_ = {
+  type BaseResponseListScheduleVO = {
     code?: number;
-    data?: SalarySlipDetailVO;
+    data?: ScheduleVO[];
     message?: string;
   };
 
-  type BaseResponseString_ = {
+  type BaseResponseListSeat = {
+    code?: number;
+    data?: Seat[];
+    message?: string;
+  };
+
+  type BaseResponseLoginUserVO = {
+    code?: number;
+    data?: LoginUserVO;
+    message?: string;
+  };
+
+  type BaseResponseLong = {
+    code?: number;
+    data?: number;
+    message?: string;
+  };
+
+  type BaseResponseOrderVO = {
+    code?: number;
+    data?: OrderVO;
+    message?: string;
+  };
+
+  type BaseResponsePageChatHistory = {
+    code?: number;
+    data?: PageChatHistory;
+    message?: string;
+  };
+
+  type BaseResponsePageFilm = {
+    code?: number;
+    data?: PageFilm;
+    message?: string;
+  };
+
+  type BaseResponsePageOrder = {
+    code?: number;
+    data?: PageOrder;
+    message?: string;
+  };
+
+  type BaseResponsePageOrderVO = {
+    code?: number;
+    data?: PageOrderVO;
+    message?: string;
+  };
+
+  type BaseResponsePageSchedule = {
+    code?: number;
+    data?: PageSchedule;
+    message?: string;
+  };
+
+  type BaseResponsePageSeat = {
+    code?: number;
+    data?: PageSeat;
+    message?: string;
+  };
+
+  type BaseResponsePageUserVO = {
+    code?: number;
+    data?: PageUserVO;
+    message?: string;
+  };
+
+  type BaseResponsePayOrderVO = {
+    code?: number;
+    data?: PayOrderVO;
+    message?: string;
+  };
+
+  type BaseResponseSchedule = {
+    code?: number;
+    data?: Schedule;
+    message?: string;
+  };
+
+  type BaseResponseSeat = {
+    code?: number;
+    data?: Seat;
+    message?: string;
+  };
+
+  type BaseResponseSeatMapVO = {
+    code?: number;
+    data?: SeatMapVO;
+    message?: string;
+  };
+
+  type BaseResponseString = {
     code?: number;
     data?: string;
     message?: string;
   };
 
-  type BaseResponseUser_ = {
+  type BaseResponseSystemConfig = {
+    code?: number;
+    data?: SystemConfig;
+    message?: string;
+  };
+
+  type BaseResponseUser = {
     code?: number;
     data?: User;
     message?: string;
   };
 
-  type BaseResponseUserVO_ = {
+  type BaseResponseUserVO = {
     code?: number;
     data?: UserVO;
     message?: string;
   };
 
-  type BindPhoneRequest = {
+  type ChatHistory = {
+    id?: number;
+    message?: string;
+    messageType?: string;
+    sessionId?: number;
+    userId?: number;
+    createTime?: string;
+    updateTime?: string;
+    isDelete?: number;
+  };
+
+  type ChatHistoryQueryRequest = {
+    pageNum?: number;
+    pageSize?: number;
+    sortField?: string;
+    sortOrder?: string;
+    id?: number;
+    sessionId?: number;
+    messageType?: string;
+    userId?: number;
+  };
+
+  type ChatSession = {
+    id?: number;
+    sessionName?: string;
+    userId?: number;
+    editTime?: string;
+    createTime?: string;
+    updateTime?: string;
+    isDelete?: number;
+  };
+
+  type Cinema = {
+    id?: number;
+    name?: string;
+    address?: string;
+    city?: string;
+    longitude?: number;
+    latitude?: number;
     phone?: string;
+    businessHours?: string;
+    tags?: string;
+    basePrice?: number;
+    status?: string;
+    isDelete?: boolean;
+    createTime?: string;
+    updateTime?: string;
   };
 
-  type cancelDelegationUsingPOSTParams = {
-    /** id */
-    id: number;
+  type ConflictCheckRequest = {
+    hallId?: number;
+    showDate?: string;
+    startTime?: string;
+    endTime?: string;
+    excludeScheduleId?: number;
   };
 
-  type cancelUsingPOSTParams = {
-    /** 请假ID */
-    id: number;
+  type CreateOrderRequest = {
+    scheduleId?: number;
+    seatIds?: number[];
   };
 
-  type ChangePasswordRequest = {
-    confirmPassword?: string;
-    newPassword?: string;
-    oldPassword?: string;
-  };
-
-  type DelegationRequest = {
-    businessTypes?: string;
-    delegateId?: number;
-    endDate?: string;
-    startDate?: string;
+  type DashboardVO = {
+    todayOrders?: number;
+    todayRevenue?: number;
+    totalFilms?: number;
+    totalCinemas?: number;
+    totalUsers?: number;
+    todaySchedules?: number;
   };
 
   type DeleteRequest = {
     id?: number;
   };
 
-  type DepartmentAddRequest = {
-    code?: string;
-    description?: string;
-    managerId?: number;
-    name?: string;
-    parentId?: number;
-    sortOrder?: number;
+  type doChatParams = {
+    message: string;
+    conversationId: string;
   };
 
-  type DepartmentMergeRequest = {
-    sourceDeptId?: number;
-    targetDeptId?: number;
+  type doChatStreamParams = {
+    message: string;
+    conversationId: string;
   };
 
-  type DepartmentMergeResultVO = {
-    transferredChildDepts?: number;
-    transferredEmployees?: number;
-  };
-
-  type DepartmentTreeVO = {
-    children?: DepartmentTreeVO[];
-    code?: string;
-    description?: string;
-    employeeCount?: number;
+  type Film = {
     id?: number;
-    managerId?: number;
-    managerName?: string;
     name?: string;
-    parentId?: number;
-    sortOrder?: number;
-  };
-
-  type DepartmentUpdateRequest = {
+    englishName?: string;
+    type?: string;
+    rating?: number;
+    duration?: number;
+    posterUrl?: string;
+    releaseDate?: string;
+    director?: string;
+    actors?: string;
     description?: string;
-    id?: number;
-    managerId?: number;
-    name?: string;
-    sortOrder?: number;
-  };
-
-  type EmpProfileUpdateRequest = {
-    currentAddress?: string;
-    email?: string;
-    emergencyContactName?: string;
-    emergencyContactPhone?: string;
-  };
-
-  type EmpProfileVO = {
-    baseSalary?: number;
+    status?: string;
+    isDelete?: boolean;
     createTime?: string;
-    currentAddress?: string;
-    departmentName?: string;
-    editableFields?: string[];
-    email?: string;
-    emergencyContactName?: string;
-    emergencyContactPhone?: string;
-    employeeName?: string;
-    employeeNo?: string;
-    employmentType?: string;
-    gender?: number;
-    hireDate?: string;
-    hireType?: number;
-    id?: number;
-    idCard?: string;
-    phone?: string;
-    positionName?: string;
-    status?: number;
     updateTime?: string;
   };
 
-  type getApprovalDetailUsingGETParams = {
-    /** recordId */
-    recordId: number;
+  type FilmQueryRequest = {
+    pageNum?: number;
+    pageSize?: number;
+    sortField?: string;
+    sortOrder?: string;
+    keyword?: string;
+    type?: string;
+    status?: string;
   };
 
-  type getApprovalProgressUsingGETParams = {
-    /** id */
+  type getByKeyParams = {
+    configKey: string;
+  };
+
+  type getFilmParams = {
     id: number;
   };
 
-  type getCalendarUsingGETParams = {
-    /** month */
-    month: string;
-  };
-
-  type getMonthRecordsUsingGETParams = {
-    /** month */
-    month: string;
-  };
-
-  type getSalarySlipDetailUsingPOSTParams = {
-    /** id */
+  type getInfo1Params = {
     id: number;
   };
 
-  type getUserByIdUsingGETParams = {
-    /** id */
+  type getInfo2Params = {
+    id: number;
+  };
+
+  type getInfo3Params = {
+    id: number;
+  };
+
+  type getInfo4Params = {
+    id: number;
+  };
+
+  type getInfo5Params = {
+    id: number;
+  };
+
+  type getInfo6Params = {
+    id: number;
+  };
+
+  type getInfo7Params = {
+    id: number;
+  };
+
+  type getInfo8Params = {
+    id: number;
+  };
+
+  type getInfo9Params = {
+    id: number;
+  };
+
+  type getInfoParams = {
+    id: number;
+  };
+
+  type getOrderDetailParams = {
+    id: number;
+  };
+
+  type getSeatMapParams = {
+    scheduleId: number;
+  };
+
+  type getUserByIdParams = {
+    id: number;
+  };
+
+  type getUserVOByIdParams = {
+    id: number;
+  };
+
+  type Hall = {
     id?: number;
-  };
-
-  type getUserVOByIdUsingGETParams = {
-    /** id */
-    id?: number;
-  };
-
-  type LeaveApplyRequest = {
-    endDate?: string;
-    leaveType?: number;
-    reason?: string;
-    startDate?: string;
-  };
-
-  type LeaveProgressVO = {
-    leave?: LeaveVO;
-    progressNodes?: ProgressNode[];
-  };
-
-  type LeaveVO = {
-    approveComment?: string;
-    approveTime?: string;
-    approverId?: number;
+    cinemaId?: number;
+    name?: string;
+    hallType?: string;
+    rowCount?: number;
+    colCount?: number;
+    seatTemplate?: string;
+    isDelete?: boolean;
     createTime?: string;
-    employeeId?: number;
-    employeeName?: string;
-    endDate?: string;
-    id?: number;
-    leaveType?: number;
-    leaveTypeText?: string;
-    reason?: string;
-    startDate?: string;
-    status?: number;
-    statusText?: string;
-    totalDays?: number;
+    updateTime?: string;
   };
 
-  type listPositionsUsingGETParams = {
-    /** departmentId */
-    departmentId?: number;
-    /** sequence */
-    sequence?: number;
+  type listByCinemaParams = {
+    cinemaId: number;
   };
 
-  type LoginLogVO = {
-    device?: string;
-    failReason?: string;
-    id?: number;
-    ip?: string;
-    isSuccess?: number;
-    loginTime?: string;
-    loginType?: number;
-    loginTypeText?: string;
+  type listBySessionParams = {
+    sessionId: number;
+  };
+
+  type listFilmParams = {
+    filmQueryRequest: FilmQueryRequest;
+  };
+
+  type listOrdersParams = {
+    pageNum?: number;
+    pageSize?: number;
+  };
+
+  type listScheduleParams = {
+    filmId: number;
+    cinemaId?: number;
+    showDate?: string;
+  };
+
+  type LockSeatRequest = {
+    scheduleId?: number;
+    seatIds?: number[];
   };
 
   type LoginUserVO = {
-    createTime?: string;
     id?: number;
-    updateTime?: string;
-    userAvatar?: string;
+    userAccount?: string;
     userName?: string;
+    userAvatar?: string;
     userProfile?: string;
     userRole?: string;
-  };
-
-  type MakeupPunchApplyRequest = {
-    punchDate?: string;
-    punchTime?: string;
-    punchType?: number;
-    reason?: string;
-  };
-
-  type MakeupPunchVO = {
-    approveComment?: string;
-    approveTime?: string;
-    approverId?: number;
     createTime?: string;
-    employeeId?: number;
-    employeeName?: string;
+    updateTime?: string;
+  };
+
+  type Order = {
     id?: number;
-    punchDate?: string;
-    punchTime?: string;
-    punchType?: number;
-    punchTypeText?: string;
-    reason?: string;
-    status?: number;
-    statusText?: string;
+    orderNo?: string;
+    userId?: number;
+    scheduleId?: number;
+    filmName?: string;
+    cinemaName?: string;
+    scheduleTime?: string;
+    hallname?: string;
+    totalPrice?: number;
+    count?: number;
+    status?: string;
+    cancelReason?: string;
+    alipayTradeNo?: string;
+    alipayStatus?: string;
+    paidAt?: string;
+    expireAt?: string;
+    isDelete?: number;
+    createTime?: string;
+    updateTime?: string;
   };
 
-  type MapStringLong_ = true;
-
-  type NodeDetail = {
-    action?: string;
-    actionText?: string;
-    approverName?: string;
-    comment?: string;
-    delegatedByName?: string;
-    isDelegated?: number;
-    nodeName?: string;
-    operateTime?: string;
-    stepOrder?: number;
+  type OrderSeat = {
+    id?: number;
+    orderId?: number;
+    seatId?: number;
+    seatLabel?: string;
+    isUsed?: boolean;
+    isDelete?: boolean;
+    createTime?: string;
+    updateTime?: string;
   };
 
-  type OrderItem = {
-    asc?: boolean;
-    column?: string;
+  type OrderVO = {
+    id?: number;
+    orderNo?: string;
+    userId?: number;
+    scheduleId?: number;
+    filmName?: string;
+    cinemaName?: string;
+    scheduleTime?: string;
+    hallName?: string;
+    totalPrice?: number;
+    count?: number;
+    status?: string;
+    cancelReason?: string;
+    paidAt?: string;
+    expireAt?: string;
+    createTime?: string;
+    seatLabels?: string[];
   };
 
-  type PageUser_ = {
-    countId?: string;
-    current?: number;
-    maxLimit?: number;
-    optimizeCountSql?: boolean;
-    orders?: OrderItem[];
-    pages?: number;
-    records?: User[];
-    searchCount?: boolean;
-    size?: number;
-    total?: number;
+  type page4Params = {
+    page: PageUserPreference;
   };
 
-  type PageUserVO_ = {
-    countId?: string;
-    current?: number;
-    maxLimit?: number;
-    optimizeCountSql?: boolean;
-    orders?: OrderItem[];
-    pages?: number;
+  type page5Params = {
+    page: PageSystemConfig;
+  };
+
+  type page6Params = {
+    page: PageOrderSeat;
+  };
+
+  type page7Params = {
+    page: PageHall;
+  };
+
+  type page8Params = {
+    page: PageCinema;
+  };
+
+  type page9Params = {
+    page: PageChatSession;
+  };
+
+  type PageChatHistory = {
+    records?: ChatHistory[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageChatSession = {
+    records?: ChatSession[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageCinema = {
+    records?: Cinema[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageFilm = {
+    records?: Film[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageHall = {
+    records?: Hall[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageOrder = {
+    records?: Order[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageOrderSeat = {
+    records?: OrderSeat[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageOrderVO = {
+    records?: OrderVO[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageSchedule = {
+    records?: Schedule[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageSeat = {
+    records?: Seat[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageSystemConfig = {
+    records?: SystemConfig[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageUserPreference = {
+    records?: UserPreference[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type PageUserVO = {
     records?: UserVO[];
-    searchCount?: boolean;
-    size?: number;
-    total?: number;
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
   };
 
-  type PositionAddRequest = {
-    defaultProbationMonths?: number;
-    departmentId?: number;
-    description?: string;
-    levelMax?: string;
-    levelMin?: string;
-    name?: string;
-    sequence?: number;
+  type PayOrderRequest = {
+    orderId?: number;
   };
 
-  type PositionUpdateRequest = {
-    defaultProbationMonths?: number;
-    departmentId?: number;
-    description?: string;
+  type PayOrderVO = {
+    payForm?: string;
+    orderNo?: string;
+  };
+
+  type remove1Params = {
+    id: number;
+  };
+
+  type remove2Params = {
+    id: number;
+  };
+
+  type remove3Params = {
+    id: number;
+  };
+
+  type remove4Params = {
+    id: number;
+  };
+
+  type remove5Params = {
+    id: number;
+  };
+
+  type remove6Params = {
+    id: number;
+  };
+
+  type remove7Params = {
+    id: number;
+  };
+
+  type remove8Params = {
+    id: number;
+  };
+
+  type remove9Params = {
+    id: number;
+  };
+
+  type removeParams = {
+    id: number;
+  };
+
+  type Schedule = {
     id?: number;
-    levelMax?: string;
-    levelMin?: string;
-    name?: string;
-    sequence?: number;
-  };
-
-  type PositionVO = {
+    filmId?: number;
+    cinemaId?: number;
+    hallId?: number;
+    showDate?: string;
+    startTime?: string;
+    endTime?: string;
+    price?: number;
+    vipPrice?: number;
+    status?: string;
+    isDelete?: boolean;
     createTime?: string;
-    defaultProbationMonths?: number;
-    departmentId?: number;
-    departmentName?: string;
+    updateTime?: string;
+  };
+
+  type ScheduleVO = {
+    id?: number;
+    filmId?: number;
+    cinemaId?: number;
+    hallId?: number;
+    showDate?: string;
+    startTime?: string;
+    endTime?: string;
+    price?: number;
+    vipPrice?: number;
+    status?: string;
+    filmName?: string;
+    filmPoster?: string;
+    filmDuration?: number;
+    filmRating?: string;
+    filmType?: string;
+    cinemaName?: string;
+    cinemaAddress?: string;
+    hallName?: string;
+    hallType?: string;
+    hallRowCount?: number;
+    hallColCount?: number;
+  };
+
+  type Seat = {
+    id?: number;
+    scheduleId?: number;
+    hallId?: number;
+    rowNum?: number;
+    colNum?: number;
+    seatLabel?: string;
+    zone?: string;
+    status?: string;
+    isDelete?: boolean;
+    createTime?: string;
+    updateTime?: string;
+  };
+
+  type SeatMapVO = {
+    hallId?: number;
+    hallName?: string;
+    hallType?: string;
+    rowCount?: number;
+    colCount?: number;
+    scheduleId?: number;
+    price?: number;
+    vipPrice?: number;
+    seats?: Seat[];
+  };
+
+  type SystemConfig = {
+    id?: number;
+    configKey?: string;
+    configValue?: string;
     description?: string;
-    id?: number;
-    levelMax?: string;
-    levelMin?: string;
-    levelRange?: string;
-    name?: string;
-    sequence?: number;
-    sequenceName?: string;
+    isDelete?: boolean;
+    createTime?: string;
+    updateTime?: string;
   };
 
-  type ProgressNode = {
-    comment?: string;
-    nodeName?: string;
-    operateTime?: string;
-    operatorName?: string;
-    status?: number;
+  type updateStatusParams = {
+    id: number;
+    status: string;
   };
 
-  type PunchRequest = {
-    location?: string;
-    punchType?: number;
+  type uploadFileParams = {
+    uploadFileRequest: UploadFileRequest;
   };
 
-  type SalarySlipDetailVO = {
-    adjustReason?: string;
-    allowance?: number;
-    baseSalary?: number;
-    employeeName?: string;
-    employeeNo?: string;
-    grossSalary?: number;
-    housingFund?: number;
-    id?: number;
-    incomeTax?: number;
-    lateDeduction?: number;
-    leaveDeduction?: number;
-    manualAdjust?: number;
-    netSalary?: number;
-    overtimePay?: number;
-    performanceBonus?: number;
-    salaryMonth?: string;
-    socialMedical?: number;
-    socialPension?: number;
-    socialUnemployment?: number;
-    totalDeduction?: number;
-  };
-
-  type SalarySlipVO = {
-    batchStatus?: string;
-    grossSalary?: number;
-    hasAnomaly?: number;
-    id?: number;
-    netSalary?: number;
-    salaryMonth?: string;
-    totalDeduction?: number;
-  };
-
-  type SalaryTrendVO = {
-    grossSalary?: number;
-    month?: string;
-    netSalary?: number;
-  };
-
-  type SequenceLevelVO = {
-    levels?: string[];
-    sequence?: number;
-    sequenceCode?: string;
-    sequenceName?: string;
-  };
-
-  type uploadFileUsingPOSTParams = {
+  type UploadFileRequest = {
     biz?: string;
   };
 
   type User = {
-    createTime?: string;
-    employeeId?: number;
     id?: number;
-    isDelete?: number;
-    roleId?: number;
+    userAccount?: string;
+    userPassword?: string;
+    userName?: string;
+    userAvatar?: string;
+    userProfile?: string;
+    userRole?: string;
+    editTime?: string;
+    createTime?: string;
     updateTime?: string;
+    isDelete?: number;
+  };
+
+  type UserAddRequest = {
+    userName?: string;
     userAccount?: string;
     userAvatar?: string;
-    userName?: string;
-    userPassword?: string;
     userProfile?: string;
     userRole?: string;
   };
 
-  type UserAddRequest = {
-    userAccount?: string;
-    userAvatar?: string;
-    userName?: string;
-    userRole?: string;
-  };
-
-  type UserLoginRequest = {
-    userAccount?: string;
-    userPassword?: string;
+  type UserPreference = {
+    id?: number;
+    userId?: number;
+    preferredTypes?: string;
+    preferredHallType?: string;
+    budgetMax?: number;
+    frequentCinemaId?: number;
+    preferredSeatZone?: string;
+    isDelete?: boolean;
+    createTime?: string;
+    updateTime?: string;
   };
 
   type UserQueryRequest = {
-    current?: number;
-    id?: number;
-    mpOpenId?: string;
+    pageNum?: number;
     pageSize?: number;
     sortField?: string;
     sortOrder?: string;
-    unionId?: string;
+    id?: number;
     userName?: string;
+    userAccount?: string;
     userProfile?: string;
     userRole?: string;
   };
 
   type UserRegisterRequest = {
-    checkPassword?: string;
     userAccount?: string;
     userPassword?: string;
-  };
-
-  type UserUpdateMyRequest = {
-    userAvatar?: string;
-    userName?: string;
-    userProfile?: string;
+    checkPassword?: string;
   };
 
   type UserUpdateRequest = {
     id?: number;
-    userAvatar?: string;
     userName?: string;
+    userAvatar?: string;
     userProfile?: string;
     userRole?: string;
   };
 
   type UserVO = {
-    createTime?: string;
     id?: number;
-    userAvatar?: string;
+    userAccount?: string;
     userName?: string;
+    userAvatar?: string;
     userProfile?: string;
     userRole?: string;
-  };
-
-  type VerifyPasswordRequest = {
-    password?: string;
+    createTime?: string;
   };
 }

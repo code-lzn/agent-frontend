@@ -1,0 +1,139 @@
+/* =============================================
+   影片管理页面
+   ============================================= */
+
+/* 主体卡片 */
+.film-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+}
+
+.film-card .ant-card-head {
+  border-bottom: 1px solid #f5f5f5;
+  padding: 0 20px;
+  min-height: 56px;
+}
+
+.film-card .ant-card-body {
+  padding: 0;
+}
+
+/* 卡片标题 */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.card-count {
+  font-size: 12px;
+  color: #999;
+  font-weight: 400;
+}
+
+/* 表格 */
+.film-page .ant-table-thead > tr > th {
+  background: #fafafa !important;
+  font-weight: 600;
+  font-size: 12px;
+  color: #374151;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.film-page .ant-table-tbody > tr > td {
+  padding: 14px 16px !important;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+  color: #595959;
+}
+
+.film-page .ant-table-tbody > tr:hover > td {
+  background: #fafafa !important;
+}
+
+.film-page .ant-table-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+/* 排序图标 */
+.film-page .ant-table-column-sorter {
+  color: #d9d9d9;
+}
+
+.film-page .ant-table-column-sorter.active {
+  color: #1677ff;
+}
+
+/* 影片名称缩略图 */
+.film-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.film-thumb {
+  width: 36px;
+  height: 50px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #f5f5f5;
+  flex-shrink: 0;
+}
+
+.film-name-text {
+  font-weight: 500;
+  color: #262626;
+}
+
+/* 评分 */
+.film-rating {
+  font-weight: 600;
+  color: #faad14;
+}
+
+/* 操作按钮 */
+.action-btns .ant-btn-link {
+  padding: 0 4px;
+  font-size: 13px;
+}
+
+/* 分页 */
+.film-page .ant-table-pagination {
+  margin: 16px 20px !important;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d9d9d9;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #bfbfbf;
+  margin: 0 0 16px;
+}
