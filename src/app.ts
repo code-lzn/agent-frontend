@@ -35,7 +35,8 @@ export async function getInitialState() {
 
 export const layout = () => {
   return {
-    logo: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
+    title: 'AI电影票',
+    logo: false,
     menu: {
       locale: false,
     },

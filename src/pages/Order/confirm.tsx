@@ -1,10 +1,12 @@
 import { getSeatMap } from '@/api/seatController';
 import { createOrder, payOrder } from '@/api/orderController';
-import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Col, Descriptions, Divider, Image, message, Row, Spin, Statistic, Tag, Typography } from 'antd';
+import { getFilm } from '@/api/filmController';
+import { getInfo3 as getSchedule } from '@/api/scheduleController';
+import { getInfo7 as getCinema } from '@/api/cinemaController';
+import { Button, Card, Col, Descriptions, Divider, message, Row, Spin, Statistic, Tag, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from '@umijs/max';
-import type { OrderVO, SeatMapVO } from '@/api/typings';
+import type { OrderVO, SeatMapVO, Film, Schedule } from '@/api/typings';
 
 const { Text, Title } = Typography;
 
@@ -15,6 +17,9 @@ const OrderConfirmPage: React.FC = () => {
   const seatIds = (searchParams.get('seatIds') || '').split(',').map(Number).filter(Boolean);
 
   const [seatMap, setSeatMap] = useState<SeatMapVO | null>(null);
+  const [film, setFilm] = useState<Film | null>(null);
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [cinemaName, setCinemaName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [order, setOrder] = useState<OrderVO | null>(null);
@@ -25,16 +30,43 @@ const OrderConfirmPage: React.FC = () => {
       navigate('/film');
       return;
     }
-    getSeatMap({ scheduleId })
-      .then((res) => {
-        if (res.data) setSeatMap(res.data);
+    setLoading(true);
+    // 并行加载所有需要的数据
+    Promise.all([
+      getSeatMap({ scheduleId }),
+      getSchedule({ id: scheduleId }).catch(() => null as any),
+    ])
+      .then(([seatMapRes, scheduleRes]) => {
+        if (seatMapRes?.data) setSeatMap(seatMapRes.data);
+        const schedData = scheduleRes?.data;
+        if (schedData) {
+          setSchedule(schedData);
+          // 获取影片信息
+          if (schedData.filmId) {
+            getFilm({ id: schedData.filmId })
+              .then((res) => {
+                if (res?.data) setFilm(res.data);
+              })
+              .catch(() => {});
+          }
+          // 获取影院名称
+          if (schedData.cinemaId) {
+            getCinema({ id: schedData.cinemaId })
+              .then((res: any) => {
+                if (res?.data?.name) setCinemaName(res.data.name);
+                else if (res?.name) setCinemaName(res.name);
+              })
+              .catch(() => {});
+          }
+        }
       })
       .catch(() => message.error('加载信息失败'))
       .finally(() => setLoading(false));
   }, [scheduleId]);
 
-  // 找到选中的座位信息
-  const selectedSeats = seatMap?.seats?.filter((s) => seatIds.includes(s.id!)) || [];
+  // 找到选中的座位信息（用字符串比较，兼容后端 Long → JSON string 的情况）
+  const seatIdSet = new Set(seatIds.map(String));
+  const selectedSeats = seatMap?.seats?.filter((s) => s.id != null && seatIdSet.has(String(s.id))) || [];
 
   // 计算价格
   const vipCount = selectedSeats.filter((s) => s.zone === 'vip').length;
@@ -64,7 +96,6 @@ const OrderConfirmPage: React.FC = () => {
     try {
       const res = await payOrder({ orderId: order.id });
       if (res.data?.payForm) {
-        // 将支付宝表单写入页面并自动提交
         const div = document.createElement('div');
         div.innerHTML = res.data.payForm;
         document.body.appendChild(div);
@@ -82,30 +113,48 @@ const OrderConfirmPage: React.FC = () => {
 
   if (loading) {
     return (
-      <PageContainer>
-        <div style={{ textAlign: 'center', padding: 80 }}>
-          <Spin size="large" />
-        </div>
-      </PageContainer>
+      <div style={{ textAlign: 'center', padding: 80 }}>
+        <Spin size="large" />
+      </div>
     );
   }
 
+  // 构建场次描述
+  const scheduleDesc = schedule
+    ? `${schedule.showDate || ''} ${schedule.startTime || ''}`
+    : `场次 ID: ${scheduleId}`;
+
   return (
-    <PageContainer>
+    <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      {/* 返回按钮 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 0 16px' }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            width: 32, height: 32, borderRadius: '50%', background: '#f5f5f5',
+            border: 'none', color: '#666', cursor: 'pointer', fontSize: '1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          ←
+        </button>
+        <span style={{ fontSize: '.8125rem', color: '#999' }}>返回选座</span>
+      </div>
+
       <Row gutter={24}>
         <Col xs={24} lg={16}>
-          {/* 订单信息 */}
           <Card title="确认订单信息">
-            <Descriptions column={1} size="small">
+            <Descriptions column={1} size="small" labelStyle={{ color: '#999', width: 60 }}>
               <Descriptions.Item label="影片">
-                {seatMap ? seatMap.seats?.[0]?.id : '-'}
+                <Text strong>{film?.name || '加载中...'}</Text>
+              </Descriptions.Item>
+              <Descriptions.Item label="影院">
+                {cinemaName || (schedule?.cinemaId ? `影院ID: ${schedule.cinemaId}` : '-')}
               </Descriptions.Item>
               <Descriptions.Item label="影厅">
                 {seatMap?.hallName} ({seatMap?.hallType}厅)
               </Descriptions.Item>
-              <Descriptions.Item label="场次">
-                {seatMap ? 'ID: ' + scheduleId : '-'}
-              </Descriptions.Item>
+              <Descriptions.Item label="场次">{scheduleDesc}</Descriptions.Item>
               <Descriptions.Item label="座位">
                 {selectedSeats.map((s) => (
                   <Tag key={s.id} color="blue" style={{ marginBottom: 2 }}>
@@ -121,7 +170,6 @@ const OrderConfirmPage: React.FC = () => {
 
             <Divider />
 
-            {/* 价格明细 */}
             <Title level={5}>价格明细</Title>
             {regularCount > 0 && (
               <Row justify="space-between" style={{ marginBottom: 8 }}>
@@ -143,7 +191,7 @@ const OrderConfirmPage: React.FC = () => {
                 </Text>
               </Col>
               <Col>
-                <Text strong style={{ color: '#ff4d4f', fontSize: 24 }}>
+                <Text strong style={{ color: '#e53e3e', fontSize: 24 }}>
                   ¥{totalPrice.toFixed(2)}
                 </Text>
               </Col>
@@ -152,7 +200,6 @@ const OrderConfirmPage: React.FC = () => {
         </Col>
 
         <Col xs={24} lg={8}>
-          {/* 操作区 */}
           <Card>
             {!order ? (
               <div style={{ textAlign: 'center' }}>
@@ -164,6 +211,7 @@ const OrderConfirmPage: React.FC = () => {
                   block
                   loading={submitting}
                   onClick={handleCreateOrder}
+                  style={{ background: '#e53e3e', borderColor: '#e53e3e' }}
                 >
                   确认下单
                 </Button>
@@ -186,6 +234,7 @@ const OrderConfirmPage: React.FC = () => {
                   block
                   loading={submitting}
                   onClick={handlePay}
+                  style={{ background: '#e53e3e', borderColor: '#e53e3e' }}
                 >
                   去支付（支付宝沙箱）
                 </Button>
@@ -199,19 +248,32 @@ const OrderConfirmPage: React.FC = () => {
               <div style={{ textAlign: 'center' }}>
                 <Statistic
                   title="支付状态"
-                  value={order.status === 'paid' ? '支付成功' : order.status === 'cancelled' ? '已取消' : order.status}
-                  valueStyle={{ color: order.status === 'paid' ? '#52c41a' : '#ff4d4f' }}
+                  value={
+                    order.status === 'paid'
+                      ? '支付成功'
+                      : order.status === 'cancelled'
+                      ? '已取消'
+                      : order.status
+                  }
+                  valueStyle={{
+                    color: order.status === 'paid' ? '#52c41a' : '#e53e3e',
+                  }}
                 />
                 <Divider />
-                <Button type="primary" block onClick={() => navigate('/order/list')}>
-                  查看订单
+                <Button
+                  type="primary"
+                  block
+                  onClick={() => navigate(`/order/${order.id}`)}
+                  style={{ background: '#e53e3e', borderColor: '#e53e3e' }}
+                >
+                  查看订单详情
                 </Button>
               </div>
             )}
           </Card>
         </Col>
       </Row>
-    </PageContainer>
+    </div>
   );
 };
 

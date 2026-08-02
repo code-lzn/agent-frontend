@@ -1,3 +1,162 @@
-.container {
-  padding-top: 80px;
+/* ===== Design Tokens ===== */
+:root {
+  --red: #FF4D4F;
+  --red-dark: #E53E3E;
+  --red-light: #FFF1F0;
+  --gold: #FFAA00;
+  --gold-light: #FFE082;
+  --bg: #F5F5F5;
+  --text-primary: #1A1A1A;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --border: #E8E8E8;
+  --border-light: #F0F0F0;
+  --shadow: 0 2px 12px rgba(0,0,0,.08);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.04);
+  --radius: 8px;
+  --radius-lg: 12px;
 }
+
+/* ===== Home Hero ===== */
+.home-hero { margin-bottom: 28px; }
+.hero-banner {
+  position: relative;
+  height: 240px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: linear-gradient(135deg, #FF4D4F 0%, #CC2233 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  color: #fff;
+}
+.hero-banner .hero-text { position: relative; z-index: 2; }
+.hero-banner .hero-text h1 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.hero-banner .hero-text p {
+  font-size: .875rem;
+  opacity: .85;
+  margin-bottom: 20px;
+}
+.hero-banner .hero-text .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.hero-banner .hero-text .chips .chip {
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.2);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  font-size: .8125rem;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+  backdrop-filter: blur(4px);
+}
+.hero-banner .hero-text .chips .chip:hover { background: rgba(255,255,255,.3); }
+.hero-banner .hero-text .chips .chip.solid { background: #fff; color: var(--red); border-color: #fff; font-weight: 600; }
+.hero-bg-icon {
+  position: absolute;
+  right: 40px;
+  font-size: 8rem;
+  opacity: .1;
+  user-select: none;
+}
+
+/* ===== Section ===== */
+.section-header {
+  display: flex; align-items: center;
+  margin-bottom: 16px;
+}
+.section-header h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  position: relative;
+  padding-left: 12px;
+}
+.section-header h2::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 4px; bottom: 4px;
+  width: 3px;
+  background: var(--red);
+  border-radius: 2px;
+}
+.section-header .view-all {
+  margin-left: auto;
+  font-size: .8125rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: none; border: none;
+  font-family: inherit;
+}
+.section-header .view-all:hover { color: var(--red); }
+
+/* ===== Movie Card ===== */
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.movie-card {
+  background: #fff;
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: var(--shadow-sm);
+}
+.movie-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.movie-card .poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: linear-gradient(135deg, #2D2D5E, #1A1A3A);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+.movie-card .poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.movie-card .poster .score {
+  position: absolute;
+  bottom: 8px; left: 12px;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--gold);
+  text-shadow: 0 1px 4px rgba(0,0,0,.5);
+}
+.movie-card .poster .score span { font-size: .75rem; font-weight: 400; }
+.movie-card .info { padding: 12px 14px 14px; }
+.movie-card .info .title {
+  font-weight: 600;
+  font-size: .9375rem;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.movie-card .info .meta {
+  font-size: .75rem;
+  color: var(--text-muted);
+  display: flex; gap: 6px;
+}
+.movie-card .info .tags {
+  display: flex; gap: 4px;
+  margin-top: 6px;
+}
+.movie-card .info .tags span {
+  font-size: .6875rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.movie-card .info .tags span.imax { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+@media (max-width: 1100px) { .movie-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) { .movie-grid { grid-template-columns: repeat(2, 1fr); } }

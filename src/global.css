@@ -1,0 +1,57 @@
+/* =============================================
+   AI电影票 · antd 组件猫眼风格覆盖
+   布局样式由 UserLayout/AdminLayout 各自负责
+   ============================================= */
+
+/* ===== 卡片 ===== */
+.ant-card {
+  border-radius: 8px !important;
+  border: 1px solid #f0f0f0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04) !important;
+}
+.ant-card-hoverable:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,.08) !important;
+  transform: translateY(-2px);
+}
+
+/* ===== 按钮 ===== */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #e53e3e, #ff4d4f) !important;
+  border: none !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(229,62,62,.25) !important;
+}
+.ant-btn-primary:hover {
+  opacity: .9 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(229,62,62,.35) !important;
+}
+
+/* ===== 标签 ===== */
+.ant-tag { border-radius: 4px !important; }
+
+/* ===== 搜索框 ===== */
+.ant-input:focus,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: #e53e3e !important;
+  box-shadow: 0 0 0 2px rgba(229,62,62,.1) !important;
+}
+
+/* ===== Segmented ===== */
+.ant-segmented-item-selected {
+  background: #e53e3e !important;
+  color: #fff !important;
+}
+
+/* ===== 分页 ===== */
+.ant-pagination-item-active {
+  border-color: #e53e3e !important;
+}
+.ant-pagination-item-active a {
+  color: #e53e3e !important;
+}
+
+/* ===== 评分 ===== */
+.ant-rate-star-full { color: #ffaa00 !important; }
+.ant-rate-star-half .ant-rate-star-first { color: #ffaa00 !important; }

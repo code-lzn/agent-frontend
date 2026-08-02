@@ -2,6 +2,42 @@
 /* eslint-disable */
 import request from '@/libs/request';
 
+/** 前台 - 正在热映 GET /film/now-showing */
+export async function nowShowing(
+  params?: { limit?: number },
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseListFilm>('/film/now-showing', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  });
+}
+
+/** 前台 - 猜你喜欢 GET /film/recommended */
+export async function recommended(
+  params?: { limit?: number; type?: string },
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseListFilm>('/film/recommended', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  });
+}
+
+/** 前台 - 搜索影片 GET /film/search */
+export async function searchFilm(
+  params: { keyword: string; pageNum?: number; pageSize?: number },
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponsePageFilm>('/film/search', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 GET /film/${param0} */
 export async function getFilm(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

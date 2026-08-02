@@ -21,12 +21,19 @@ const OrderDetailPage: React.FC = () => {
   const loadOrder = () => {
     if (!id) return;
     setLoading(true);
-    getOrderDetail({ id: Number(id) })
+    // 注意：id 可能为 Long 值，不能 Number() 转换以免精度丢失
+    const rawId = String(id);
+    console.log('[OrderDetail] loading order, raw id from URL:', rawId);
+    getOrderDetail({ id: rawId as any })
       .then((res) => {
-        if (res.data) setOrder(res.data);
-        else message.error('订单不存在');
+        console.log('[OrderDetail] response:', res);
+        if (res?.data) setOrder(res.data);
+        else message.error(`订单 ${rawId} 不存在或已失效，请刷新列表重试`);
       })
-      .catch(() => message.error('加载订单失败'))
+      .catch((e: any) => {
+        console.error('[OrderDetail] error:', e);
+        message.error(e?.message || '加载订单失败');
+      })
       .finally(() => setLoading(false));
   };
 

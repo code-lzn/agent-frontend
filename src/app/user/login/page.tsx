@@ -34,7 +34,9 @@ const UserLoginPage: React.FC = () => {
           ...pre,
           currentUser: res.data,
         }));
-        navigate(redirect, { replace: true });
+        // 根据角色跳转：管理员 → 后台，普通用户 → 首页
+        const target = res.data.userRole === 'admin' ? '/admin/dashboard' : redirect;
+        navigate(target, { replace: true });
         form.resetFields();
       }
     } catch (e: any) {
@@ -49,8 +51,8 @@ const UserLoginPage: React.FC = () => {
         logo={
           <Image src={logo} alt="HRMS" height={44} width={44} preview={false} />
         }
-        title="HRMS 人力资源管理系统"
-        subTitle="欢迎登录"
+        title="AI电影票"
+        subTitle="智能购票 · 一句话搞定"
         onFinish={doSubmit}
       >
         <ProFormText

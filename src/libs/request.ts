@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-// 创建 Axios 实例
-// 区分开发和生产环境
 const DEV_BASE_URL = 'http://localhost:8123/api';
 const PROD_BASE_URL = 'http://xx.xx.xx.xx';
 const myAxios = axios.create({
@@ -10,42 +8,42 @@ const myAxios = axios.create({
   withCredentials: true,
 });
 
-// 创建请求拦截器
+// 请求拦截器
 myAxios.interceptors.request.use(
   function (config) {
-    // 请求执行前执行
     return config;
   },
   function (error) {
-    // 处理请求错误
     return Promise.reject(error);
   },
 );
 
-// 创建响应拦截器
+// 响应拦截器
 myAxios.interceptors.response.use(
-  // 2xx 响应触发
   function (response) {
-    // 处理响应数据
     const { data } = response;
     // 未登录
     if (data.code === 40100) {
-      // 不是获取用户信息接口，或者不是登录页面，则跳转到登录页面
+      // getLoginUser 和 Profile 页面自身：直接返回让调用方自行判断
       if (
-        !response.request.responseURL.includes('user/get/login') &&
-        !window.location.pathname.includes('/user/login')
+        response.request.responseURL.includes('user/get/login') ||
+        window.location.pathname.includes('/user/profile')
       ) {
-        window.location.href = `/user/login?redirect=${window.location.href}`;
+        return data;
       }
-    } else if (data.code !== 0) {
-      // 其他错误
-      throw new Error(data.message ?? '服务器错误');
+      // 其他接口：跳转登录页，并 reject Promise 防止调用方 .then() 误报错误
+      window.location.href = `/user/profile?redirect=${encodeURIComponent(
+        window.location.pathname + window.location.search,
+      )}`;
+      return Promise.reject(new Error('请先登录'));
+    }
+    // 其他业务错误
+    if (data.code !== 0) {
+      throw new Error(data.message || '服务器错误');
     }
     return data;
   },
-  // 非 2xx 响应触发
   function (error) {
-    // 处理响应错误
     return Promise.reject(error);
   },
 );

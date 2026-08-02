@@ -388,6 +388,7 @@ declare namespace API {
   type listOrdersParams = {
     pageNum?: number;
     pageSize?: number;
+    status?: string;
   };
 
   type listScheduleParams = {
@@ -410,6 +411,18 @@ declare namespace API {
     userRole?: string;
     createTime?: string;
     updateTime?: string;
+    needSetPassword?: boolean;
+  };
+
+  type MailLoginRequest = {
+    email?: string;
+    code?: string;
+  };
+
+  type MovieChatRequest = {
+    message?: string;
+    conversationId?: string;
+    userId?: number;
   };
 
   type Order = {
@@ -793,6 +806,28 @@ declare namespace API {
   type UserRegisterRequest = {
     userAccount?: string;
     userPassword?: string;
+    checkPassword?: string;
+  };
+
+  type SendMailCodeRequest = {
+    email?: string;
+  };
+
+  type ResetPasswordRequest = {
+    email?: string;
+    code?: string;
+    newPassword?: string;
+    checkPassword?: string;
+  };
+
+  type SetPasswordRequest = {
+    newPassword?: string;
+    checkPassword?: string;
+  };
+
+  type ChangePasswordRequest = {
+    oldPassword?: string;
+    newPassword?: string;
     checkPassword?: string;
   };
 

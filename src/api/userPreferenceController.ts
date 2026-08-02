@@ -2,6 +2,29 @@
 /* eslint-disable */
 import request from '@/libs/request';
 
+/** 前台 - 获取我的偏好 GET /userPreference/my */
+export async function getMyPreference(options?: { [key: string]: any }) {
+  return request<API.UserPreference>('/userPreference/my', {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
+/** 前台 - 保存我的偏好 POST /userPreference/my */
+export async function saveMyPreference(
+  body: API.UserPreference,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/userPreference/my', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 GET /userPreference/getInfo/${param0} */
 export async function getInfo(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

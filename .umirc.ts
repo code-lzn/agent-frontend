@@ -7,12 +7,17 @@ export default defineConfig({
   initialState: {},
   request: {},
   layout: {
-    title: '@umijs/max',
+    title: 'AI电影票',
   },
   routes: [
     {
       path: '/',
-      redirect: '/film',
+      redirect: '/home',
+    },
+    {
+      name: '首页',
+      path: '/home',
+      component: './Home',
     },
     {
       name: '影片',
@@ -55,14 +60,14 @@ export default defineConfig({
       hideInMenu: true,
     },
     {
-      name: '用户登录',
-      path: '/user/login',
-      component: '../app/user/login/page',
+      name: 'AI 购票',
+      path: '/ai-chat',
+      component: './AiChat',
     },
     {
-      name: '用户注册',
-      path: '/user/register',
-      component: '../app/user/register/page',
+      name: '个人中心',
+      path: '/user/profile',
+      component: './User/Profile',
     },
     // ===== 后台管理路由 =====
     {

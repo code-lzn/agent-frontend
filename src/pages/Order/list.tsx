@@ -1,11 +1,12 @@
-import { listOrders } from '@/api/orderController';
-import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Col, Empty, Row, Spin, Tag, Typography, message } from 'antd';
+import { listOrders, cancelOrder, payOrder } from '@/api/orderController';
+import { Badge, Button, Card, Col, Empty, Row, Segmented, Spin, Tag, Typography, message, Modal } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import { history } from '@umijs/max';
 import type { OrderVO } from '@/api/typings';
 
 const { Text } = Typography;
+const { confirm } = Modal;
 
 const statusMap: Record<string, { color: string; text: string }> = {
   pending: { color: 'orange', text: '待支付' },
@@ -14,34 +15,95 @@ const statusMap: Record<string, { color: string; text: string }> = {
   completed: { color: 'blue', text: '已完成' },
 };
 
+const statusTabs = [
+  { label: '全部', value: '' },
+  { label: '待支付', value: 'pending' },
+  { label: '已支付', value: 'paid' },
+  { label: '已取消', value: 'cancelled' },
+];
+
 const OrderListPage: React.FC = () => {
   const [orders, setOrders] = useState<OrderVO[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('');
 
-  const loadOrders = async (pageNum = 1) => {
+  const loadOrders = async (pageNum = 1, status?: string) => {
     setLoading(true);
     try {
-      const res = await listOrders({ pageNum, pageSize: 10 });
+      const res = await listOrders({
+        pageNum,
+        pageSize: 10,
+        status: status || undefined,
+      });
       if (res.data) {
         setOrders(res.data.records || []);
-        setTotal(res.data.total || 0);
+        setTotal(res.data.totalRow || 0);
         setPage(pageNum);
       }
     } catch (e: any) {
-      message.error('加载订单失败');
+      message.error(e?.message || '加载订单失败');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadOrders();
-  }, []);
+    loadOrders(1, statusFilter);
+  }, [statusFilter]);
+
+  const handleCancelOrder = (orderId: number | string) => {
+    confirm({
+      title: '确认取消订单？',
+      icon: <ExclamationCircleOutlined />,
+      content: '取消后不可恢复，请确认',
+      okText: '确认取消',
+      cancelText: '我再想想',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await cancelOrder({ id: orderId as any });
+          message.success('订单已取消');
+          loadOrders(page, statusFilter);
+        } catch (e: any) {
+          message.error('取消失败：' + (e?.message || ''));
+        }
+      },
+    });
+  };
+
+  const handleStatusChange = (value: string | number) => {
+    setStatusFilter(value as string);
+  };
+
+  const handlePay = async (orderId: number | string) => {
+    try {
+      const res = await payOrder({ orderId: orderId as any });
+      if (res.data?.payForm) {
+        const div = document.createElement('div');
+        div.innerHTML = res.data.payForm;
+        document.body.appendChild(div);
+        const form = div.querySelector('form');
+        if (form) {
+          form.submit();
+        }
+      }
+    } catch (e: any) {
+      message.error('支付失败：' + (e?.message || ''));
+    }
+  };
 
   return (
-    <PageContainer header={{ title: '我的订单' }}>
+    <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      <div style={{ marginBottom: 20 }}>
+        <Segmented
+          options={statusTabs}
+          value={statusFilter}
+          onChange={handleStatusChange}
+        />
+      </div>
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: 48 }}>
           <Spin size="large" />
@@ -61,15 +123,20 @@ const OrderListPage: React.FC = () => {
                 <Card
                   hoverable
                   onClick={() => history.push(`/order/${order.id}`)}
+                  bodyStyle={{ padding: '16px 20px' }}
                 >
                   <Row justify="space-between" align="middle">
-                    <Col>
+                    <Col flex="auto">
                       <Text strong style={{ fontSize: 16 }}>
                         {order.filmName}
                       </Text>
                       <div style={{ marginTop: 4 }}>
-                        <Text type="secondary">{order.cinemaName}</Text>
-                        <Text type="secondary" style={{ marginLeft: 8 }}>
+                        <Text type="secondary" style={{ fontSize: 13 }}>
+                          {order.cinemaName} · {order.hallName}
+                        </Text>
+                      </div>
+                      <div style={{ marginTop: 4 }}>
+                        <Text type="secondary" style={{ fontSize: 13 }}>
                           {order.scheduleTime}
                         </Text>
                       </div>
@@ -81,18 +148,46 @@ const OrderListPage: React.FC = () => {
                         ))}
                       </div>
                     </Col>
-                    <Col style={{ textAlign: 'right' }}>
-                      <Tag color={st.color}>{st.text}</Tag>
-                      <div style={{ marginTop: 4 }}>
-                        <Text strong style={{ color: '#ff4d4f', fontSize: 18 }}>
+                    <Col style={{ textAlign: 'right', minWidth: 120 }}>
+                      <Tag color={st.color} style={{ marginBottom: 8 }}>
+                        {st.text}
+                      </Tag>
+                      <div>
+                        <Text strong style={{ color: '#e53e3e', fontSize: 20 }}>
                           ¥{order.totalPrice?.toFixed(2)}
                         </Text>
                       </div>
-                      <div>
+                      <div style={{ marginTop: 2 }}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                           {order.count}张
                         </Text>
                       </div>
+                      {order.status === 'pending' && (
+                        <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                          <Button
+                            type="primary"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePay(order.id!);
+                            }}
+                            style={{ background: '#e53e3e', borderColor: '#e53e3e', borderRadius: 6 }}
+                          >
+                            去支付
+                          </Button>
+                          <Button
+                            type="link"
+                            danger
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelOrder(order.id!);
+                            }}
+                          >
+                            取消
+                          </Button>
+                        </div>
+                      )}
                     </Col>
                   </Row>
                 </Card>
@@ -100,10 +195,10 @@ const OrderListPage: React.FC = () => {
             );
           })}
           {total > 10 && (
-            <Col span={24} style={{ textAlign: 'center' }}>
+            <Col span={24} style={{ textAlign: 'center', marginTop: 16 }}>
               <Button
                 loading={loading}
-                onClick={() => loadOrders(page + 1)}
+                onClick={() => loadOrders(page + 1, statusFilter)}
               >
                 加载更多
               </Button>
@@ -111,7 +206,7 @@ const OrderListPage: React.FC = () => {
           )}
         </Row>
       )}
-    </PageContainer>
+    </div>
   );
 };
 
