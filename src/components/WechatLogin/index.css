@@ -1,0 +1,94 @@
+.wechat-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.wechat-qrcode-wrapper {
+  width: 220px;
+  height: 220px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.wechat-qrcode-img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
+
+.wechat-qrcode-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #999;
+}
+
+.wechat-qrcode-tip {
+  margin-top: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.wechat-icon {
+  font-size: 18px;
+}
+
+.wechat-scanned-icon,
+.wechat-error-icon {
+  font-size: 48px;
+}
+
+.wechat-scanned-text {
+  font-size: 14px;
+  color: #52c41a;
+}
+
+.wechat-error-text {
+  font-size: 14px;
+  color: #999;
+  text-align: center;
+  padding: 0 12px;
+}
+
+.wechat-refresh-btn {
+  margin-top: 4px;
+  padding: 6px 20px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.wechat-refresh-btn:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.wechat-refresh-link {
+  margin-top: 12px;
+  color: #1890ff;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.wechat-refresh-link:hover {
+  text-decoration: underline;
+}

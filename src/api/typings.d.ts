@@ -165,6 +165,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseMap = {
+    code?: number;
+    data?: Record<string, any>;
+    message?: string;
+  };
+
   type BaseResponseSystemConfig = {
     code?: number;
     data?: SystemConfig;

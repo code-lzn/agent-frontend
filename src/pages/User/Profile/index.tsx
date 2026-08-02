@@ -26,9 +26,11 @@ import {
   LockOutlined,
   LogoutOutlined,
   EditOutlined,
+  WechatOutlined,
 } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import type { UserPreference } from '@/api/typings';
+import WechatLogin from '@/components/WechatLogin';
 import './index.css';
 
 const { Text } = Typography;
@@ -40,7 +42,7 @@ const ProfilePage: React.FC = () => {
   const redirect = searchParams.get('redirect') || '/home';
 
   // ===== 登录/注册状态 =====
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'wechat'>('login');
   const [authLoading, setAuthLoading] = useState(false);
   const [loginForm] = Form.useForm();
 
@@ -192,8 +194,22 @@ const ProfilePage: React.FC = () => {
               >
                 注册
               </span>
+              <span
+                className={authMode === 'wechat' ? 'active' : ''}
+                onClick={() => setAuthMode('wechat')}
+              >
+                <WechatOutlined /> 微信登录
+              </span>
             </div>
 
+            {authMode === 'wechat' ? (
+              <WechatLogin
+                redirect={redirect}
+                onLoginSuccess={(_userRole, target) => {
+                  history.push(target, { replace: true });
+                }}
+              />
+            ) : (
             <Form
               form={loginForm}
               layout="vertical"
@@ -271,6 +287,7 @@ const ProfilePage: React.FC = () => {
                 </Button>
               </Form.Item>
             </Form>
+            )}
           </div>
         </div>
       </div>

@@ -227,3 +227,37 @@ export async function changePassword(
     ...(options || {}),
   });
 }
+
+// ==================== 微信扫码登录 ====================
+
+/** 生成微信扫码登录二维码 GET /v1/weixin/portal/createQrCode */
+export async function createWeixinQrCode(options?: { [key: string]: any }) {
+  return request<API.BaseResponseMap>('/v1/weixin/portal/createQrCode', {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
+/** 检查微信扫码状态 GET /v1/weixin/portal/checkLogin */
+export async function checkWeixinLogin(
+  params: { ticket: string },
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseMap>('/v1/weixin/portal/checkLogin', {
+    method: 'GET',
+    params,
+    ...(options || {}),
+  });
+}
+
+/** 微信扫码后登录/注册 POST /user/login-by-weixin */
+export async function loginByWeixin(
+  params: { openid: string },
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseLoginUserVO>('/user/login-by-weixin', {
+    method: 'POST',
+    params,
+    ...(options || {}),
+  });
+}

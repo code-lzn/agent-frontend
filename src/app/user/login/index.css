@@ -6,11 +6,42 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.user-auth-page .ant-pro-form-login-container {
+.user-auth-card {
   background: #fff;
-  padding: 24px 32px;
+  padding: 32px 36px 24px;
   border-radius: 8px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 12%);
+  width: 400px;
+  max-width: 90vw;
+}
+
+.user-auth-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.user-auth-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 85%);
+  margin-top: 8px;
+}
+
+.user-auth-subtitle {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 45%);
+  margin-top: 4px;
+}
+
+/* 覆盖 LoginForm 内部样式，让它融入卡片 */
+.user-auth-card .ant-pro-form-login-container {
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.user-auth-card .ant-pro-form-login-main {
+  width: 100%;
 }
 
 .user-auth-footer {
