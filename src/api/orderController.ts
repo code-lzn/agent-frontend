@@ -126,6 +126,32 @@ export async function cancelOrder(
   });
 }
 
+/** 前台 - 申请退款 POST /order/refund/${param0} */
+export async function refundOrder(
+  params: { id: number },
+  options?: { [key: string]: any },
+) {
+  const { id: param0, ...queryParams } = params;
+  return request<API.BaseResponseBoolean>(`/order/refund/${param0}`, {
+    method: 'POST',
+    params: { ...queryParams },
+    ...(options || {}),
+  });
+}
+
+/** 管理员退款 POST /order/admin/refund/${param0} */
+export async function adminRefund(
+  params: API.adminRefundParams,
+  options?: { [key: string]: any },
+) {
+  const { id: param0, ...queryParams } = params;
+  return request<API.BaseResponseBoolean>(`/order/admin/refund/${param0}`, {
+    method: 'POST',
+    params: { ...queryParams },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /order/pay */
 export async function payOrder(
   body: API.PayOrderRequest,

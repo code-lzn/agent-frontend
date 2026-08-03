@@ -84,7 +84,7 @@ const FilmFormPage: React.FC = () => {
       };
 
       if (isEdit) {
-        await update6({ id: id as any, ...params });
+        await update6({ id, ...params });
         message.success('更新成功');
       } else {
         await save6(params);

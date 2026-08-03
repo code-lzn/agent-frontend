@@ -9,14 +9,14 @@ const { Text, Title } = Typography;
 const SeatPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const scheduleId = Number(searchParams.get('scheduleId'));
+  const scheduleId = searchParams.get('scheduleId') || '';
 
   const [seatMap, setSeatMap] = useState<SeatMapVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([]);
 
   useEffect(() => {
-    if (!scheduleId || isNaN(scheduleId)) {
+    if (!scheduleId) {
       message.error('缺少场次ID');
       navigate('/film');
       return;

@@ -13,8 +13,8 @@ const { Text, Title } = Typography;
 const OrderConfirmPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const scheduleId = Number(searchParams.get('scheduleId'));
-  const seatIds = (searchParams.get('seatIds') || '').split(',').map(Number).filter(Boolean);
+  const scheduleId = searchParams.get('scheduleId') || '';
+  const seatIds = (searchParams.get('seatIds') || '').split(',').filter(Boolean);
 
   const [seatMap, setSeatMap] = useState<SeatMapVO | null>(null);
   const [film, setFilm] = useState<Film | null>(null);

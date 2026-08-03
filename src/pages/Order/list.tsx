@@ -1,4 +1,4 @@
-import { listOrders, cancelOrder, payOrder } from '@/api/orderController';
+import { listOrders, cancelOrder, payOrder, refundOrder } from '@/api/orderController';
 import { Badge, Button, Card, Col, Empty, Row, Segmented, Spin, Tag, Typography, message, Modal } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
@@ -13,12 +13,14 @@ const statusMap: Record<string, { color: string; text: string }> = {
   paid: { color: 'green', text: '已支付' },
   cancelled: { color: 'default', text: '已取消' },
   completed: { color: 'blue', text: '已完成' },
+  refunded: { color: 'red', text: '已退款' },
 };
 
 const statusTabs = [
   { label: '全部', value: '' },
   { label: '待支付', value: 'pending' },
   { label: '已支付', value: 'paid' },
+  { label: '已退款', value: 'refunded' },
   { label: '已取消', value: 'cancelled' },
 ];
 
@@ -92,6 +94,26 @@ const OrderListPage: React.FC = () => {
     } catch (e: any) {
       message.error('支付失败：' + (e?.message || ''));
     }
+  };
+
+  const handleRefundOrder = (orderId: number | string, totalPrice?: number) => {
+    confirm({
+      title: '确认退款？',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要申请退款吗？退款金额 ¥${Number(totalPrice || 0).toFixed(2)} 将原路返回。`,
+      okText: '确认退款',
+      cancelText: '我再想想',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await refundOrder({ id: orderId as any });
+          message.success('退款申请已提交，退款将原路返回');
+          loadOrders(page, statusFilter);
+        } catch (e: any) {
+          message.error('退款失败：' + (e?.message || ''));
+        }
+      },
+    });
   };
 
   return (
@@ -185,6 +207,21 @@ const OrderListPage: React.FC = () => {
                             }}
                           >
                             取消
+                          </Button>
+                        </div>
+                      )}
+                      {order.status === 'paid' && (
+                        <div style={{ marginTop: 8 }}>
+                          <Button
+                            type="link"
+                            danger
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRefundOrder(order.id!, order.totalPrice);
+                            }}
+                          >
+                            申请退款
                           </Button>
                         </div>
                       )}

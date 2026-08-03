@@ -11,7 +11,7 @@ const { Text } = Typography;
 const SchedulePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const filmId = Number(searchParams.get('filmId'));
+  const filmId = searchParams.get('filmId') || '';
 
   const [film, setFilm] = useState<Film | null>(null);
   const [schedules, setSchedules] = useState<ScheduleVO[]>([]);

@@ -1,15 +1,19 @@
-import { getOrderDetail, payOrder } from '@/api/orderController';
+import { getOrderDetail, payOrder, refundOrder } from '@/api/orderController';
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Descriptions, Divider, Spin, Statistic, Tag, message } from 'antd';
+import { Button, Card, Descriptions, Divider, Modal, Spin, Statistic, Tag, message } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import { history, useParams } from '@umijs/max';
 import type { OrderVO } from '@/api/typings';
+
+const { confirm } = Modal;
 
 const statusMap: Record<string, { color: string; text: string }> = {
   pending: { color: 'orange', text: '待支付' },
   paid: { color: 'green', text: '已支付' },
   cancelled: { color: 'default', text: '已取消' },
   completed: { color: 'blue', text: '已完成' },
+  refunded: { color: 'red', text: '已退款' },
 };
 
 const OrderDetailPage: React.FC = () => {
@@ -17,6 +21,7 @@ const OrderDetailPage: React.FC = () => {
   const [order, setOrder] = useState<OrderVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [refunding, setRefunding] = useState(false);
 
   const loadOrder = () => {
     if (!id) return;
@@ -60,6 +65,30 @@ const OrderDetailPage: React.FC = () => {
     } finally {
       setPaying(false);
     }
+  };
+
+  const handleRefund = () => {
+    if (!order?.id) return;
+    confirm({
+      title: '确认退款？',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要申请退款吗？退款金额 ¥${order.totalPrice?.toFixed(2)} 将原路返回。`,
+      okText: '确认退款',
+      cancelText: '我再想想',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        setRefunding(true);
+        try {
+          await refundOrder({ id: order.id! });
+          message.success('退款申请已提交，退款将原路返回');
+          loadOrder();
+        } catch (e: any) {
+          message.error('退款失败：' + (e?.message || ''));
+        } finally {
+          setRefunding(false);
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -122,6 +151,34 @@ const OrderDetailPage: React.FC = () => {
             >
               去支付（支付宝沙箱）
             </Button>
+          </div>
+        </Card>
+      )}
+
+      {order.status === 'paid' && (
+        <Card style={{ marginTop: 16 }}>
+          <div style={{ textAlign: 'center' }}>
+            <Statistic title="已支付" value={order.totalPrice} precision={2} prefix="¥" />
+            <Divider />
+            <Button
+              type="default"
+              size="large"
+              danger
+              loading={refunding}
+              onClick={handleRefund}
+            >
+              申请退款
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {order.status === 'refunded' && (
+        <Card style={{ marginTop: 16 }}>
+          <div style={{ textAlign: 'center' }}>
+            <Statistic title="已退款" value={order.totalPrice} precision={2} prefix="¥" />
+            <Divider />
+            <span style={{ color: '#999' }}>退款已原路返回，座位已释放</span>
           </div>
         </Card>
       )}
