@@ -1,10 +1,11 @@
 import { listAll2, remove6, updateStatus } from '@/api/filmController';
-import { ExclamationCircleOutlined, FileTextOutlined, PlusOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, FileTextOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history } from '@umijs/max';
 import {
   Badge,
   Button,
   Card,
+  Input,
   message,
   Modal,
   Space,
@@ -13,34 +14,48 @@ import {
   Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import React, { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
+import React, { useEffect, useMemo, useState } from 'react';
 import './index.css';
 
 const { confirm } = Modal;
 
-/** 影片状态映射 */
-const FILM_STATUS_RECORD: Record<string, { status: 'success' | 'default' | 'warning' | 'error'; text: string }> = {
-  published: { status: 'success', text: '已发布' },
+/** 影片五态映射：草稿 / 准备上映 / 热映 / 正在上映 / 已下线 */
+const FILM_STATUS_RECORD: Record<string, { status: 'success' | 'default' | 'warning' | 'error' | 'processing'; text: string }> = {
   draft: { status: 'default', text: '草稿' },
-  offline: { status: 'warning', text: '已下线' },
+  upcoming: { status: 'warning', text: '准备上映' },
+  hot: { status: 'processing', text: '热映' },
+  published: { status: 'success', text: '正在上映' },
+  offline: { status: 'default', text: '已下线' },
 };
 
 /** 影片管理页面 */
 const FilmListPage: React.FC = () => {
   const [films, setFilms] = useState<API.Film[]>([]);
   const [loading, setLoading] = useState(false);
+  const [keyword, setKeyword] = useState('');
 
   const loadData = async () => {
     setLoading(true);
     try {
       const res = await listAll2();
-      setFilms(res.data || []);
+      const list = (res as any)?.data || [];
+      // 新增的影片放最前面（按 id 倒序，雪花/自增 id 均按创建时间递增）
+      (list as API.Film[]).sort((a: API.Film, b: API.Film) => Number(b.id) - Number(a.id));
+      setFilms(list);
     } catch {
       message.error('加载影片列表失败');
     } finally {
       setLoading(false);
     }
   };
+
+  // 名称模糊搜索（客户端过滤，全量数据量小）
+  const filteredFilms = useMemo(() => {
+    if (!keyword.trim()) return films;
+    const kw = keyword.trim().toLowerCase();
+    return films.filter((f) => (f.name || '').toLowerCase().includes(kw));
+  }, [films, keyword]);
 
   useEffect(() => {
     loadData();
@@ -154,6 +169,19 @@ const FilmListPage: React.FC = () => {
       ellipsis: true,
     },
     {
+      title: '创建时间',
+      dataIndex: 'createTime',
+      key: 'createTime',
+      width: 150,
+      sorter: (a, b) => {
+        if (!a.createTime) return -1;
+        if (!b.createTime) return 1;
+        return String(a.createTime).localeCompare(String(b.createTime));
+      },
+      showSorterTooltip: false,
+      render: (val: string) => (val ? dayjs(val).format('YYYY-MM-DD HH:mm') : '-'),
+    },
+    {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
@@ -178,7 +206,7 @@ const FilmListPage: React.FC = () => {
               发布
             </Button>
           )}
-          {record.status === 'published' && (
+          {(record.status === 'published' || record.status === 'hot' || record.status === 'upcoming') && (
             <Button type="link" size="small" onClick={() => handleStatus(record.id!, 'offline')}>
               下线
             </Button>
@@ -212,9 +240,6 @@ const FilmListPage: React.FC = () => {
             <Tooltip title="刷新">
               <Button icon={<ReloadOutlined />} onClick={loadData} />
             </Tooltip>
-            <Tooltip title="设置">
-              <Button icon={<SettingOutlined />} />
-            </Tooltip>
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -227,9 +252,21 @@ const FilmListPage: React.FC = () => {
       >
         <Table<API.Film>
           columns={columns}
-          dataSource={films}
+          dataSource={filteredFilms}
           rowKey="id"
           loading={loading}
+          title={() => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Input.Search
+                allowClear
+                placeholder="搜索影片名称"
+                style={{ width: 260 }}
+                onSearch={(v) => setKeyword(v)}
+                onChange={(e) => !e.target.value && setKeyword('')}
+              />
+              <span style={{ fontSize: 13, color: '#999' }}>共 {filteredFilms.length} 部</span>
+            </div>
+          )}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

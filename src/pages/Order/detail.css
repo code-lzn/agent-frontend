@@ -1,0 +1,188 @@
+/* =============================================
+   订单详情（原型风格）
+   ============================================= */
+
+.order-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .order-detail-layout { grid-template-columns: 1fr; }
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 16px;
+}
+
+.page-nav .back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  color: #606266;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.page-nav .back-btn:hover {
+  border-color: #FF4D4F;
+  color: #FF4D4F;
+}
+
+.page-nav .nav-label {
+  font-size: 13px;
+  color: #909399;
+}
+
+/* 状态横幅 */
+.order-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.order-banner .ob-icon { font-size: 26px; }
+.order-banner .ob-title { font-weight: 700; font-size: 16px; color: #303133; }
+.order-banner .ob-sub { font-size: 13px; color: #606266; margin-top: 2px; }
+
+.order-banner.pending { background: #fff1f0; border: 1px solid #ffd1d1; }
+.order-banner.paid { background: #f0fff4; border: 1px solid #c6f6d5; }
+.order-banner.cancelled { background: #f4f4f5; border: 1px solid #e8e8e8; }
+
+.order-banner .ob-timer {
+  margin-left: auto;
+  font-weight: 700;
+  color: #FF4D4F;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Courier New', monospace;
+}
+
+/* 订单信息卡片 */
+.order-detail-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f5f7fa;
+  padding: 24px;
+}
+
+.order-detail-card .orow {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 14px;
+  color: #303133;
+}
+
+.order-detail-card .orow:last-of-type {
+  border-bottom: none;
+}
+
+.order-detail-card .orow .ol {
+  color: #909399;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.order-detail-card .osum {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f5f5f5;
+  text-align: right;
+}
+
+.order-detail-card .osum .sub {
+  font-size: 13px;
+  color: #909399;
+}
+
+.order-detail-card .osum .total {
+  font-size: 24px;
+  font-weight: 700;
+  color: #FF4D4F;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 右侧操作面板 */
+.order-side {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f5f7fa;
+  padding: 24px;
+  position: sticky;
+  top: 0;
+  align-self: start;
+}
+
+.order-side .os-title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 16px;
+  color: #303133;
+}
+
+.order-side .os-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-side .os-actions .os-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.order-side .os-actions .pay { background: #FF4D4F; color: #fff; }
+.order-side .os-actions .pay:hover { opacity: 0.85; }
+.order-side .os-actions .sec { background: #f5f7fa; color: #606266; border: 1px solid #e8e8e8; }
+.order-side .os-actions .sec:hover { border-color: #c0c4cc; }
+.order-side .os-actions .danger { background: #fff; color: #FF4D4F; border: 1px solid #ffd1d1; }
+.order-side .os-actions .danger:hover { background: #fff1f0; }
+
+/* 取票码 */
+.ticket-box {
+  text-align: center;
+  padding: 20px;
+  border: 1px dashed #FF4D4F;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: #fff1f0;
+}
+
+.ticket-box .tl {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 6px;
+}
+
+.ticket-box .tc {
+  font-family: 'Courier New', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: #FF4D4F;
+  letter-spacing: 4px;
+}

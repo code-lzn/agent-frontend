@@ -18,23 +18,32 @@ myAxios.interceptors.request.use(
   },
 );
 
+/** 获取当前路由（兼容 hash 路由：从 hash 中解析，否则用 pathname） */
+function getCurrentRoute(): string {
+  const hash = window.location.hash;
+  if (hash && hash.startsWith('#/')) {
+    return hash.slice(1);
+  }
+  return window.location.pathname + window.location.search;
+}
+
 // 响应拦截器
 myAxios.interceptors.response.use(
   function (response) {
     const { data } = response;
     // 未登录
     if (data.code === 40100) {
-      // getLoginUser 和 Profile 页面自身：直接返回让调用方自行判断
+      const route = getCurrentRoute();
+      // getLoginUser 和登录页/个人中心自身：直接返回让调用方自行判断，避免跳转循环
       if (
         response.request.responseURL.includes('user/get/login') ||
-        window.location.pathname.includes('/user/profile')
+        route.includes('/user/login') ||
+        route.includes('/user/profile')
       ) {
         return data;
       }
-      // 其他接口：跳转登录页，并 reject Promise 防止调用方 .then() 误报错误
-      window.location.href = `/user/profile?redirect=${encodeURIComponent(
-        window.location.pathname + window.location.search,
-      )}`;
+      // 其他接口：统一跳转登录页（带 redirect 回跳），并 reject Promise 防止调用方 .then() 误报错误
+      window.location.href = `/user/login?redirect=${encodeURIComponent(route)}`;
       return Promise.reject(new Error('请先登录'));
     }
     // 其他业务错误

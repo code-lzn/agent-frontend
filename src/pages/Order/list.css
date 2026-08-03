@@ -1,0 +1,190 @@
+/* =============================================
+   我的订单页（珊瑚红配色规范）
+   ============================================= */
+
+/* 全屏宽度（不约束，右侧侧边栏由 UserLayout 提供） */
+.order-list-page {
+  width: 100%;
+}
+
+/* 筛选 Tab（分段控制器） */
+.order-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.order-tab {
+  padding: 7px 22px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #909399;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.order-tab:hover:not(.active) {
+  color: #FF4D4F;
+}
+
+.order-tab.active {
+  background: #FF4D4F;
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(255, 77, 79, 0.3);
+}
+
+/* 横向表格（列：影片｜影院/场次｜座位｜金额｜状态｜操作） */
+.order-table-head,
+.order-row {
+  display: grid;
+  grid-template-columns: 2fr 2.5fr 2fr 0.9fr 0.9fr 0.9fr;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 20px;
+}
+
+.order-table-head {
+  font-size: 12px;
+  color: #909399;
+  font-weight: 500;
+  padding-bottom: 8px;
+}
+
+.order-row {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f5f7fa;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.order-row:hover {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
+  transform: translateY(-1px);
+}
+
+/* 影片列 */
+.order-film-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.order-poster {
+  width: 32px;
+  height: 44px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #2d2d5e, #1a1a3a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.order-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.order-film-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #303133;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 影院/场次列 */
+.order-meta-cell {
+  font-size: 13px;
+  color: #909399;
+  line-height: 1.6;
+  min-width: 0;
+}
+
+/* 座位列 */
+.order-seats-cell {
+  font-size: 13px;
+  color: #606266;
+  line-height: 1.6;
+  min-width: 0;
+}
+
+/* 金额列 */
+.order-price {
+  font-weight: 700;
+  font-size: 16px;
+  color: #FF4D4F;
+  font-variant-numeric: tabular-nums;
+}
+
+.order-count {
+  font-size: 12px;
+  color: #909399;
+}
+
+/* 状态胶囊 */
+.order-status {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 12px;
+  border-radius: 12px;
+}
+
+.order-status.pending { background: #fff1f0; color: #FF4D4F; }
+.order-status.paid { background: #f0f9eb; color: #67c23a; }
+.order-status.cancelled { background: #f4f4f5; color: #909399; }
+.order-status.completed { background: #ecf5ff; color: #409eff; }
+.order-status.refunded { background: #fdf6ec; color: #e6a23c; }
+
+/* 操作列 */
+.order-action-link {
+  font-size: 13px;
+  color: #FF4D4F;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  transition: all 0.15s;
+}
+
+.order-action-link:hover {
+  text-decoration: underline;
+}
+
+.order-action-link.gray {
+  color: #909399;
+}
+
+.order-action-link.gray:hover {
+  color: #303133;
+}
+
+/* 分页 */
+.order-pagination {
+  text-align: center;
+  margin-top: 24px;
+}
+
+/* 空状态 */
+.order-empty {
+  padding: 60px 0;
+}

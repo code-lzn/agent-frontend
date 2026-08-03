@@ -1,8 +1,5 @@
-import {
-  createWeixinQrCode,
-  checkWeixinLogin,
-  loginByWeixin,
-} from '@/api/userController';
+import { checkLogin, createQrCode } from '@/api/weixinPortalController';
+import { weixinLogin } from '@/api/userController';
 import { useModel } from '@umijs/max';
 import { message, Spin } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -51,7 +48,7 @@ const WechatLogin: React.FC<WechatLoginProps> = ({
       setErrorMsg('');
       stopPolling();
 
-      const res = await createWeixinQrCode();
+      const res = await createQrCode();
       if (res.data?.ticket && res.data?.qrCodeUrl) {
         setTicket(res.data.ticket);
         setQrCodeUrl(res.data.qrCodeUrl);
@@ -72,14 +69,14 @@ const WechatLogin: React.FC<WechatLoginProps> = ({
       stopPolling();
       timerRef.current = setInterval(async () => {
         try {
-          const res = await checkWeixinLogin({ ticket });
+          const res = await checkLogin({ ticket });
           if (res.data?.scanned && res.data?.openid) {
             // 扫码成功！
             stopPolling();
             setStatus('scanned');
 
             // 调用后端完成登录
-            const loginRes = await loginByWeixin({ openid: res.data.openid });
+            const loginRes = await weixinLogin({ openid: res.data.openid });
             if (loginRes.data) {
               message.success('微信登录成功');
               setInitialState((pre: any) => ({

@@ -191,7 +191,7 @@ const OrderConfirmPage: React.FC = () => {
                 </Text>
               </Col>
               <Col>
-                <Text strong style={{ color: '#e53e3e', fontSize: 24 }}>
+                <Text strong style={{ color: '#FF4D4F', fontSize: 24 }}>
                   ¥{totalPrice.toFixed(2)}
                 </Text>
               </Col>
@@ -211,7 +211,7 @@ const OrderConfirmPage: React.FC = () => {
                   block
                   loading={submitting}
                   onClick={handleCreateOrder}
-                  style={{ background: '#e53e3e', borderColor: '#e53e3e' }}
+                  style={{ borderRadius: 8 }}
                 >
                   确认下单
                 </Button>
@@ -234,7 +234,7 @@ const OrderConfirmPage: React.FC = () => {
                   block
                   loading={submitting}
                   onClick={handlePay}
-                  style={{ background: '#e53e3e', borderColor: '#e53e3e' }}
+                  style={{ borderRadius: 8 }}
                 >
                   去支付（支付宝沙箱）
                 </Button>
@@ -264,7 +264,7 @@ const OrderConfirmPage: React.FC = () => {
                   type="primary"
                   block
                   onClick={() => navigate(`/order/${order.id}`)}
-                  style={{ background: '#e53e3e', borderColor: '#e53e3e' }}
+                  style={{ borderRadius: 8 }}
                 >
                   查看订单详情
                 </Button>

@@ -1,5 +1,5 @@
 import { getFilm } from '@/api/filmController';
-import { Button, Col, Descriptions, Divider, Image, Rate, Row, Spin, Tag, Typography, message } from 'antd';
+import { Button, Card, Col, Descriptions, Divider, Image, Rate, Row, Spin, Tag, Typography, message } from 'antd';
 import { RobotOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import { history, useParams } from '@umijs/max';
@@ -137,61 +137,51 @@ const FilmDetailPage: React.FC = () => {
 
           <Divider style={{ margin: '20px 0' }} />
 
-          {/* AI 入口 */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
-              padding: '14px 20px',
-              background: 'linear-gradient(135deg, #fff5f5, #fff1f0)',
-              borderRadius: 10,
-              cursor: 'pointer',
-              border: '1px solid #ffd8d8',
-              marginBottom: 24,
-              transition: 'all 0.2s',
-            }}
+          {/* AI 入口（管理端风格卡片） */}
+          <Card
+            hoverable
             onClick={() => history.push('/ai-chat')}
+            style={{ marginBottom: 24, borderRadius: 8 }}
           >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                background: 'linear-gradient(135deg, #e53e3e, #ff4d4f)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 20,
-                flexShrink: 0,
-              }}
-            >
-              🤖
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: '#1a1a1a' }}>
-                问问 AI · 关于《{film.name}》
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '4px 8px' }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  background: '#FF4D4F',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 20,
+                  flexShrink: 0,
+                  boxShadow: '0 2px 8px rgba(255,77,79,.25)',
+                }}
+              >
+                🤖
               </div>
-              <div style={{ fontSize: 13, color: '#999', marginTop: 2 }}>
-                选场次、查座位、比价格，一句话搞定
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 15, color: '#1a1a1a' }}>
+                  问问 AI · 关于《{film.name}》
+                </div>
+                <div style={{ fontSize: 13, color: '#999', marginTop: 2 }}>
+                  选场次、查座位、比价格，一句话搞定
+                </div>
               </div>
+              <span style={{ color: '#FF4D4F', fontSize: 18, fontWeight: 600 }}>→</span>
             </div>
-            <span style={{ color: '#e53e3e', fontSize: 18, fontWeight: 700 }}>→</span>
-          </div>
+          </Card>
 
           <Button
             type="primary"
             size="large"
             onClick={() => history.push(`/schedule?filmId=${film.id}`)}
             style={{
-              background: 'linear-gradient(135deg, #e53e3e, #ff4d4f)',
-              border: 'none',
               borderRadius: 8,
               height: 48,
               padding: '0 40px',
               fontSize: 16,
-              fontWeight: 700,
-              boxShadow: '0 4px 14px rgba(229, 62, 62, 0.3)',
+              fontWeight: 600,
             }}
           >
             选择场次购票

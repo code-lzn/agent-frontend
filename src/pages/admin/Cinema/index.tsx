@@ -31,7 +31,10 @@ const CinemaListPage: React.FC = () => {
     setLoading(true);
     try {
       const res = await list4();
-      setCinemas(res.data || []);
+      const list = (res as any)?.data || [];
+      // 新增的影院放最前面（按 id 倒序）
+      list.sort((a: API.Cinema, b: API.Cinema) => Number(b.id) - Number(a.id));
+      setCinemas(list);
     } catch {
       message.error('加载影院列表失败');
     } finally {

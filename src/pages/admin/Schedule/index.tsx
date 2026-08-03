@@ -2,7 +2,7 @@ import { listAll2 } from '@/api/filmController';
 import { list4 } from '@/api/cinemaController';
 import { list3 } from '@/api/hallController';
 import { listAll1, remove3 } from '@/api/scheduleController';
-import { CalendarOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CalendarOutlined, DeleteOutlined, ExclamationCircleOutlined, EyeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history } from '@umijs/max';
 import {
   Badge,
@@ -17,6 +17,7 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import React, { useEffect, useState } from 'react';
+import SeatViewModal from './SeatViewModal';
 import './index.css';
 
 const { confirm } = Modal;
@@ -28,12 +29,27 @@ const STATUS_MAP: Record<string, { status: 'success' | 'default' | 'warning' | '
   soldOut: { status: 'error', text: '已售罄' },
 };
 
+/** 判断场次是否已放映（日期已过，或今天且开始时间已过） */
+const isPastSchedule = (s: API.Schedule): boolean => {
+  if (!s.showDate) return false;
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  if (s.showDate < today) return true;
+  if (s.showDate === today) {
+    const nowHM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const startHM = (s.startTime || '').substring(0, 5);
+    return startHM < nowHM;
+  }
+  return false;
+};
+
 const ScheduleListPage: React.FC = () => {
   const [schedules, setSchedules] = useState<API.Schedule[]>([]);
   const [loading, setLoading] = useState(false);
   const [filmMap, setFilmMap] = useState<Record<number, API.Film>>({});
   const [cinemaMap, setCinemaMap] = useState<Record<number, API.Cinema>>({});
   const [hallMap, setHallMap] = useState<Record<number, API.Hall>>({});
+  const [seatView, setSeatView] = useState<API.Schedule | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -45,6 +61,8 @@ const ScheduleListPage: React.FC = () => {
         list3(),
       ]);
       const schedules = (scheduleRes as any)?.data || scheduleRes || [];
+      // 新增的场次放最前面（按 id 倒序）
+      schedules.sort((a: API.Schedule, b: API.Schedule) => Number(b.id) - Number(a.id));
       setSchedules(schedules);
 
       const fMap: Record<number, API.Film> = {};
@@ -137,9 +155,17 @@ const ScheduleListPage: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 100,
+      width: 200,
       render: (_, record) => (
         <Space size="small">
+          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => setSeatView(record)}>
+            座位视图
+          </Button>
+          {!isPastSchedule(record) && (
+            <Button type="link" size="small" onClick={() => history.push(`/admin/schedule/edit/${record.id}`)}>
+              编辑
+            </Button>
+          )}
           <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id!)}>
             删除
           </Button>
@@ -197,6 +223,18 @@ const ScheduleListPage: React.FC = () => {
           }}
         />
       </Card>
+
+      {/* 座位视图弹窗 */}
+      <SeatViewModal
+        scheduleId={seatView?.id}
+        scheduleDesc={
+          seatView
+            ? `${filmMap[seatView.filmId!]?.name || ''} · ${seatView.showDate} ${seatView.startTime}`
+            : undefined
+        }
+        open={!!seatView}
+        onClose={() => setSeatView(null)}
+      />
     </div>
   );
 };

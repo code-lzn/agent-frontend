@@ -110,7 +110,7 @@ const FilmFormPage: React.FC = () => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ status: 'published' }}
+          initialValues={{ status: 'draft' }}
         >
           <Form.Item name="name" label="影片名称" rules={[{ required: true, message: '请输入影片名称' }]}>
             <Input placeholder="请输入影片名称" maxLength={50} />
@@ -154,7 +154,10 @@ const FilmFormPage: React.FC = () => {
 
           <Form.Item name="status" label="发布状态">
             <Radio.Group>
-              <Radio value="published">已发布</Radio>
+              <Radio value="draft">草稿</Radio>
+              <Radio value="upcoming">准备上映</Radio>
+              <Radio value="hot">热映</Radio>
+              <Radio value="published">正在上映</Radio>
               <Radio value="offline">已下线</Radio>
             </Radio.Group>
           </Form.Item>

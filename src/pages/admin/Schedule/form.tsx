@@ -1,9 +1,9 @@
 import { listAll2 } from '@/api/filmController';
 import { list4 } from '@/api/cinemaController';
 import { listByCinema } from '@/api/hallController';
-import { checkConflict, save3 } from '@/api/scheduleController';
+import { checkConflict, getInfo3, save3, update3 } from '@/api/scheduleController';
 import { PageContainer } from '@ant-design/pro-components';
-import { useNavigate } from '@umijs/max';
+import { useNavigate, useParams } from '@umijs/max';
 import {
   Alert,
   Button,
@@ -15,6 +15,7 @@ import {
   message,
   Select,
   Space,
+  Spin,
   TimePicker,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -28,8 +29,11 @@ const calcEndTime = (start: dayjs.Dayjs | null, durationMin: number) => {
 
 const ScheduleFormPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = !!id;
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(isEdit);
 
   const [films, setFilms] = useState<API.Film[]>([]);
   const [cinemas, setCinemas] = useState<API.Cinema[]>([]);
@@ -44,10 +48,51 @@ const ScheduleFormPage: React.FC = () => {
     loadOptions();
   }, []);
 
+  // 编辑模式：加载已有场次数据回填（依赖 films 就绪，确保影片高亮正确）
+  useEffect(() => {
+    if (!isEdit || films.length === 0) return;
+    (async () => {
+      try {
+        const res = await getInfo3({ id: id as any });
+        const s = (res as any)?.data;
+        if (!s) {
+          message.error('场次不存在');
+          navigate('/admin/schedule');
+          return;
+        }
+        // 加载影院影厅
+        if (s.cinemaId) {
+          const hallRes = await listByCinema({ cinemaId: s.cinemaId });
+          setAllHalls((hallRes.data as any)?.data || hallRes.data || []);
+          setSelectedCinemaId(s.cinemaId);
+        }
+        if (s.filmId) {
+          const film = films.find((f) => f.id === s.filmId);
+          setSelectedFilm(film || null);
+        }
+        form.setFieldsValue({
+          filmId: s.filmId,
+          cinemaId: s.cinemaId,
+          hallId: s.hallId,
+          showDate: s.showDate ? dayjs(s.showDate) : undefined,
+          startTime: s.startTime ? dayjs(`2000-01-01 ${s.startTime}`) : undefined,
+          endTime: s.endTime,
+          price: s.price,
+          vipPrice: s.vipPrice,
+        });
+      } catch {
+        message.error('加载场次失败');
+        navigate('/admin/schedule');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [isEdit, films]);
+
   const loadOptions = async () => {
     const [filmRes, cinemaRes] = await Promise.all([listAll2(), list4()]);
-    setFilms(filmRes.data || []);
-    setCinemas(cinemaRes.data || []);
+    setFilms((filmRes as any)?.data || []);
+    setCinemas((cinemaRes as any)?.data || []);
   };
 
   const handleCinemaChange = async (cinemaId: number) => {
@@ -83,8 +128,9 @@ const ScheduleFormPage: React.FC = () => {
         showDate: values.showDate.format('YYYY-MM-DD'),
         startTime: values.startTime.format('HH:mm'),
         endTime: values.endTime || calcEndTime(values.startTime, selectedFilm?.duration || 0),
-      });
-      const hasConflict = res.data === true;
+        excludeScheduleId: isEdit ? (id as any) : undefined,
+      } as any);
+      const hasConflict = (res as any)?.data === true;
       if (hasConflict) {
         setShowConflict(true);
         setConflictMsg('该影厅在所选时段已有排期，请调整时间或选择其他影厅');
@@ -112,13 +158,20 @@ const ScheduleFormPage: React.FC = () => {
         startTime: values.startTime.format('HH:mm'),
         endTime: values.endTime || calcEndTime(values.startTime, selectedFilm?.duration || 0),
         price: values.price,
+        vipPrice: values.vipPrice,
         status: 'published',
       };
-      await save3(params);
-      message.success('场次创建成功');
+      if (isEdit) {
+        // 雪花 ID 用字符串传递，避免 Number() 精度丢失
+        await update3({ id: id as any, ...params } as any);
+        message.success('场次更新成功');
+      } else {
+        await save3(params);
+        message.success('场次创建成功');
+      }
       navigate('/admin/schedule');
     } catch (e: any) {
-      message.error('创建失败：' + (e.message || ''));
+      message.error(isEdit ? '更新失败：' + (e.message || '') : '创建失败：' + (e.message || ''));
     } finally {
       setSubmitting(false);
     }
@@ -127,11 +180,17 @@ const ScheduleFormPage: React.FC = () => {
   return (
     <PageContainer
       header={{
-        title: '新增场次',
+        title: isEdit ? '编辑场次' : '新增场次',
         onBack: () => navigate('/admin/schedule'),
       }}
     >
       <Card style={{ maxWidth: 700 }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60 }}>
+            <Spin size="large" />
+          </div>
+        ) : (
+        <>
         {showConflict && (
           <Alert
             message={conflictMsg}
@@ -208,12 +267,14 @@ const ScheduleFormPage: React.FC = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" loading={submitting}>
-                创建场次
+                {isEdit ? '保存修改' : '创建场次'}
               </Button>
               <Button onClick={() => navigate('/admin/schedule')}>取消</Button>
             </Space>
           </Form.Item>
         </Form>
+        </>
+        )}
       </Card>
     </PageContainer>
   );

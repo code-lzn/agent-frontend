@@ -1,7 +1,8 @@
 import { useModel, useLocation, Outlet, history } from '@umijs/max';
-import { Input } from 'antd';
+import { Button, ConfigProvider, Input, Modal } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import React, { useState } from 'react';
+import zhCN from 'antd/locale/zh_CN';
 import './index.css';
 
 const pageTitleMap: Record<string, string> = {
@@ -27,6 +28,9 @@ const UserLayout: React.FC = () => {
   const currentUser = initialState?.currentUser;
   const location = useLocation();
   const [searchVal, setSearchVal] = useState('');
+  // 游客访问需登录页面的确认弹窗
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [pendingTarget, setPendingTarget] = useState('');
 
   // 匹配当前活跃的导航项
   const currentNav = navItems.find((item) =>
@@ -46,7 +50,34 @@ const UserLayout: React.FC = () => {
     }
   };
 
+  /** 导航点击：订单/个人中心未登录时先弹确认框 */
+  const handleNavClick = (key: string) => {
+    const requiresLogin = key === '/order/list' || key === '/user/profile';
+    if (requiresLogin && !currentUser) {
+      setPendingTarget(key);
+      setLoginModalOpen(true);
+      return;
+    }
+    history.push(key);
+  };
+
+  /** 前往登录 */
+  const handleGoLogin = () => {
+    setLoginModalOpen(false);
+    history.push('/user/login?redirect=' + encodeURIComponent(pendingTarget));
+  };
+
   return (
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        token: {
+          colorPrimary: '#FF4D4F',
+          colorLink: '#FF4D4F',
+          borderRadius: 8,
+        },
+      }}
+    >
     <div className="app-layout">
       {/* ===== 侧边栏（对照原型） ===== */}
       <aside className="sidebar">
@@ -64,7 +95,7 @@ const UserLayout: React.FC = () => {
             <button
               key={item.key}
               className={`nav-item ${currentNav?.key === item.key ? 'active' : ''}`}
-              onClick={() => history.push(item.key)}
+              onClick={() => handleNavClick(item.key)}
             >
               <span className="icon">{item.icon}</span>
               {item.label}
@@ -83,7 +114,7 @@ const UserLayout: React.FC = () => {
         <div className="sidebar-footer">
           <button
             className="user-item"
-            onClick={() => history.push('/user/profile')}
+            onClick={() => handleNavClick('/user/profile')}
           >
             <div className="avatar">
               {currentUser?.userName?.charAt(0)?.toUpperCase() ||
@@ -136,6 +167,29 @@ const UserLayout: React.FC = () => {
         </div>
       </div>
     </div>
+
+    {/* 游客访问需登录页面的确认弹窗 */}
+    <Modal
+      open={loginModalOpen}
+      onCancel={() => setLoginModalOpen(false)}
+      footer={null}
+      width={360}
+    >
+      <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+        <div style={{ fontSize: 17, fontWeight: 600, color: '#303133', marginBottom: 8 }}>
+          需要先登录
+        </div>
+        <div style={{ fontSize: 14, color: '#909399', marginBottom: 24 }}>
+          查看订单和个人中心需要登录后才能使用
+        </div>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <Button onClick={() => setLoginModalOpen(false)}>暂不登录</Button>
+          <Button type="primary" onClick={handleGoLogin}>去登录</Button>
+        </div>
+      </div>
+    </Modal>
+    </ConfigProvider>
   );
 };
 

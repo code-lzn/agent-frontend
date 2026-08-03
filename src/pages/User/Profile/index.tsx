@@ -1,13 +1,10 @@
 import {
-  getLoginUser,
-  userLogin,
-  userRegister,
-  updateMyProfile,
   changePassword,
+  updateMyProfile,
   userLogout,
 } from '@/api/userController';
 import { getMyPreference, saveMyPreference } from '@/api/userPreferenceController';
-import { useModel, useSearchParams, history } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import {
   Button,
   Col,
@@ -22,29 +19,19 @@ import {
   Typography,
 } from 'antd';
 import {
-  UserOutlined,
+  EditOutlined,
   LockOutlined,
   LogoutOutlined,
-  EditOutlined,
-  WechatOutlined,
 } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import type { UserPreference } from '@/api/typings';
-import WechatLogin from '@/components/WechatLogin';
 import './index.css';
 
 const { Text } = Typography;
 
 const ProfilePage: React.FC = () => {
-  const { initialState, setInitialState } = useModel('@@initialState');
+  const { initialState, loading, setInitialState } = useModel('@@initialState');
   const currentUser = initialState?.currentUser;
-  const [searchParams] = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/home';
-
-  // ===== 登录/注册状态 =====
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'wechat'>('login');
-  const [authLoading, setAuthLoading] = useState(false);
-  const [loginForm] = Form.useForm();
 
   // ===== 个人资料状态 =====
   const [profileVisible, setProfileVisible] = useState(false);
@@ -64,48 +51,6 @@ const ProfilePage: React.FC = () => {
       })
       .catch(() => {});
   }, [currentUser]);
-
-  // ===== 登录 =====
-  const handleLogin = async (values: any) => {
-    setAuthLoading(true);
-    try {
-      const res = await userLogin({
-        userAccount: values.userAccount,
-        userPassword: values.userPassword,
-        checkPassword: values.userPassword,
-      });
-      if (res.data) {
-        message.success('登录成功');
-        setInitialState((pre: any) => ({ ...pre, currentUser: res.data }));
-        const target =
-          res.data.userRole === 'admin' ? '/admin/dashboard' : redirect;
-        history.push(target, { replace: true });
-      }
-    } catch (e: any) {
-      message.error('登录失败，' + (e?.message || '请检查账号密码'));
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  // ===== 注册 =====
-  const handleRegister = async (values: any) => {
-    if (values.userPassword !== values.checkPassword) {
-      message.error('两次输入的密码不一致');
-      return;
-    }
-    setAuthLoading(true);
-    try {
-      await userRegister(values);
-      message.success('注册成功，请登录');
-      setAuthMode('login');
-      loginForm.resetFields();
-    } catch (e: any) {
-      message.error('注册失败，' + (e?.message || '请稍后重试'));
-    } finally {
-      setAuthLoading(false);
-    }
-  };
 
   // ===== 修改资料 =====
   const handleUpdateProfile = async (values: any) => {
@@ -164,134 +109,19 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // ========== 未登录：显示登录/注册 ==========
+  // ========== 未登录：跳转统一登录页 ==========
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      history.replace('/user/login?redirect=' + encodeURIComponent('/user/profile'));
+    }
+  }, [loading, currentUser]);
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: 60 }}>加载中...</div>;
+  }
+
   if (!currentUser) {
-    return (
-      <div className="profile-wrap">
-        <div className="card">
-          <div className="auth-box">
-            <div className="brand">
-              AI<span>电影票</span>
-            </div>
-            <div className="subtitle">智能购票 · 一句话搞定</div>
-
-            <div className="auth-tabs">
-              <span
-                className={authMode === 'login' ? 'active' : ''}
-                onClick={() => {
-                  setAuthMode('login');
-                  loginForm.resetFields();
-                }}
-              >
-                登录
-              </span>
-              <span
-                className={authMode === 'register' ? 'active' : ''}
-                onClick={() => {
-                  setAuthMode('register');
-                  loginForm.resetFields();
-                }}
-              >
-                注册
-              </span>
-              <span
-                className={authMode === 'wechat' ? 'active' : ''}
-                onClick={() => setAuthMode('wechat')}
-              >
-                <WechatOutlined /> 微信登录
-              </span>
-            </div>
-
-            {authMode === 'wechat' ? (
-              <WechatLogin
-                redirect={redirect}
-                onLoginSuccess={(_userRole, target) => {
-                  history.push(target, { replace: true });
-                }}
-              />
-            ) : (
-            <Form
-              form={loginForm}
-              layout="vertical"
-              onFinish={
-                authMode === 'login' ? handleLogin : handleRegister
-              }
-              size="large"
-            >
-              <Form.Item
-                name="userAccount"
-                rules={[
-                  { required: true, message: '请输入账号' },
-                  { min: 4, message: '账号至少4个字符' },
-                ]}
-              >
-                <Input
-                  prefix={<UserOutlined style={{ color: '#bbb' }} />}
-                  placeholder="请输入账号"
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="userPassword"
-                rules={[
-                  { required: true, message: '请输入密码' },
-                  { min: 6, message: '密码至少6位' },
-                ]}
-              >
-                <Input.Password
-                  prefix={<LockOutlined style={{ color: '#bbb' }} />}
-                  placeholder="请输入密码"
-                />
-              </Form.Item>
-
-              {authMode === 'register' && (
-                <Form.Item
-                  name="checkPassword"
-                  rules={[
-                    { required: true, message: '请再次输入密码' },
-                    ({ getFieldValue }) => ({
-                      validator(_, value) {
-                        if (!value || getFieldValue('userPassword') === value) {
-                          return Promise.resolve();
-                        }
-                        return Promise.reject(
-                          new Error('两次输入的密码不一致'),
-                        );
-                      },
-                    }),
-                  ]}
-                >
-                  <Input.Password
-                    prefix={<LockOutlined style={{ color: '#bbb' }} />}
-                    placeholder="请再次输入密码"
-                  />
-                </Form.Item>
-              )}
-
-              <Form.Item style={{ marginTop: 8 }}>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={authLoading}
-                  block
-                  style={{
-                    background: 'linear-gradient(135deg, #e53e3e, #ff4d4f)',
-                    border: 'none',
-                    borderRadius: 8,
-                    height: 44,
-                    fontWeight: 700,
-                    fontSize: 15,
-                  }}
-                >
-                  {authMode === 'login' ? '登录' : '注册'}
-                </Button>
-              </Form.Item>
-            </Form>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+    return null; // 等待跳转
   }
 
   // ========== 已登录：显示个人资料 ==========
