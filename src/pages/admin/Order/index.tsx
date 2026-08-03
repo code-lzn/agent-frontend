@@ -1,4 +1,4 @@
-import { adminCancel, adminList } from '@/api/orderController';
+import { adminCancel, adminList, adminRefund } from '@/api/orderController';
 import { ExclamationCircleOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -14,6 +14,7 @@ const statusMap: Record<string, { status: 'processing' | 'success' | 'default' |
   paid: { status: 'success', text: '已支付' },
   cancelled: { status: 'default', text: '已取消' },
   completed: { status: 'success', text: '已完成' },
+  refunded: { status: 'error', text: '已退款' },
 };
 
 const OrderListPage: React.FC = () => {
@@ -44,6 +45,7 @@ const OrderListPage: React.FC = () => {
         paid: { text: '已支付', status: 'Success' },
         cancelled: { text: '已取消', status: 'Default' },
         completed: { text: '已完成', status: 'Success' },
+        refunded: { text: '已退款', status: 'Error' },
       },
       render: (_, r) => {
         const s = statusMap[r.status || 'pending'];
@@ -113,7 +115,7 @@ const OrderListPage: React.FC = () => {
       content: `确定要退款订单「${record.orderNo}」（¥${Number(record.totalPrice).toFixed(2)}）吗？退款后座位将释放。`,
       onOk: async () => {
         try {
-          await adminCancel({ id: record.id! });
+          await adminRefund({ id: record.id! });
           message.success('退款成功');
           actionRef.current?.reload();
         } catch (e: any) {

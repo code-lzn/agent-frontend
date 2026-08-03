@@ -3,6 +3,14 @@ declare namespace API {
     id: number;
   };
 
+  type adminRefundParams = {
+    id: number;
+  };
+
+  type refundOrderParams = {
+    id: number;
+  };
+
   type adminListParams = {
     pageNum?: number;
     pageSize?: number;
