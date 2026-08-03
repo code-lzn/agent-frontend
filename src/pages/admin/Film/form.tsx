@@ -37,7 +37,7 @@ const FilmFormPage: React.FC = () => {
   const loadFilm = async () => {
     setLoading(true);
     try {
-      const res = await getInfo6({ id: Number(id) });
+      const res = await getInfo6({ id });
       if (res.data) {
         const film = res.data;
         form.setFieldsValue({
@@ -63,7 +63,7 @@ const FilmFormPage: React.FC = () => {
       };
 
       if (isEdit) {
-        await update6({ id: Number(id), ...params });
+        await update6({ id, ...params });
         message.success('更新成功');
       } else {
         await save6(params);

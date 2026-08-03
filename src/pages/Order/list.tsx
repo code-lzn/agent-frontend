@@ -20,6 +20,7 @@ const statusTabs = [
   { label: '全部', value: '' },
   { label: '待支付', value: 'pending' },
   { label: '已支付', value: 'paid' },
+  { label: '已退款', value: 'refunded' },
   { label: '已取消', value: 'cancelled' },
 ];
 

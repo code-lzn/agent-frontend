@@ -15,7 +15,7 @@ const FilmDetailPage: React.FC = () => {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    getFilm({ id: Number(id) })
+    getFilm({ id })
       .then((res) => {
         if (res?.data) setFilm(res.data);
         else {
