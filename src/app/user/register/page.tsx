@@ -39,7 +39,7 @@ const UserRegisterPage: React.FC = () => {
         logo={
           <Image src={logo} alt="HRMS" height={44} width={44} preview={false} />
         }
-        title="AI电影票"
+        title="妙语购票"
         subTitle="创建新账号"
         submitter={{
           searchConfig: {

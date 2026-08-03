@@ -1,4 +1,4 @@
-import { adminCancel, adminList } from '@/api/orderController';
+import { adminCancel, adminDetail, adminList } from '@/api/orderController';
 import { ExclamationCircleOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -22,19 +22,41 @@ const OrderListPage: React.FC = () => {
   const [detailData, setDetailData] = useState<API.Order | null>(null);
 
   const columns: ProColumns<API.Order>[] = [
-    { title: '订单号', dataIndex: 'orderNo', width: 180, ellipsis: true, copyable: true },
-    { title: '用户ID', dataIndex: 'userId', width: 80 },
-    { title: '影片', dataIndex: 'filmName', width: 150, ellipsis: true },
-    { title: '影院', dataIndex: 'cinemaName', width: 150, ellipsis: true },
-    { title: '影厅', dataIndex: 'hallName', width: 100 },
-    { title: '放映时间', dataIndex: 'scheduleTime', width: 150 },
     {
-      title: '金额',
-      dataIndex: 'totalPrice',
-      width: 90,
-      render: (v) => (v ? <span style={{ color: '#cf1322', fontWeight: 600 }}>¥{Number(v).toFixed(2)}</span> : '-'),
+      title: '订单号',
+      dataIndex: 'orderNo',
+      width: 180,
+      ellipsis: true,
+      copyable: true,
     },
-    { title: '数量', dataIndex: 'count', width: 60 },
+    {
+      title: '用户ID',
+      dataIndex: 'userId',
+      width: 80,
+    },
+    {
+      title: '影片',
+      dataIndex: 'filmName',
+      width: 150,
+      ellipsis: true,
+    },
+    {
+      title: '影院',
+      dataIndex: 'cinemaName',
+      width: 150,
+      ellipsis: true,
+    },
+    {
+      title: '影厅',
+      dataIndex: 'hallName',
+      width: 100,
+    },
+    {
+      title: '放映时间',
+      dataIndex: 'scheduleTime',
+      width: 150,
+      hideInSearch: true,
+    },
     {
       title: '状态',
       dataIndex: 'status',
@@ -54,6 +76,7 @@ const OrderListPage: React.FC = () => {
       title: '创建时间',
       dataIndex: 'createTime',
       width: 160,
+      hideInSearch: true,
       render: (v) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
@@ -82,9 +105,19 @@ const OrderListPage: React.FC = () => {
   ];
 
   /** 查看详情 */
-  const handleDetail = (record: API.Order) => {
+  const handleDetail = async (record: API.Order) => {
+    // 先显示表格行数据
     setDetailData(record);
     setDetailOpen(true);
+    // 异步加载更多详情（座位号等）
+    try {
+      const res = await adminDetail({ id: record.id! });
+      if (res.data) {
+        setDetailData(res.data as API.OrderVO);
+      }
+    } catch {
+      // 保持表格行数据，静默失败
+    }
   };
 
   /** 取消订单 */
@@ -98,8 +131,8 @@ const OrderListPage: React.FC = () => {
           await adminCancel({ id });
           message.success('订单已取消');
           actionRef.current?.reload();
-        } catch (e: any) {
-          message.error('操作失败：' + (e.message || ''));
+        } catch {
+          message.error('取消失败');
         }
       },
     });
@@ -116,8 +149,8 @@ const OrderListPage: React.FC = () => {
           await adminCancel({ id: record.id! });
           message.success('退款成功');
           actionRef.current?.reload();
-        } catch (e: any) {
-          message.error('操作失败：' + (e.message || ''));
+        } catch {
+          message.error('退款失败');
         }
       },
     });
@@ -145,7 +178,12 @@ const OrderListPage: React.FC = () => {
             const res = await adminList({
               pageNum: params.current || 1,
               pageSize: params.pageSize || 10,
+              orderNo: params.orderNo as string | undefined,
               status: params.status as string | undefined,
+              userId: params.userId ? Number(params.userId) : undefined,
+              filmName: params.filmName as string | undefined,
+              cinemaName: params.cinemaName as string | undefined,
+              hallName: params.hallName as string | undefined,
             });
             return {
               data: (res.data as any)?.records || [],
@@ -155,7 +193,9 @@ const OrderListPage: React.FC = () => {
           }}
           rowKey="id"
           search={{
-            filterType: 'light',
+            filterType: 'query',
+            labelWidth: 'auto',
+            defaultCollapsed: true,
           }}
           pagination={{
             pageSize: 10,
@@ -176,13 +216,7 @@ const OrderListPage: React.FC = () => {
       </Card>
 
       {/* 订单详情弹窗 */}
-      <Modal
-        title="订单详情"
-        open={detailOpen}
-        onCancel={() => setDetailOpen(false)}
-        footer={null}
-        width={640}
-      >
+      <Modal title="订单详情" open={detailOpen} onCancel={() => setDetailOpen(false)} footer={null} width={640}>
         {detailData && (
           <Descriptions column={2} bordered size="small">
             <Descriptions.Item label="订单号" span={2}>
@@ -193,6 +227,11 @@ const OrderListPage: React.FC = () => {
             <Descriptions.Item label="影片" span={2}>{detailData.filmName || '-'}</Descriptions.Item>
             <Descriptions.Item label="影院" span={2}>{detailData.cinemaName || '-'}</Descriptions.Item>
             <Descriptions.Item label="影厅">{detailData.hallName || '-'}</Descriptions.Item>
+            <Descriptions.Item label="座位号">
+              {(detailData as API.OrderVO).seatLabels?.length ? (
+                <span>{(detailData as API.OrderVO).seatLabels!.join('、')}</span>
+              ) : '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="放映时间">{detailData.scheduleTime || '-'}</Descriptions.Item>
             <Descriptions.Item label="订单金额">
               <span style={{ color: '#cf1322', fontWeight: 600 }}>
@@ -205,9 +244,13 @@ const OrderListPage: React.FC = () => {
                 text={statusMap[detailData.status || 'pending']?.text}
               />
             </Descriptions.Item>
-            {detailData.cancelReason && (
+            {detailData.status === 'cancelled' && detailData.cancelReason && (
               <Descriptions.Item label="取消原因" span={2}>
-                {detailData.cancelReason === 'timeout' ? '超时未支付，系统自动取消' : detailData.cancelReason === 'user_cancelled' ? '用户主动取消' : detailData.cancelReason}
+                {detailData.cancelReason === 'timeout'
+                  ? '超时未支付，系统自动取消'
+                  : detailData.cancelReason === 'user_cancelled'
+                    ? '用户主动取消'
+                    : detailData.cancelReason}
               </Descriptions.Item>
             )}
             {detailData.alipayTradeNo && (

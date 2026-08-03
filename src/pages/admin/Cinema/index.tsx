@@ -1,29 +1,11 @@
 import { list4, remove7, save7, update7 } from '@/api/cinemaController';
-import { listByCinema, remove5, save5 } from '@/api/hallController';
+import { DeleteOutlined, ExclamationCircleOutlined, EyeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
-  DeleteOutlined,
-  ExclamationCircleOutlined,
-  EyeOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
-import {
-  Badge,
-  Button,
-  Card,
-  Form,
-  Input,
-  InputNumber,
-  message,
-  Modal,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Tooltip,
+  Badge, Button, Card, Form, Input, InputNumber, message, Modal, Select, Space, Table, Tag, Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import React, { useEffect, useState } from 'react';
+import HallManager from './HallManager';
 import './index.css';
 
 const { confirm } = Modal;
@@ -34,8 +16,6 @@ const STATUS_MAP: Record<string, { status: 'success' | 'default' | 'warning'; te
   offline: { status: 'warning', text: '已停业' },
 };
 
-const HALL_TYPES = ['IMAX', '杜比', '普通', '4DX', 'VIP'];
-
 const CinemaListPage: React.FC = () => {
   const [cinemas, setCinemas] = useState<API.Cinema[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,13 +23,9 @@ const CinemaListPage: React.FC = () => {
   const [editingCinema, setEditingCinema] = useState<API.Cinema | null>(null);
   const [cinemaForm] = Form.useForm();
 
-  // 影厅抽屉
-  const [hallDrawerOpen, setHallDrawerOpen] = useState(false);
+  // 影厅管理弹窗
+  const [hallModalOpen, setHallModalOpen] = useState(false);
   const [currentCinema, setCurrentCinema] = useState<API.Cinema | null>(null);
-  const [halls, setHalls] = useState<API.Hall[]>([]);
-  const [hallLoading, setHallLoading] = useState(false);
-  const [hallFormOpen, setHallFormOpen] = useState(false);
-  const [hallForm] = Form.useForm();
 
   const loadData = async () => {
     setLoading(true);
@@ -67,45 +43,9 @@ const CinemaListPage: React.FC = () => {
     loadData();
   }, []);
 
-  // 打开影厅抽屉
-  const openHalls = async (cinema: API.Cinema) => {
+  const openHalls = (cinema: API.Cinema) => {
     setCurrentCinema(cinema);
-    setHallDrawerOpen(true);
-    setHallLoading(true);
-    try {
-      const res = await listByCinema({ cinemaId: cinema.id! });
-      setHalls((res.data as any)?.data || res.data || []);
-    } catch {
-      message.error('加载影厅列表失败');
-    } finally {
-      setHallLoading(false);
-    }
-  };
-
-  const handleAddHall = async () => {
-    try {
-      const values = await hallForm.validateFields();
-      await save5({
-        ...values,
-        cinemaId: currentCinema?.id,
-        seatTemplate: JSON.stringify({ rows: values.rowCount, cols: values.colCount }),
-      });
-      message.success('影厅创建成功');
-      hallForm.resetFields();
-      setHallFormOpen(false);
-      // 刷新影厅列表
-      const res = await listByCinema({ cinemaId: currentCinema!.id! });
-      setHalls((res.data as any)?.data || res.data || []);
-    } catch (e: any) {
-      if (e.errorFields) return;
-      message.error('创建失败');
-    }
-  };
-
-  const handleDeleteHall = async (id: number) => {
-    await remove5({ id });
-    message.success('删除成功');
-    setHalls((prev) => prev.filter((h) => h.id !== id));
+    setHallModalOpen(true);
   };
 
   // 影院表单
@@ -230,7 +170,12 @@ const CinemaListPage: React.FC = () => {
           dataSource={cinemas}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10, showTotal: (t) => `共 ${t} 条` }}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 条`,
+            pageSizeOptions: ['10', '20', '50'],
+          }}
           scroll={{ x: 1100 }}
           locale={{
             emptyText: (
@@ -279,7 +224,7 @@ const CinemaListPage: React.FC = () => {
           </Form.Item>
           <Form.Item name="tags" label="特色标签">
             <Select
-              mode="tags"
+              mode="multiple"
               placeholder="选择特色标签"
               options={['IMAX', '杜比', '4K', '巨幕', '4DX', 'VIP'].map((t) => ({ label: t, value: t }))}
             />
@@ -302,84 +247,17 @@ const CinemaListPage: React.FC = () => {
       {/* 影厅管理弹窗 */}
       <Modal
         title={`影厅管理 - ${currentCinema?.name || ''}`}
-        open={hallDrawerOpen}
+        open={hallModalOpen}
         onCancel={() => {
-          setHallDrawerOpen(false);
+          setHallModalOpen(false);
           setCurrentCinema(null);
         }}
         footer={null}
-        width={600}
+        width={620}
       >
-        <div style={{ marginBottom: 16, textAlign: 'right' }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setHallFormOpen(true)}>
-            新增影厅
-          </Button>
-        </div>
-        <Table
-          dataSource={halls}
-          rowKey="id"
-          loading={hallLoading}
-          pagination={false}
-          columns={[
-            { title: '影厅名称', dataIndex: 'name', width: 120 },
-            {
-              title: '厅型',
-              dataIndex: 'hallType',
-              width: 100,
-              render: (t) => <Tag color="blue">{t}</Tag>,
-            },
-            {
-              title: '座位布局',
-              width: 180,
-              render: (_, r) =>
-                r.rowCount && r.colCount ? `${r.rowCount}行×${r.colCount}列 (${r.rowCount * r.colCount}座)` : '-',
-            },
-            {
-              title: '操作',
-              width: 80,
-              render: (_, record) => (
-                <Button type="link" size="small" danger onClick={() => handleDeleteHall(record.id!)}>
-                  删除
-                </Button>
-              ),
-            },
-          ]}
-          locale={{
-            emptyText: (
-              <div className="empty-state" style={{ padding: '24px 0' }}>
-                <p className="empty-text">暂无影厅，请新增</p>
-              </div>
-            ),
-          }}
-        />
-      </Modal>
-
-      {/* 新增影厅弹窗 */}
-      <Modal
-        title="新增影厅"
-        open={hallFormOpen}
-        onCancel={() => {
-          setHallFormOpen(false);
-          hallForm.resetFields();
-        }}
-        onOk={handleAddHall}
-      >
-        <Form form={hallForm} layout="vertical">
-          <Form.Item name="name" label="影厅名称" rules={[{ required: true, message: '请输入影厅名称' }]}>
-            <Input placeholder="如 IMAX厅、2号厅" />
-          </Form.Item>
-          <Form.Item name="hallType" label="厅型" rules={[{ required: true, message: '请选择厅型' }]}>
-            <Select options={HALL_TYPES.map((t) => ({ label: t, value: t }))} />
-          </Form.Item>
-          <Space>
-            <Form.Item name="rowCount" label="行数" rules={[{ required: true }]}>
-              <InputNumber min={1} max={20} placeholder="行" />
-            </Form.Item>
-            <Form.Item name="colCount" label="列数" rules={[{ required: true }]}>
-              <InputNumber min={1} max={20} placeholder="列" />
-            </Form.Item>
-          </Space>
-        </Form>
+        {currentCinema && (
+          <HallManager cinemaId={currentCinema.id!} cinemaName={currentCinema.name} />
+        )}
       </Modal>
     </div>
   );

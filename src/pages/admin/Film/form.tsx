@@ -1,17 +1,22 @@
 import { getInfo6, save6, update6 } from '@/api/filmController';
 import { PageContainer } from '@ant-design/pro-components';
+import { PlusOutlined } from '@ant-design/icons';
 import {
   Button,
   Card,
   DatePicker,
   Form,
+  Image,
   Input,
   InputNumber,
   message,
   Radio,
   Select,
   Space,
+  Upload,
 } from 'antd';
+import type { UploadChangeParam } from 'antd/es/upload';
+import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from '@umijs/max';
@@ -26,6 +31,7 @@ const FilmFormPage: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [posterUrl, setPosterUrl] = useState<string>('');
   const isEdit = !!id && id !== 'add';
 
   useEffect(() => {
@@ -37,19 +43,34 @@ const FilmFormPage: React.FC = () => {
   const loadFilm = async () => {
     setLoading(true);
     try {
-      const res = await getInfo6({ id: Number(id) });
-      if (res.data) {
-        const film = res.data;
+      const res = await getInfo6({ id: id as any });
+      const filmData = (res as any)?.data;
+      if (filmData) {
+        if (filmData.posterUrl) setPosterUrl(filmData.posterUrl);
         form.setFieldsValue({
-          ...film,
-          type: film.type?.split(',').filter(Boolean),
-          releaseDate: film.releaseDate ? dayjs(film.releaseDate) : undefined,
+          ...filmData,
+          type: filmData.type?.split(',').filter(Boolean),
+          releaseDate: filmData.releaseDate ? dayjs(filmData.releaseDate) : undefined,
         });
       }
     } catch (e) {
       message.error('加载影片信息失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  /** 海报上传回调 */
+  const handleUploadChange = (info: UploadChangeParam<UploadFile>) => {
+    if (info.file.status === 'done') {
+      const url = info.file.response?.data;
+      if (url) {
+        setPosterUrl(url);
+        form.setFieldValue('posterUrl', url);
+        message.success('海报上传成功');
+      }
+    } else if (info.file.status === 'error') {
+      message.error('海报上传失败');
     }
   };
 
@@ -63,7 +84,7 @@ const FilmFormPage: React.FC = () => {
       };
 
       if (isEdit) {
-        await update6({ id: Number(id), ...params });
+        await update6({ id: id as any, ...params });
         message.success('更新成功');
       } else {
         await save6(params);
@@ -137,6 +158,44 @@ const FilmFormPage: React.FC = () => {
               <Radio value="offline">已下线</Radio>
             </Radio.Group>
           </Form.Item>
+
+          {/* 海报上传 */}
+          <Form.Item label="影片海报">
+            <Space align="start" size={16}>
+              <Upload
+                name="file"
+                action="http://localhost:8123/api/file/upload"
+                data={{ biz: 'film_poster' }}
+                withCredentials={true}
+                maxCount={1}
+                listType="picture-card"
+                showUploadList={false}
+                onChange={handleUploadChange}
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+              >
+                {posterUrl ? (
+                  <Image
+                    src={posterUrl}
+                    alt="海报预览"
+                    style={{ width: 120, height: 168, objectFit: 'cover', borderRadius: 4 }}
+                    preview={{ mask: '替换' }}
+                  />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '8px 0' }}>
+                    <PlusOutlined style={{ fontSize: 24, color: '#999' }} />
+                    <span style={{ fontSize: 12, color: '#999' }}>上传海报</span>
+                  </div>
+                )}
+              </Upload>
+              {posterUrl && (
+                <Button size="small" onClick={() => { setPosterUrl(''); form.setFieldValue('posterUrl', ''); }}>
+                  移除
+                </Button>
+              )}
+            </Space>
+            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>支持 jpg/png/webp，不超过 5MB</div>
+          </Form.Item>
+          <Form.Item name="posterUrl" hidden />
 
           <Form.Item>
             <Space>

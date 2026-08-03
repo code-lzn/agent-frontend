@@ -9,7 +9,7 @@ export async function getInfo7(
   options?: { [key: string]: any },
 ) {
   const { id: param0, ...queryParams } = params;
-  return request<API.Cinema>(`/cinema/getInfo/${param0}`, {
+  return request<API.BaseResponseCinema>(`/cinema/getInfo/${param0}`, {
     method: 'GET',
     params: { ...queryParams },
     ...(options || {}),
@@ -18,7 +18,7 @@ export async function getInfo7(
 
 /** 此处后端没有提供注释 GET /cinema/list */
 export async function list4(options?: { [key: string]: any }) {
-  return request<API.Cinema[]>('/cinema/list', {
+  return request<API.BaseResponseListCinema>('/cinema/list', {
     method: 'GET',
     ...(options || {}),
   });
@@ -30,7 +30,7 @@ export async function page8(
   params: API.page8Params,
   options?: { [key: string]: any },
 ) {
-  return request<API.PageCinema>('/cinema/page', {
+  return request<API.BaseResponsePageCinema>('/cinema/page', {
     method: 'GET',
     params: {
       ...params,

@@ -12,8 +12,7 @@ import {
   Tag,
   Tooltip,
 } from 'antd';
-import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
-import type { SorterResult } from 'antd/es/table/interface';
+import type { ColumnsType } from 'antd/es/table';
 import React, { useEffect, useState } from 'react';
 import './index.css';
 
@@ -197,15 +196,6 @@ const FilmListPage: React.FC = () => {
     },
   ];
 
-  /** 表格分页变化 */
-  const handleTableChange = (
-    pagination: TablePaginationConfig,
-    _filters: any,
-    _sorter: SorterResult<API.Film> | SorterResult<API.Film>[],
-  ) => {
-    console.log('Table change:', pagination, _sorter);
-  };
-
   return (
     <div className="film-page">
       {/* 主体卡片 */}
@@ -240,7 +230,6 @@ const FilmListPage: React.FC = () => {
           dataSource={films}
           rowKey="id"
           loading={loading}
-          onChange={handleTableChange}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
