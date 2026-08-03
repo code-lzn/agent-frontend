@@ -18,7 +18,8 @@
     "@umijs/max": "^4.6.74",
     "antd": "^5.29.3",
     "axios": "^1.18.1",
-    "dayjs": "^1.11.21"
+    "dayjs": "^1.11.21",
+    "echarts": "^6.1.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.33",

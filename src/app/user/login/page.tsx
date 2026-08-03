@@ -108,10 +108,23 @@ const UserLoginPage: React.FC = () => {
   };
 
   /**
-   * 微信登录成功回调
+   * 微信登录成功回调（与邮箱登录 handleLoginSuccess 对齐）
    */
-  const onWechatLoginSuccess = (userRole: string | undefined, target: string) => {
-    history.push(target);
+  const onWechatLoginSuccess = (user: any, target: string) => {
+    (setInitialState as any)((prev: any) => ({ ...prev, currentUser: user }));
+    message.success('登录成功');
+    // 规范化跳转路径（与邮箱登录一致）
+    const finalTarget =
+      user.userRole === 'admin'
+        ? '/admin/dashboard'
+        : target.startsWith('/admin')
+        ? '/film'
+        : target === '/' || target === ''
+        ? '/film'
+        : target;
+    setTimeout(() => {
+      history.push(finalTarget);
+    }, 100);
   };
 
   return (

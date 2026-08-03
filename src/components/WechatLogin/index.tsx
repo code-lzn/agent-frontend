@@ -1,12 +1,11 @@
 import { checkLogin, createQrCode } from '@/api/weixinPortalController';
 import { weixinLogin } from '@/api/userController';
-import { useModel } from '@umijs/max';
 import { message, Spin } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './index.css';
 
 interface WechatLoginProps {
-  onLoginSuccess: (userRole: string | undefined, redirect: string) => void;
+  onLoginSuccess: (user: any, redirect: string) => void;
   redirect: string;
 }
 
@@ -21,7 +20,6 @@ const WechatLogin: React.FC<WechatLoginProps> = ({
   onLoginSuccess,
   redirect,
 }) => {
-  const { setInitialState } = useModel('@@initialState');
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [ticket, setTicket] = useState<string>('');
   const [status, setStatus] = useState<'loading' | 'waiting' | 'scanned' | 'expired' | 'error'>('loading');
@@ -79,15 +77,11 @@ const WechatLogin: React.FC<WechatLoginProps> = ({
             const loginRes = await weixinLogin({ openid: res.data.openid });
             if (loginRes.data) {
               message.success('微信登录成功');
-              setInitialState((pre: any) => ({
-                ...pre,
-                currentUser: loginRes.data,
-              }));
               const target =
                 loginRes.data.userRole === 'admin'
                   ? '/admin/dashboard'
                   : redirect;
-              onLoginSuccess(loginRes.data.userRole, target);
+              onLoginSuccess(loginRes.data, target);
             }
           }
         } catch (e: any) {
@@ -96,7 +90,7 @@ const WechatLogin: React.FC<WechatLoginProps> = ({
         }
       }, 2000); // 每 2 秒轮询一次
     },
-    [stopPolling, setInitialState, redirect, onLoginSuccess],
+    [stopPolling, redirect, onLoginSuccess],
   );
 
   // ticket 变化后开始轮询

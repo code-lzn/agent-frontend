@@ -4,6 +4,17 @@ import { getLoginUser } from '@/api/userController';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 
+// Hash 路由修正：非 / 路径（如 /admin/film）说明用户直接访问了非 hash 路由，
+// 自动将 pathname 转为 hash 路由格式，防止管理员页显示用户端内容
+(function fixHashRoute() {
+  if (typeof window === 'undefined') return;
+  const { pathname, hash } = window.location;
+  if (pathname !== '/' && pathname !== '/index.html' && !pathname.startsWith('/api')) {
+    // 用 pathname 作为目标路由（忽略可能错误的 hash）
+    window.location.replace('/#/' + pathname.slice(1) + window.location.search);
+  }
+})();
+
 dayjs.locale('zh-cn');
 
 // 抑制 findDOMNode 弃用警告（来自 @ant-design/pro-components 内部依赖 rc-resize-observer）
