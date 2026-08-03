@@ -147,7 +147,7 @@ const SeatPage: React.FC = () => {
                 width: '55%',
                 margin: '0 auto 28px',
                 height: 6,
-                background: 'linear-gradient(90deg, transparent, rgba(229,62,62,.12), transparent)',
+                background: 'linear-gradient(90deg, transparent, rgba(255,77,79,.15), transparent)',
                 borderRadius: '3px 3px 0 0',
                 textAlign: 'center',
                 position: 'relative',
@@ -156,7 +156,7 @@ const SeatPage: React.FC = () => {
               <Text
                 style={{
                   fontSize: 12,
-                  color: '#e53e3e',
+                  color: '#FF4D4F',
                   position: 'absolute',
                   top: -20,
                   left: '50%',
@@ -355,7 +355,7 @@ const SeatPage: React.FC = () => {
                   <Text type="secondary" style={{ fontSize: 13 }}>
                     {selectedSeats.length} 张
                   </Text>
-                  <Text strong style={{ fontSize: 24, color: '#e53e3e' }}>
+                  <Text strong style={{ fontSize: 24, color: '#FF4D4F' }}>
                     ¥{totalPrice.toFixed(2)}
                   </Text>
                 </div>
@@ -369,13 +369,10 @@ const SeatPage: React.FC = () => {
                     navigate(`/order/confirm?scheduleId=${scheduleId}&seatIds=${seatIdStr}`);
                   }}
                   style={{
-                    background: 'linear-gradient(135deg, #e53e3e, #ff4d4f)',
-                    border: 'none',
                     borderRadius: 8,
                     height: 46,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     fontSize: 15,
-                    boxShadow: '0 4px 14px rgba(229,62,62,.3)',
                   }}
                 >
                   确认选座

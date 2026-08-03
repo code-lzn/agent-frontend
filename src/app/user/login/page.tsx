@@ -116,18 +116,36 @@ const UserLoginPage: React.FC = () => {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <div className="login-header">
-          <div className="login-logo">🎬</div>
-          <h1 className="login-title">妙语购票</h1>
-          <p className="login-subtitle">后台管理</p>
-        </div>
+      <div className="login-shell">
+        <div className="login-panel">
+          {/* 左：品牌区 */}
+          <div className="login-brand">
+            <div className="brand-eyebrow">🎬 妙语购票</div>
+            <h1>一句话<br />搞定购票</h1>
+            <p>AI 智能选片 · 可视化选座 · 即时出票</p>
+            <div className="brand-features">
+              <span>🤖 AI 对话购票</span>
+              <span>💺 双模式共享选座</span>
+              <span>🎫 电子票即时出票</span>
+            </div>
+            <div className="brand-orb" />
+          </div>
 
-        <Tabs
-          activeKey={tab}
-          onChange={handleTabChange}
-          centered
-          items={[
+          {/* 右：登录表单 */}
+          <div className="login-form-wrap">
+            <div className="form-eyebrow">欢迎回来</div>
+            <div className="login-form-header">
+              <h2>{redirect.startsWith('/admin') ? '管理员登录' : '登录 / 注册'}</h2>
+              <p className="login-subtitle">
+                {redirect.startsWith('/admin') ? '进入后台管理' : '智能购票 · 一句话搞定'}
+              </p>
+            </div>
+
+            <Tabs
+              className="login-tabs"
+              activeKey={tab}
+              onChange={handleTabChange}
+              items={[
             {
               key: 'code',
               label: <span>📧 邮箱验证码登录</span>,
@@ -174,10 +192,11 @@ const UserLoginPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Form.Item>
-                    <Button type="primary" htmlType="submit" size="large" block>
+                  <Form.Item style={{ marginBottom: 8 }}>
+                    <button type="submit" className="login-submit-btn">
                       登录 / 自动注册
-                    </Button>
+                      <span className="submit-arrow">→</span>
+                    </button>
                     <div className="login-tip">新用户将自动创建账号</div>
                   </Form.Item>
                 </Form>
@@ -210,10 +229,11 @@ const UserLoginPage: React.FC = () => {
                     />
                   </Form.Item>
 
-                  <Form.Item>
-                    <Button type="primary" htmlType="submit" size="large" block>
+                  <Form.Item style={{ marginBottom: 0 }}>
+                    <button type="submit" className="login-submit-btn">
                       登录
-                    </Button>
+                      <span className="submit-arrow">→</span>
+                    </button>
                   </Form.Item>
                 </Form>
               ),
@@ -233,7 +253,9 @@ const UserLoginPage: React.FC = () => {
               ),
             },
           ]}
-        />
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

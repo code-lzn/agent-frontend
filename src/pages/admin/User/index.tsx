@@ -1,8 +1,9 @@
-import { deleteUser, listUserVoByPage, updateUser } from '@/api/userController';
+import { adminResetPassword, deleteUser, freezeUser, listUserVoByPage, updateUser } from '@/api/userController';
+import { getByUser, resetByUser } from '@/api/userPreferenceController';
 import { ExclamationCircleOutlined, PlusOutlined, ReloadOutlined, UserOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Avatar, Badge, Button, Card, Form, Image, Input, message, Modal, Select, Space, Tooltip, Upload } from 'antd';
+import { Avatar, Badge, Button, Card, Descriptions, Form, Image, Input, message, Modal, Select, Space, Tooltip, Upload } from 'antd';
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs from 'dayjs';
@@ -23,12 +24,19 @@ const UserListPage: React.FC = () => {
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [editForm] = Form.useForm();
 
+  // 偏好画像弹窗
+  const [prefOpen, setPrefOpen] = useState(false);
+  const [prefUser, setPrefUser] = useState<API.UserVO | null>(null);
+  const [prefData, setPrefData] = useState<API.UserPreference | null>(null);
+  const [prefLoading, setPrefLoading] = useState(false);
+
   const columns: ProColumns<API.UserVO>[] = [
-    { title: 'ID', dataIndex: 'id', width: 70 },
+    { title: 'ID', dataIndex: 'id', width: 70, search: false },
     {
       title: '头像',
       dataIndex: 'userAvatar',
       width: 60,
+      search: false,
       render: (_, record) => (
         <Avatar
           src={record.userAvatar}
@@ -50,27 +58,57 @@ const UserListPage: React.FC = () => {
       title: '角色',
       dataIndex: 'userRole',
       width: 100,
+      search: false, // 搜索只保留 用户名/账号
       render: (_, record) => {
         const r = roleMap[record.userRole || 'user'];
         return r ? <Badge status={r.status} text={r.text} /> : record.userRole;
       },
     },
     {
+      title: '状态',
+      dataIndex: 'userStatus',
+      width: 90,
+      search: false,
+      render: (_, record) =>
+        record.userStatus === 1 ? (
+          <Badge status="error" text="已冻结" />
+        ) : (
+          <Badge status="success" text="正常" />
+        ),
+    },
+    {
       title: '注册时间',
       dataIndex: 'createTime',
       width: 160,
-      render: (v) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-'),
+      search: false,
+      render: (v) => (v ? dayjs(v as string).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
       title: '操作',
       key: 'action',
-      width: 140,
+      width: 240,
       fixed: 'right',
       render: (_, record) => (
-        <Space size="small">
+        <Space size="small" wrap>
           <Button type="link" size="small" onClick={() => handleEdit(record)}>
             编辑
           </Button>
+          <Button type="link" size="small" onClick={() => handlePreference(record)}>
+            画像
+          </Button>
+          <Button type="link" size="small" onClick={() => handleResetPassword(record)}>
+            重置密码
+          </Button>
+          {record.userRole !== 'admin' &&
+            (record.userStatus === 1 ? (
+              <Button type="link" size="small" onClick={() => handleFreeze(record, 0)}>
+                解冻
+              </Button>
+            ) : (
+              <Button type="link" size="small" danger onClick={() => handleFreeze(record, 1)}>
+                冻结
+              </Button>
+            ))}
           <Button type="link" size="small" danger onClick={() => handleDelete(record)}>
             删除
           </Button>
@@ -119,6 +157,85 @@ const UserListPage: React.FC = () => {
     }
   };
 
+  /** 查看偏好画像 */
+  const handlePreference = async (record: API.UserVO) => {
+    setPrefUser(record);
+    setPrefData(null);
+    setPrefOpen(true);
+    setPrefLoading(true);
+    try {
+      const res = await getByUser({ userId: record.id! });
+      setPrefData((res as any)?.data ?? null);
+    } catch {
+      setPrefData(null);
+    } finally {
+      setPrefLoading(false);
+    }
+  };
+
+  /** 重置偏好画像（二次确认） */
+  const handleResetPreference = () => {
+    if (!prefUser?.id) return;
+    confirm({
+      title: '确认重置偏好画像？',
+      icon: <ExclamationCircleOutlined />,
+      content: `将清空用户「${prefUser.userName || prefUser.userAccount}」的全部观影偏好数据，重置后 AI 推荐将不再参考历史偏好。`,
+      okText: '确认重置',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await resetByUser({ userId: prefUser.id! });
+          message.success('偏好画像已重置');
+          setPrefData(null);
+        } catch (e: any) {
+          message.error('重置失败：' + (e?.message || ''));
+        }
+      },
+    });
+  };
+
+  /** 重置密码（二次确认） */
+  const handleResetPassword = (record: API.UserVO) => {
+    confirm({
+      title: '确认重置密码？',
+      icon: <ExclamationCircleOutlined />,
+      content: `将把用户「${record.userName || record.userAccount}」的密码重置为默认密码 12345678。`,
+      okText: '确认重置',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await adminResetPassword({ id: record.id! });
+          message.success('密码已重置为 12345678');
+        } catch (e: any) {
+          message.error('重置失败：' + (e?.message || ''));
+        }
+      },
+    });
+  };
+
+  /** 冻结 / 解冻 */
+  const handleFreeze = (record: API.UserVO, status: number) => {
+    const isFreeze = status === 1;
+    confirm({
+      title: isFreeze ? '确认冻结该账号？' : '确认解冻该账号？',
+      icon: <ExclamationCircleOutlined />,
+      content: isFreeze
+        ? `冻结后「${record.userName || record.userAccount}」将无法登录、无法发起购票。`
+        : `解冻后「${record.userName || record.userAccount}」可恢复正常登录和购票。`,
+      okText: isFreeze ? '确认冻结' : '确认解冻',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await freezeUser({ id: record.id!, status });
+          message.success(isFreeze ? '账号已冻结' : '账号已解冻');
+          actionRef.current?.reload();
+        } catch (e: any) {
+          message.error((isFreeze ? '冻结失败：' : '解冻失败：') + (e?.message || ''));
+        }
+      },
+    });
+  };
+
   /** 删除用户 */
   const handleDelete = (record: API.UserVO) => {
     confirm({
@@ -161,17 +278,19 @@ const UserListPage: React.FC = () => {
               pageSize: params.pageSize || 10,
               userAccount: (params.userAccount as string) || undefined,
               userName: (params.userName as string) || undefined,
-              userRole: (params.userRole as string) || undefined,
             });
             return {
-              data: res.data?.records || [],
-              total: res.data?.totalRow || 0,
+              data: (res as any)?.data?.records || [],
+              total: (res as any)?.data?.totalRow || 0,
               success: true,
             };
           }}
           rowKey="id"
+          options={{ density: false }}
           search={{
-            filterType: 'light',
+            filterType: 'query',
+            labelWidth: 'auto',
+            defaultCollapsed: true,
           }}
           pagination={{
             pageSize: 10,
@@ -179,7 +298,7 @@ const UserListPage: React.FC = () => {
             showTotal: (total) => `共 ${total} 条`,
             pageSizeOptions: ['10', '20', '50'],
           }}
-          scroll={{ x: 800 }}
+          scroll={{ x: 1100 }}
           locale={{
             emptyText: (
               <div className="empty-state">
@@ -257,6 +376,49 @@ const UserListPage: React.FC = () => {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 偏好画像弹窗 */}
+      <Modal
+        title={`偏好画像 - ${prefUser?.userName || prefUser?.userAccount || ''}`}
+        open={prefOpen}
+        onCancel={() => setPrefOpen(false)}
+        footer={
+          <Space>
+            <Button onClick={() => setPrefOpen(false)}>关闭</Button>
+            <Button danger onClick={handleResetPreference} disabled={!prefData}>
+              一键重置画像
+            </Button>
+          </Space>
+        }
+        width={520}
+        destroyOnClose
+      >
+        {prefLoading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>加载中...</div>
+        ) : prefData ? (
+          <Descriptions column={1} size="small" labelStyle={{ color: '#999', width: 110 }}>
+            <Descriptions.Item label="偏好影片类型">
+              {prefData.preferredTypes || '未设置'}
+            </Descriptions.Item>
+            <Descriptions.Item label="偏好厅型">
+              {prefData.preferredHallType || '未设置'}
+            </Descriptions.Item>
+            <Descriptions.Item label="票价预算上限">
+              {prefData.budgetMax != null ? `¥${prefData.budgetMax}` : '未设置'}
+            </Descriptions.Item>
+            <Descriptions.Item label="常用座位区域">
+              {prefData.preferredSeatZone || '未设置'}
+            </Descriptions.Item>
+            <Descriptions.Item label="常去影院ID">
+              {prefData.frequentCinemaId != null ? prefData.frequentCinemaId : '未设置'}
+            </Descriptions.Item>
+          </Descriptions>
+        ) : (
+          <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+            该用户暂无偏好画像数据
+          </div>
+        )}
       </Modal>
     </div>
   );

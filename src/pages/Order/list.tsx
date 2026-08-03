@@ -1,20 +1,12 @@
-import { listOrders, cancelOrder, payOrder, refundOrder } from '@/api/orderController';
-import { Badge, Button, Card, Col, Empty, Row, Segmented, Spin, Tag, Typography, message, Modal } from 'antd';
+import { cancelOrder, listOrders, payOrder, refundOrder } from '@/api/orderController';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import React, { useEffect, useState } from 'react';
 import { history } from '@umijs/max';
+import { Button, Empty, message, Modal, Pagination, Spin } from 'antd';
+import React, { useCallback, useEffect, useState } from 'react';
 import type { OrderVO } from '@/api/typings';
+import './list.css';
 
-const { Text } = Typography;
 const { confirm } = Modal;
-
-const statusMap: Record<string, { color: string; text: string }> = {
-  pending: { color: 'orange', text: '待支付' },
-  paid: { color: 'green', text: '已支付' },
-  cancelled: { color: 'default', text: '已取消' },
-  completed: { color: 'blue', text: '已完成' },
-  refunded: { color: 'red', text: '已退款' },
-};
 
 const statusTabs = [
   { label: '全部', value: '' },
@@ -24,6 +16,8 @@ const statusTabs = [
   { label: '已取消', value: 'cancelled' },
 ];
 
+const PAGE_SIZE = 8;
+
 const OrderListPage: React.FC = () => {
   const [orders, setOrders] = useState<OrderVO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,17 +25,18 @@ const OrderListPage: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
 
-  const loadOrders = async (pageNum = 1, status?: string) => {
+  const loadOrders = useCallback(async (pageNum = 1, status?: string) => {
     setLoading(true);
     try {
       const res = await listOrders({
         pageNum,
-        pageSize: 10,
+        pageSize: PAGE_SIZE,
         status: status || undefined,
-      });
-      if (res.data) {
-        setOrders(res.data.records || []);
-        setTotal(res.data.totalRow || 0);
+      } as any);
+      const data = (res as any)?.data;
+      if (data) {
+        setOrders(data.records || []);
+        setTotal(data.totalRow || 0);
         setPage(pageNum);
       }
     } catch (e: any) {
@@ -49,17 +44,17 @@ const OrderListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadOrders(1, statusFilter);
-  }, [statusFilter]);
+  }, [statusFilter, loadOrders]);
 
   const handleCancelOrder = (orderId: number | string) => {
     confirm({
       title: '确认取消订单？',
       icon: <ExclamationCircleOutlined />,
-      content: '取消后不可恢复，请确认',
+      content: '取消后座位将释放，不可恢复',
       okText: '确认取消',
       cancelText: '我再想想',
       okButtonProps: { danger: true },
@@ -75,16 +70,12 @@ const OrderListPage: React.FC = () => {
     });
   };
 
-  const handleStatusChange = (value: string | number) => {
-    setStatusFilter(value as string);
-  };
-
   const handlePay = async (orderId: number | string) => {
     try {
       const res = await payOrder({ orderId: orderId as any });
-      if (res.data?.payForm) {
+      if ((res as any)?.data?.payForm) {
         const div = document.createElement('div');
-        div.innerHTML = res.data.payForm;
+        div.innerHTML = (res as any).data.payForm;
         document.body.appendChild(div);
         const form = div.querySelector('form');
         if (form) {
@@ -116,132 +107,165 @@ const OrderListPage: React.FC = () => {
     });
   };
 
+  const statusText: Record<string, string> = {
+    pending: '待支付',
+    paid: '已支付',
+    cancelled: '已取消',
+    completed: '已完成',
+    refunded: '已退款',
+  };
+
+  const renderOrder = (order: OrderVO) => {
+    const st = order.status || 'pending';
+    return (
+      <div
+        key={order.id}
+        className="order-row"
+        onClick={() => history.push(`/order/${order.id}`)}
+      >
+        {/* 影片 */}
+        <div className="order-film-cell">
+          <div className="order-poster">
+            {(order as any).posterUrl ? (
+              <img src={(order as any).posterUrl} alt={order.filmName} />
+            ) : (
+              order.filmName?.slice(0, 1) || '🎬'
+            )}
+          </div>
+          <div className="order-film-name">{order.filmName}</div>
+        </div>
+
+        {/* 影院 / 场次 */}
+        <div className="order-meta-cell">
+          {order.cinemaName} {order.hallName && `· ${order.hallName}`}
+          <br />
+          {order.scheduleTime}
+        </div>
+
+        {/* 座位 */}
+        <div className="order-seats-cell">
+          {order.seatLabels?.join('、') || '-'}
+        </div>
+
+        {/* 金额 */}
+        <div>
+          <div className="order-price">¥{order.totalPrice?.toFixed(2)}</div>
+          <div className="order-count">{order.count} 张</div>
+        </div>
+
+        {/* 状态 */}
+        <div>
+          <span className={`order-status ${st}`}>{statusText[st] || st}</span>
+        </div>
+
+        {/* 操作 */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          {order.status === 'pending' ? (
+            <>
+              <button
+                className="order-action-link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePay(order.id!);
+                }}
+              >
+                去支付
+              </button>
+              <button
+                className="order-action-link gray"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancelOrder(order.id!);
+                }}
+              >
+                取消
+              </button>
+            </>
+          ) : order.status === 'paid' ? (
+            <>
+              <button
+                className="order-action-link gray"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  history.push(`/order/${order.id}`);
+                }}
+              >
+                查看
+              </button>
+              <button
+                className="order-action-link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRefundOrder(order.id!, order.totalPrice);
+                }}
+              >
+                申请退款
+              </button>
+            </>
+          ) : (
+            <button
+              className="order-action-link gray"
+              onClick={(e) => {
+                e.stopPropagation();
+                history.push(`/order/${order.id}`);
+              }}
+            >
+              查看
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-      <div style={{ marginBottom: 20 }}>
-        <Segmented
-          options={statusTabs}
-          value={statusFilter}
-          onChange={handleStatusChange}
-        />
+    <div className="order-list-page">
+      {/* 筛选 Tab（分段控制器） */}
+      <div className="order-tabs">
+        {statusTabs.map((tab) => (
+          <button
+            key={tab.value}
+            className={`order-tab ${statusFilter === tab.value ? 'active' : ''}`}
+            onClick={() => setStatusFilter(tab.value)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 48 }}>
+        <div style={{ textAlign: 'center', padding: 60 }}>
           <Spin size="large" />
         </div>
       ) : orders.length === 0 ? (
-        <Empty description="暂无订单">
-          <Button type="primary" onClick={() => history.push('/film')}>
-            去购票
-          </Button>
-        </Empty>
+        <div className="order-empty">
+          <Empty description="暂无订单">
+            <Button type="primary" onClick={() => history.push('/film')}>
+              去购票
+            </Button>
+          </Empty>
+        </div>
       ) : (
-        <Row gutter={[0, 12]}>
-          {orders.map((order) => {
-            const st = statusMap[order.status!] || { color: 'default', text: order.status };
-            return (
-              <Col span={24} key={order.id}>
-                <Card
-                  hoverable
-                  onClick={() => history.push(`/order/${order.id}`)}
-                  bodyStyle={{ padding: '16px 20px' }}
-                >
-                  <Row justify="space-between" align="middle">
-                    <Col flex="auto">
-                      <Text strong style={{ fontSize: 16 }}>
-                        {order.filmName}
-                      </Text>
-                      <div style={{ marginTop: 4 }}>
-                        <Text type="secondary" style={{ fontSize: 13 }}>
-                          {order.cinemaName} · {order.hallName}
-                        </Text>
-                      </div>
-                      <div style={{ marginTop: 4 }}>
-                        <Text type="secondary" style={{ fontSize: 13 }}>
-                          {order.scheduleTime}
-                        </Text>
-                      </div>
-                      <div style={{ marginTop: 4 }}>
-                        {order.seatLabels?.map((label) => (
-                          <Tag key={label} style={{ marginBottom: 2 }}>
-                            {label}
-                          </Tag>
-                        ))}
-                      </div>
-                    </Col>
-                    <Col style={{ textAlign: 'right', minWidth: 120 }}>
-                      <Tag color={st.color} style={{ marginBottom: 8 }}>
-                        {st.text}
-                      </Tag>
-                      <div>
-                        <Text strong style={{ color: '#e53e3e', fontSize: 20 }}>
-                          ¥{order.totalPrice?.toFixed(2)}
-                        </Text>
-                      </div>
-                      <div style={{ marginTop: 2 }}>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {order.count}张
-                        </Text>
-                      </div>
-                      {order.status === 'pending' && (
-                        <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                          <Button
-                            type="primary"
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePay(order.id!);
-                            }}
-                            style={{ background: '#e53e3e', borderColor: '#e53e3e', borderRadius: 6 }}
-                          >
-                            去支付
-                          </Button>
-                          <Button
-                            type="link"
-                            danger
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCancelOrder(order.id!);
-                            }}
-                          >
-                            取消
-                          </Button>
-                        </div>
-                      )}
-                      {order.status === 'paid' && (
-                        <div style={{ marginTop: 8 }}>
-                          <Button
-                            type="link"
-                            danger
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRefundOrder(order.id!, order.totalPrice);
-                            }}
-                          >
-                            申请退款
-                          </Button>
-                        </div>
-                      )}
-                    </Col>
-                  </Row>
-                </Card>
-              </Col>
-            );
-          })}
-          {total > 10 && (
-            <Col span={24} style={{ textAlign: 'center', marginTop: 16 }}>
-              <Button
-                loading={loading}
-                onClick={() => loadOrders(page + 1, statusFilter)}
-              >
-                加载更多
-              </Button>
-            </Col>
-          )}
-        </Row>
+        <>
+          <div className="order-table-head">
+            <span>影片</span>
+            <span>影院 / 场次</span>
+            <span>座位</span>
+            <span>金额</span>
+            <span>状态</span>
+            <span>操作</span>
+          </div>
+          {orders.map(renderOrder)}
+          <div className="order-pagination">
+            <Pagination
+              current={page}
+              pageSize={PAGE_SIZE}
+              total={total}
+              showSizeChanger={false}
+              onChange={(p) => loadOrders(p, statusFilter)}
+            />
+          </div>
+        </>
       )}
     </div>
   );

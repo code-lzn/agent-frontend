@@ -26,6 +26,10 @@ declare namespace API {
     hallName?: string;
   };
 
+  type adminResetPasswordParams = {
+    id: number;
+  };
+
   type BaseResponseBoolean = {
     code?: number;
     data?: boolean;
@@ -128,6 +132,18 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseMapStringObject = {
+    code?: number;
+    data?: Record<string, any>;
+    message?: string;
+  };
+
+  type BaseResponseMapStringString = {
+    code?: number;
+    data?: Record<string, any>;
+    message?: string;
+  };
+
   type BaseResponseOrderVO = {
     code?: number;
     data?: OrderVO;
@@ -224,12 +240,6 @@ declare namespace API {
     message?: string;
   };
 
-  type BaseResponseMap = {
-    code?: number;
-    data?: Record<string, any>;
-    message?: string;
-  };
-
   type BaseResponseSystemConfig = {
     code?: number;
     data?: SystemConfig;
@@ -242,10 +252,20 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseUserPreference = {
+    code?: number;
+    data?: UserPreference;
+    message?: string;
+  };
+
   type BaseResponseUserVO = {
     code?: number;
     data?: UserVO;
     message?: string;
+  };
+
+  type cancelOrderParams = {
+    id: number;
   };
 
   type ChangePasswordRequest = {
@@ -284,6 +304,10 @@ declare namespace API {
     createTime?: string;
     updateTime?: string;
     isDelete?: number;
+  };
+
+  type checkLoginParams = {
+    ticket: string;
   };
 
   type Cinema = {
@@ -334,18 +358,24 @@ declare namespace API {
     conversationId: string;
   };
 
-  type doChatGetParams = {
+  type doChatStream1Params = {
     message: string;
     conversationId: string;
     userId?: number;
   };
 
-  type doChatStream1Params = {
+  type doChatStream2Params = {
     message: string;
     conversationId: string;
   };
 
   type doChatStreamParams = {
+    message: string;
+    conversationId: string;
+    userId?: number;
+  };
+
+  type doSmartStreamParams = {
     message: string;
     conversationId: string;
     userId?: number;
@@ -377,10 +407,20 @@ declare namespace API {
     keyword?: string;
     type?: string;
     status?: string;
+    statusList?: string[];
+  };
+
+  type freezeUserParams = {
+    id: number;
+    status: number;
   };
 
   type getByKeyParams = {
     configKey: string;
+  };
+
+  type getByUserParams = {
+    userId: number;
   };
 
   type getFilmParams = {
@@ -492,6 +532,7 @@ declare namespace API {
     userAvatar?: string;
     userProfile?: string;
     userRole?: string;
+    userStatus?: number;
     createTime?: string;
     updateTime?: string;
     needSetPassword?: boolean;
@@ -506,6 +547,10 @@ declare namespace API {
     message?: string;
     conversationId?: string;
     userId?: number;
+  };
+
+  type nowShowingParams = {
+    limit?: number;
   };
 
   type Order = {
@@ -547,6 +592,7 @@ declare namespace API {
     userId?: number;
     scheduleId?: number;
     filmName?: string;
+    posterUrl?: string;
     cinemaName?: string;
     scheduleTime?: string;
     hallName?: string;
@@ -710,6 +756,24 @@ declare namespace API {
     orderNo?: string;
   };
 
+  type payPageParams = {
+    orderId: number;
+  };
+
+  type postParams = {
+    signature: string;
+    timestamp: string;
+    nonce: string;
+    openid: string;
+    encrypt_type?: string;
+    msg_signature?: string;
+  };
+
+  type recommendedParams = {
+    limit?: number;
+    type?: string;
+  };
+
   type remove1Params = {
     id: number;
   };
@@ -750,6 +814,14 @@ declare namespace API {
     id: number;
   };
 
+  type resetByUserParams = {
+    userId: number;
+  };
+
+  type resetConversation1Params = {
+    conversationId: string;
+  };
+
   type resetConversationParams = {
     conversationId: string;
   };
@@ -759,6 +831,11 @@ declare namespace API {
     code?: string;
     newPassword?: string;
     checkPassword?: string;
+  };
+
+  type reverseParams = {
+    lat: number;
+    lng: number;
   };
 
   type Schedule = {
@@ -799,6 +876,12 @@ declare namespace API {
     hallType?: string;
     hallRowCount?: number;
     hallColCount?: number;
+  };
+
+  type searchParams = {
+    keyword: string;
+    pageNum?: number;
+    pageSize?: number;
   };
 
   type Seat = {
@@ -870,6 +953,7 @@ declare namespace API {
     userAvatar?: string;
     userProfile?: string;
     userRole?: string;
+    userStatus?: number;
     editTime?: string;
     createTime?: string;
     updateTime?: string;
@@ -930,6 +1014,18 @@ declare namespace API {
     userAvatar?: string;
     userProfile?: string;
     userRole?: string;
+    userStatus?: number;
     createTime?: string;
+  };
+
+  type validateParams = {
+    signature?: string;
+    timestamp?: string;
+    nonce?: string;
+    echostr?: string;
+  };
+
+  type weixinLoginParams = {
+    openid: string;
   };
 }

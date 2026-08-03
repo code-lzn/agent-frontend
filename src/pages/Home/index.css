@@ -1,0 +1,167 @@
+/* =============================================
+   首页（管理端风格）
+   ============================================= */
+
+.user-home {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 欢迎横幅（白卡片） */
+.home-hero-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+  margin-bottom: 24px;
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 8px 4px;
+}
+
+.hero-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: #999;
+}
+
+/* 区块 */
+.home-section {
+  margin-bottom: 28px;
+}
+
+.home-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.home-section-header h2 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+  position: relative;
+  padding-left: 12px;
+}
+
+.home-section-header h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  background: #FF4D4F;
+  border-radius: 2px;
+}
+
+/* 影片卡片网格 */
+.film-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1200px) { .film-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px) { .film-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px) { .film-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.film-card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f0f0;
+}
+
+.film-card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.film-poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: linear-gradient(135deg, #2d2d5e, #1a1a3a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.film-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.film-score {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  font-weight: 700;
+  font-size: 18px;
+  color: #faad14;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.film-score span {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.film-info {
+  padding: 12px 14px 14px;
+}
+
+.film-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #262626;
+}
+
+.film-meta {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.film-tags {
+  display: flex;
+  gap: 4px;
+}
+
+.film-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid #e8e8e8;
+  color: #666;
+}
+
+.film-tag.hot {
+  border-color: #ff4d4f;
+  color: #ff4d4f;
+  background: #fff1f0;
+}

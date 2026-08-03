@@ -4,6 +4,8 @@ export default defineConfig({
   antd: {
     locale: 'zh_CN',
   },
+  // hash 路由：直接访问/刷新任意路径不依赖服务器 history 回退
+  history: { type: 'hash' },
   access: {},
   model: {},
   initialState: {},
@@ -12,60 +14,7 @@ export default defineConfig({
     title: '妙语购票',
   },
   routes: [
-    {
-      path: '/',
-      redirect: '/home',
-    },
-    {
-      name: '首页',
-      path: '/home',
-      component: './Home',
-    },
-    {
-      name: '影片',
-      path: '/film',
-      component: './Film',
-    },
-    {
-      name: '影片详情',
-      path: '/film/:id',
-      component: './Film/Detail',
-      hideInMenu: true,
-    },
-    {
-      name: '排期',
-      path: '/schedule',
-      component: './Schedule',
-      hideInMenu: true,
-    },
-    {
-      name: '选座',
-      path: '/seat',
-      component: './Seat',
-      hideInMenu: true,
-    },
-    {
-      name: '确认订单',
-      path: '/order/confirm',
-      component: './Order/confirm',
-      hideInMenu: true,
-    },
-    {
-      name: '订单列表',
-      path: '/order/list',
-      component: './Order/list',
-    },
-    {
-      name: '订单详情',
-      path: '/order/:id',
-      component: './Order/detail',
-      hideInMenu: true,
-    },
-    {
-      name: 'AI 购票',
-      path: '/ai-chat',
-      component: './AiChat',
-    },
+    // ===== 登录页（独立全屏，不走 UserLayout） =====
     {
       name: '用户登录',
       path: '/user/login',
@@ -73,10 +22,73 @@ export default defineConfig({
       layout: false,
       hideInMenu: true,
     },
+    // ===== C端主布局（UserLayout 包裹：左侧侧边栏 + 右侧内容区） =====
     {
-      name: '个人中心',
-      path: '/user/profile',
-      component: './User/Profile',
+      path: '/',
+      component: '@/layouts/UserLayout',
+      layout: false,
+      routes: [
+        { path: '/', redirect: '/home' },
+        {
+          name: '首页',
+          path: '/home',
+          component: './Home',
+        },
+        {
+          name: '影片',
+          path: '/film',
+          component: './Film',
+        },
+        {
+          name: '影片详情',
+          path: '/film/:id',
+          component: './Film/Detail',
+          hideInMenu: true,
+        },
+        {
+          name: '排期',
+          path: '/schedule',
+          component: './Schedule',
+          hideInMenu: true,
+        },
+        {
+          name: '选座',
+          path: '/seat',
+          component: './Seat',
+          hideInMenu: true,
+          wrappers: ['@/wrappers/AuthGuard'],
+        },
+        {
+          name: '确认订单',
+          path: '/order/confirm',
+          component: './Order/confirm',
+          hideInMenu: true,
+          wrappers: ['@/wrappers/AuthGuard'],
+        },
+        {
+          name: '订单列表',
+          path: '/order/list',
+          component: './Order/list',
+          wrappers: ['@/wrappers/AuthGuard'],
+        },
+        {
+          name: '订单详情',
+          path: '/order/:id',
+          component: './Order/detail',
+          hideInMenu: true,
+          wrappers: ['@/wrappers/AuthGuard'],
+        },
+        {
+          name: 'AI 购票',
+          path: '/ai-chat',
+          component: './AiChat',
+        },
+        {
+          name: '个人中心',
+          path: '/user/profile',
+          component: './User/Profile',
+        },
+      ],
     },
     // ===== 后台管理路由 =====
     {
@@ -128,6 +140,12 @@ export default defineConfig({
           name: '新增场次',
           path: '/admin/schedule/add',
           component: './admin/Schedule/form',
+        },
+        {
+          name: '编辑场次',
+          path: '/admin/schedule/edit/:id',
+          component: './admin/Schedule/form',
+          hideInMenu: true,
         },
         {
           name: '批量新增',

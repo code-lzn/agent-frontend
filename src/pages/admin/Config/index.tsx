@@ -8,8 +8,9 @@ import {
   ClockCircleOutlined,
   PercentageOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Form, Input, InputNumber, message, Space, Spin, Tag, Tooltip } from 'antd';
-import React, { useEffect, useState } from 'react';
+import { Button, Card, Form, Input, InputNumber, message, Modal, Select, Space, Spin, Tag, Tooltip } from 'antd';
+import { history } from '@umijs/max';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './index.css';
 
 const { TextArea } = Input;
@@ -19,6 +20,9 @@ const ConfigPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
+  // 已保存的配置快照（用于脏检查 + 高风险变更检测）
+  const loadedRef = useRef<Record<string, any>>({});
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     loadConfigs();
@@ -28,7 +32,7 @@ const ConfigPage: React.FC = () => {
     setLoading(true);
     try {
       const res = await list1();
-      setConfigs(res.data || []);
+      setConfigs((res as any)?.data || []);
     } catch {
       message.error('加载配置失败');
     } finally {
@@ -46,10 +50,57 @@ const ConfigPage: React.FC = () => {
     }
   };
 
+  // 首次加载配置后记录快照
+  useEffect(() => {
+    if (!loading && configs.length > 0) {
+      loadedRef.current = form.getFieldsValue(true);
+      setDirty(false);
+    }
+  }, [loading, configs, form]);
+
+  const markDirty = useCallback((_: any, allValues: any) => {
+    setDirty(JSON.stringify(allValues) !== JSON.stringify(loadedRef.current));
+  }, []);
+
+  // 未保存离开提示（PRD 3.3.4 交互规则①）
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    const unblock = (history as any).block?.('当前配置已修改，是否确认离开？');
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      unblock?.();
+    };
+  }, [dirty]);
+
   const handleSaveAll = async () => {
+    // 高风险配置项二次确认（PRD 3.3.4 交互规则⑤：锁座时长 / 订单超时）
+    const values = form.getFieldsValue(true);
+    const changedHighRisk = ['lockDuration', 'orderTimeoutMinutes'].filter(
+      (key) => values[key] !== loadedRef.current[key],
+    );
+    if (changedHighRisk.length > 0) {
+      const ok = await new Promise<boolean>((resolve) => {
+        Modal.confirm({
+          title: '高风险配置修改确认',
+          content: `${changedHighRisk
+            .map((k) => (k === 'lockDuration' ? '锁座时长' : '订单超时'))
+            .join('、')}已修改，该配置会影响新生成的订单，是否确认保存？`,
+          okText: '确认保存',
+          cancelText: '再想想',
+          onOk: () => resolve(true),
+          onCancel: () => resolve(false),
+        });
+      });
+      if (!ok) return;
+    }
+
     setSaving(true);
     try {
-      const values = form.getFieldsValue();
       const entries = Object.entries(values);
       const results = await Promise.allSettled(
         entries.map(([key, value]) =>
@@ -62,6 +113,8 @@ const ConfigPage: React.FC = () => {
       } else {
         message.warning(`保存完成，${failed.length}/${entries.length} 项失败`);
       }
+      loadedRef.current = form.getFieldsValue(true);
+      setDirty(false);
       loadConfigs();
     } catch {
       message.error('保存失败');
@@ -87,13 +140,16 @@ const ConfigPage: React.FC = () => {
           lockDuration: getConfigValue('lockDuration', 15),
           welcomeMessage: getConfigValue('welcomeMessage', '你好！想看什么电影？'),
           presetChips: getConfigValue('presetChips', '周末喜剧,附近IMAX,低价场次'),
+          strategyTemplate: getConfigValue('strategyTemplate', '价格优先'),
           priceWeight: getConfigValue('priceWeight', 30),
           scoreWeight: getConfigValue('scoreWeight', 25),
           distanceWeight: getConfigValue('distanceWeight', 20),
           ratingWeight: getConfigValue('ratingWeight', 25),
           maxRecommendations: getConfigValue('maxRecommendations', 10),
           orderTimeoutMinutes: getConfigValue('orderTimeoutMinutes', 15),
+          refundTimeoutHours: getConfigValue('refundTimeoutHours', 24),
         }}
+        onValuesChange={markDirty}
       >
         <Space direction="vertical" style={{ width: '100%' }} size={16}>
           {/* 基础参数 */}
@@ -112,6 +168,9 @@ const ConfigPage: React.FC = () => {
               </Form.Item>
               <Form.Item name="orderTimeoutMinutes" label={<span><ClockCircleOutlined /> 订单超时（分钟）</span>}>
                 <InputNumber min={5} max={60} style={{ width: 200 }} />
+              </Form.Item>
+              <Form.Item name="refundTimeoutHours" label={<span><ClockCircleOutlined /> 可退款时限（小时）</span>}>
+                <InputNumber min={0} max={720} style={{ width: 200 }} />
               </Form.Item>
             </div>
             <Form.Item name="welcomeMessage" label={<span><MessageOutlined /> 对话开场白</span>}>
@@ -138,6 +197,18 @@ const ConfigPage: React.FC = () => {
               </div>
             }
           >
+            <Form.Item name="strategyTemplate" label={<span><SlidersOutlined /> 推荐策略模板</span>}
+              style={{ maxWidth: 300 }}>
+              <Select
+                placeholder="选择推荐策略"
+                options={[
+                  { label: '价格优先', value: '价格优先' },
+                  { label: '评分优先', value: '评分优先' },
+                  { label: '距离优先', value: '距离优先' },
+                  { label: '体验优先', value: '体验优先' },
+                ]}
+              />
+            </Form.Item>
             <div className="config-form-grid">
               <Form.Item name="priceWeight" label={<span><PercentageOutlined /> 价格权重(%)</span>}
                 rules={[{ required: true, message: '请输入价格权重' }]}>

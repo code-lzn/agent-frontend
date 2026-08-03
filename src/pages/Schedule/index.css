@@ -1,0 +1,169 @@
+/* =============================================
+   排期页（管理端风格）
+   ============================================= */
+
+.schedule-page {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.page-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 16px;
+}
+
+.back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  color: #666;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  border-color: #FF4D4F;
+  color: #FF4D4F;
+}
+
+.page-back span {
+  font-size: 13px;
+  color: #999;
+}
+
+/* 影片信息卡片 */
+.film-info-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+  margin-bottom: 16px;
+}
+
+.film-info-card .ant-card-body {
+  padding: 16px 20px;
+}
+
+.film-info-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.film-name {
+  font-weight: 600;
+  font-size: 17px;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.film-rating-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: #e6f4ff;
+  color: #FF4D4F;
+}
+
+/* 日期卡片 */
+.date-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+  margin-bottom: 16px;
+}
+
+.date-card .ant-card-body {
+  padding: 14px 20px;
+}
+
+.date-card .ant-radio-group {
+  display: flex;
+  gap: 8px;
+}
+
+.date-card .ant-radio-button-wrapper {
+  border-radius: 6px;
+  border-color: #e8e8e8;
+}
+
+/* 影院分组卡片 */
+.cinema-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+  margin-bottom: 12px;
+}
+
+.cinema-card .ant-card-body {
+  padding: 16px 20px;
+}
+
+.cinema-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.cinema-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: #262626;
+}
+
+.cinema-address {
+  font-size: 12px;
+}
+
+/* 场次列表 */
+.schedule-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.schedule-item {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  background: #fafafa;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 96px;
+  font-family: inherit;
+}
+
+.schedule-item:hover {
+  border-color: #FF4D4F;
+  background: #f0f7ff;
+}
+
+.schedule-time {
+  font-weight: 600;
+  font-size: 16px;
+  color: #262626;
+}
+
+.schedule-price {
+  font-size: 13px;
+  color: #FF4D4F;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-hall {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}

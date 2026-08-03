@@ -17,6 +17,36 @@ export async function addUser(
   });
 }
 
+/** 此处后端没有提供注释 POST /user/admin/freeze */
+export async function freezeUser(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.freezeUserParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/user/admin/freeze', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 POST /user/admin/reset-password */
+export async function adminResetPassword(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.adminResetPasswordParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/user/admin/reset-password', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /user/change-password */
 export async function changePassword(
   body: API.ChangePasswordRequest,
@@ -130,6 +160,21 @@ export async function mailLogin(
   });
 }
 
+/** 此处后端没有提供注释 POST /user/login-by-weixin */
+export async function weixinLogin(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.weixinLoginParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseLoginUserVO>('/user/login-by-weixin', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /user/logout */
 export async function userLogout(options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean>('/user/logout', {
@@ -213,7 +258,7 @@ export async function updateUser(
   });
 }
 
-/** 前台 - 修改个人信息 POST /user/update/my */
+/** 此处后端没有提供注释 POST /user/update/my */
 export async function updateMyProfile(
   body: API.UserUpdateRequest,
   options?: { [key: string]: any },
@@ -224,40 +269,6 @@ export async function updateMyProfile(
       'Content-Type': 'application/json',
     },
     data: body,
-    ...(options || {}),
-  });
-}
-
-// ==================== 微信扫码登录 ====================
-
-/** 生成微信扫码登录二维码 GET /v1/weixin/portal/createQrCode */
-export async function createWeixinQrCode(options?: { [key: string]: any }) {
-  return request<API.BaseResponseMap>('/v1/weixin/portal/createQrCode', {
-    method: 'GET',
-    ...(options || {}),
-  });
-}
-
-/** 检查微信扫码状态 GET /v1/weixin/portal/checkLogin */
-export async function checkWeixinLogin(
-  params: { ticket: string },
-  options?: { [key: string]: any },
-) {
-  return request<API.BaseResponseMap>('/v1/weixin/portal/checkLogin', {
-    method: 'GET',
-    params,
-    ...(options || {}),
-  });
-}
-
-/** 微信扫码后登录/注册 POST /user/login-by-weixin */
-export async function loginByWeixin(
-  params: { openid: string },
-  options?: { [key: string]: any },
-) {
-  return request<API.BaseResponseLoginUserVO>('/user/login-by-weixin', {
-    method: 'POST',
-    params,
     ...(options || {}),
   });
 }

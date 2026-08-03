@@ -9,12 +9,12 @@ import './index.css';
 
 const { confirm } = Modal;
 
-const statusMap: Record<string, { status: 'processing' | 'success' | 'default' | 'error'; text: string }> = {
+const statusMap: Record<string, { status: 'processing' | 'success' | 'default' | 'error' | 'warning'; text: string }> = {
   pending: { status: 'processing', text: '待支付' },
   paid: { status: 'success', text: '已支付' },
   cancelled: { status: 'default', text: '已取消' },
   completed: { status: 'success', text: '已完成' },
-  refunded: { status: 'error', text: '已退款' },
+  refunded: { status: 'warning', text: '已退款' },
 };
 
 const OrderListPage: React.FC = () => {
@@ -67,7 +67,7 @@ const OrderListPage: React.FC = () => {
         paid: { text: '已支付', status: 'Success' },
         cancelled: { text: '已取消', status: 'Default' },
         completed: { text: '已完成', status: 'Success' },
-        refunded: { text: '已退款', status: 'Error' },
+        refunded: { text: '已退款', status: 'Warning' },
       },
       render: (_, r) => {
         const s = statusMap[r.status || 'pending'];
@@ -79,7 +79,7 @@ const OrderListPage: React.FC = () => {
       dataIndex: 'createTime',
       width: 160,
       hideInSearch: true,
-      render: (v) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-'),
+      render: (v) => (v ? dayjs(v as string).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
       title: '操作',
@@ -194,6 +194,7 @@ const OrderListPage: React.FC = () => {
             };
           }}
           rowKey="id"
+          options={{ density: false }}
           search={{
             filterType: 'query',
             labelWidth: 'auto',
@@ -246,13 +247,19 @@ const OrderListPage: React.FC = () => {
                 text={statusMap[detailData.status || 'pending']?.text}
               />
             </Descriptions.Item>
-            {detailData.status === 'cancelled' && detailData.cancelReason && (
+            {(detailData.status === 'cancelled' || detailData.status === 'refunded') && detailData.cancelReason && (
               <Descriptions.Item label="取消原因" span={2}>
                 {detailData.cancelReason === 'timeout'
                   ? '超时未支付，系统自动取消'
                   : detailData.cancelReason === 'user_cancelled'
                     ? '用户主动取消'
-                    : detailData.cancelReason}
+                    : detailData.cancelReason === 'admin_cancelled'
+                      ? '管理员取消'
+                      : detailData.cancelReason === 'admin_refund'
+                        ? '管理员退款'
+                        : detailData.cancelReason === 'user_refund'
+                          ? '用户退款'
+                          : detailData.cancelReason}
               </Descriptions.Item>
             )}
             {detailData.alipayTradeNo && (
