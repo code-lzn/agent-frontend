@@ -28,7 +28,6 @@ const CinemaDetailPage: React.FC = () => {
   const [pendingSchedule, setPendingSchedule] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('[CinemaDetail] 接收到的 id:', id, 'type:', typeof id);
     if (!id) {
       message.error('缺少影院ID');
       navigate(`/cinema${cityFromUrl ? `?city=${encodeURIComponent(cityFromUrl)}` : ''}`);
@@ -37,7 +36,6 @@ const CinemaDetailPage: React.FC = () => {
 
     // ID 保持字符串，避免超长 Snowflake ID 精度丢失
     const cinemaId = id;
-    console.log('[CinemaDetail] cinemaId:', cinemaId);
 
     // 加载影院信息
     getInfo7({ id: cinemaId } as any)
@@ -54,11 +52,8 @@ const CinemaDetailPage: React.FC = () => {
     setLoading(true);
     listAll2()
       .then((res) => {
-        console.log('[CinemaDetail] listAll2 原始响应:', JSON.stringify(res));
         const films: Film[] = (res as any)?.data || [];
-        console.log(`[CinemaDetail] 全部影片数: ${films.length}`, films.map(f => `id=${f.id} name=${f.name} status=${f.status}`));
         if (films.length === 0) {
-          console.log('[CinemaDetail] ⚠️ 没有任何影片');
           setSchedules([]);
           setLoading(false);
           return;
@@ -67,12 +62,7 @@ const CinemaDetailPage: React.FC = () => {
         return Promise.all(
           films.map((film) =>
             listSchedule({ filmId: film.id!, cinemaId } as any)
-              .then((sRes) => {
-                console.log(`[CinemaDetail] 影片${film.name}(${film.id}) 原始排期响应:`, JSON.stringify(sRes));
-                const sData = (sRes as any)?.data || [];
-                console.log(`[CinemaDetail] 影片${film.name}(${film.id}) 在影院${cinemaId} 的排期: ${sData.length} 条`);
-                return sData;
-              })
+              .then((sRes) => (sRes as any)?.data || [])
               .catch((e) => {
                 console.error(`[CinemaDetail] 影片${film.name} 排期查询失败:`, e);
                 return [];
@@ -82,7 +72,6 @@ const CinemaDetailPage: React.FC = () => {
           // 合并所有排期
           const all: ScheduleVO[] = [];
           results.forEach((arr) => all.push(...arr));
-          console.log(`[CinemaDetail] 合并后排期总数: ${all.length}`);
           setSchedules(all);
         });
       })
@@ -90,10 +79,18 @@ const CinemaDetailPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // 按影片分组排期
+  // 按影片分组排期（过滤已过期的场次）
   const filmGroups = useMemo(() => {
+    const nowTs = Date.now();
+    const validSchedules = schedules.filter((s) => {
+      if (!s.showDate || !s.startTime) return true;
+      const [y, mo, d] = s.showDate.split('-').map(Number);
+      const [hh, mm] = s.startTime.split(':').map(Number);
+      return new Date(y, mo - 1, d, hh, mm).getTime() > nowTs;
+    });
+
     const map: Record<number, { filmName: string; filmPoster: string; filmType: string; filmDuration: number; filmRating: number; schedules: ScheduleVO[] }> = {};
-    schedules.forEach((s) => {
+    validSchedules.forEach((s) => {
       const fid = s.filmId!;
       if (!map[fid]) {
         map[fid] = {
