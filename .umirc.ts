@@ -46,6 +46,19 @@ export default defineConfig({
           hideInMenu: true,
         },
         {
+          name: '影院',
+          path: '/cinema',
+          exact: true,
+          component: './Cinema',
+        },
+        {
+          name: '影院详情',
+          path: '/cinema/:id',
+          exact: true,
+          component: './Cinema/Detail',
+          hideInMenu: true,
+        },
+        {
           name: '排期',
           path: '/schedule',
           component: './Schedule',
