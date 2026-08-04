@@ -8,6 +8,7 @@ import './index.css';
 const pageTitleMap: Record<string, string> = {
   '/home': '首页',
   '/film': '影片',
+  '/cinema': '影院',
   '/schedule': '选择场次',
   '/seat': '选座',
   '/order/confirm': '确认订单',
@@ -19,6 +20,7 @@ const pageTitleMap: Record<string, string> = {
 const navItems = [
   { key: '/home', icon: '🏠', label: '首页' },
   { key: '/film', icon: '🎬', label: '影片' },
+  { key: '/cinema', icon: '🏢', label: '影院' },
   { key: '/order/list', icon: '🎫', label: '订单' },
   { key: '/user/profile', icon: '👤', label: '我的' },
 ];
