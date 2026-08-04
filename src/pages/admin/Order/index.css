@@ -69,6 +69,20 @@
   margin: 16px 20px !important;
 }
 
+/* 状态筛选 Tab（位于 ProTable 工具栏行：左侧 Tab、右侧刷新/设置按钮） */
+.order-status-tabs .ant-tabs-nav {
+  margin: 0;
+}
+
+.order-status-tabs .ant-tabs-tab {
+  padding: 8px 16px;
+  transition: all 0.2s;
+}
+
+.order-status-tabs .ant-tabs-tab:hover {
+  color: #1677ff;
+}
+
 /* 空状态 */
 .empty-state {
   display: flex;

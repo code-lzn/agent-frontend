@@ -5,7 +5,7 @@ import {
   AutoComplete, Badge, Button, Card, Form, Input, InputNumber, message, Modal, Select, Space, Spin, Table, Tag, Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import HallManager from './HallManager';
 import './index.css';
 
@@ -63,6 +63,14 @@ const CinemaListPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // 名称模糊搜索（客户端过滤，参照影片列表）
+  const [keyword, setKeyword] = useState('');
+  const filteredCinemas = useMemo(() => {
+    if (!keyword.trim()) return cinemas;
+    const kw = keyword.trim().toLowerCase();
+    return cinemas.filter((c) => (c.name || '').toLowerCase().includes(kw));
+  }, [cinemas, keyword]);
 
   useEffect(() => {
     loadData();
@@ -271,7 +279,14 @@ const CinemaListPage: React.FC = () => {
         title={
           <div className="card-header">
             <span className="card-title">影院列表</span>
-            <span className="card-count">共 {cinemas.length} 家</span>
+            <span className="card-count">共 {filteredCinemas.length} 家</span>
+            <Input.Search
+              allowClear
+              placeholder="搜索影院名称"
+              style={{ width: 240 }}
+              onSearch={(v) => setKeyword(v)}
+              onChange={(e) => !e.target.value && setKeyword('')}
+            />
           </div>
         }
         extra={
@@ -295,7 +310,7 @@ const CinemaListPage: React.FC = () => {
       >
         <Table<API.Cinema>
           columns={columns}
-          dataSource={cinemas}
+          dataSource={filteredCinemas}
           rowKey="id"
           loading={loading}
           pagination={{

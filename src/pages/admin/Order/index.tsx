@@ -1,8 +1,8 @@
 import { adminCancel, adminDetail, adminList, adminRefund } from '@/api/orderController';
-import { ExclamationCircleOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Badge, Button, Card, Descriptions, message, Modal, Space, Tooltip } from 'antd';
+import { Badge, Button, Card, Descriptions, message, Modal, Space, Tabs } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import './index.css';
@@ -21,6 +21,8 @@ const OrderListPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState<API.Order | null>(null);
+  // 状态 Tab：''=全部
+  const [statusTab, setStatusTab] = useState('');
 
   const columns: ProColumns<API.Order>[] = [
     {
@@ -62,6 +64,7 @@ const OrderListPage: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       width: 90,
+      hideInSearch: true, // 状态筛选由顶部 Tab 承担
       valueEnum: {
         pending: { text: '待支付', status: 'Processing' },
         paid: { text: '已支付', status: 'Success' },
@@ -167,15 +170,26 @@ const OrderListPage: React.FC = () => {
             <span className="card-title">订单管理</span>
           </div>
         }
-        extra={
-          <Tooltip title="刷新">
-            <Button icon={<ReloadOutlined />} onClick={() => actionRef.current?.reload()} />
-          </Tooltip>
-        }
       >
         <ProTable<API.Order>
           actionRef={actionRef}
           columns={columns}
+          params={{ status: statusTab || undefined }}
+          headerTitle={
+            <Tabs
+              className="order-status-tabs"
+              activeKey={statusTab}
+              onChange={(key) => setStatusTab(key)}
+              items={[
+                { key: '', label: '全部' },
+                { key: 'pending', label: '待支付' },
+                { key: 'paid', label: '已支付' },
+                { key: 'cancelled', label: '已取消' },
+                { key: 'completed', label: '已完成' },
+                { key: 'refunded', label: '已退款' },
+              ]}
+            />
+          }
           request={async (params) => {
             const res = await adminList({
               pageNum: params.current || 1,

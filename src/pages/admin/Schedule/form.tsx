@@ -32,6 +32,9 @@ const ScheduleFormPage: React.FC = () => {
   const { id } = useParams();
   const isEdit = !!id;
   const [form] = Form.useForm();
+  // 选择今天的日期时，禁用已过去的时间
+  const watchedShowDate = Form.useWatch('showDate', form);
+  const isToday = !!watchedShowDate && dayjs(watchedShowDate).isSame(dayjs(), 'day');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(isEdit);
 
@@ -222,7 +225,7 @@ const ScheduleFormPage: React.FC = () => {
             <Select
               placeholder="选择影院"
               onChange={handleCinemaChange}
-              options={cinemas.map((c) => ({ label: c.name, value: c.id }))}
+              options={cinemas.filter((c) => c.status === 'published').map((c) => ({ label: c.name, value: c.id }))}
             />
           </Form.Item>
 
@@ -244,10 +247,28 @@ const ScheduleFormPage: React.FC = () => {
 
           <Space size={16}>
             <Form.Item name="showDate" label="放映日期" rules={[{ required: true, message: '请选择日期' }]}>
-              <DatePicker placeholder="选择日期" />
+              <DatePicker
+                placeholder="选择日期"
+                disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
+              />
             </Form.Item>
             <Form.Item name="startTime" label="放映时间" rules={[{ required: true, message: '请选择时间' }]}>
-              <TimePicker format="HH:mm" minuteStep={5} placeholder="选择时间" onChange={handleStartTimeChange} />
+              <TimePicker
+                format="HH:mm"
+                minuteStep={5}
+                placeholder="选择时间"
+                onChange={handleStartTimeChange}
+                disabledHours={isToday ? () => Array.from({ length: dayjs().hour() }, (_, i) => i) : undefined}
+                disabledMinutes={
+                  isToday
+                    ? (hour: number) => {
+                        if (hour > dayjs().hour()) return [];
+                        if (hour === dayjs().hour()) return Array.from({ length: dayjs().minute() }, (_, i) => i);
+                        return [];
+                      }
+                    : undefined
+                }
+              />
             </Form.Item>
           </Space>
 
