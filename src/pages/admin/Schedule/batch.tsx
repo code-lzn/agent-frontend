@@ -403,7 +403,7 @@ const ScheduleBatchPage: React.FC = () => {
               columns={previewColumns}
               rowKey="key"
               pagination={{
-                pageSize: 50,
+                defaultPageSize: 50,
                 showSizeChanger: true,
                 showTotal: (t) => `共 ${t} 场`,
                 pageSizeOptions: ['50', '100', '200'],

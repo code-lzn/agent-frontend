@@ -2,6 +2,36 @@
 /* eslint-disable */
 import request from '@/libs/request';
 
+/** 此处后端没有提供注释 POST /chatSession/create */
+export async function create(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.createParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseChatSession>('/chatSession/create', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 GET /chatSession/current */
+export async function getCurrentSession(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getCurrentSessionParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseChatSession>('/chatSession/current', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 GET /chatSession/getInfo/${param0} */
 export async function getInfo8(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -20,6 +50,21 @@ export async function getInfo8(
 export async function list5(options?: { [key: string]: any }) {
   return request<API.ChatSession[]>('/chatSession/list', {
     method: 'GET',
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 GET /chatSession/listByUser */
+export async function listByUser(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.listByUserParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseListChatSession>('/chatSession/listByUser', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
     ...(options || {}),
   });
 }
@@ -51,6 +96,21 @@ export async function remove8(
   return request<API.BaseResponseBoolean>(`/chatSession/remove/${param0}`, {
     method: 'DELETE',
     params: { ...queryParams },
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 PUT /chatSession/rename */
+export async function rename(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.renameParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/chatSession/rename', {
+    method: 'PUT',
+    params: {
+      ...params,
+    },
     ...(options || {}),
   });
 }

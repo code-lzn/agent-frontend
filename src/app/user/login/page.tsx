@@ -66,10 +66,10 @@ const UserLoginPage: React.FC = () => {
 
   /** 发送验证码 */
   const handleSendCode = async () => {
-    const email = codeForm.getFieldValue('email');
-    if (!email || !email.includes('@')) {
-      message.warning('请输入正确的邮箱地址');
-      return;
+    try {
+      await codeForm.validateFields(['email']);
+    } catch {
+      return; // 邮箱格式校验不通过，Form 会展示错误信息
     }
     setCodeSending(true);
     try {

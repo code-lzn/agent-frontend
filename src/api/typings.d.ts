@@ -7,14 +7,6 @@ declare namespace API {
     id: number;
   };
 
-  type adminRefundParams = {
-    id: number;
-  };
-
-  type refundOrderParams = {
-    id: number;
-  };
-
   type adminListParams = {
     pageNum?: number;
     pageSize?: number;
@@ -24,6 +16,10 @@ declare namespace API {
     filmName?: string;
     cinemaName?: string;
     hallName?: string;
+  };
+
+  type adminRefundParams = {
+    id: number;
   };
 
   type adminResetPasswordParams = {
@@ -39,6 +35,12 @@ declare namespace API {
   type BaseResponseChatHistory = {
     code?: number;
     data?: ChatHistory;
+    message?: string;
+  };
+
+  type BaseResponseChatSession = {
+    code?: number;
+    data?: ChatSession;
     message?: string;
   };
 
@@ -78,6 +80,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListChatSession = {
+    code?: number;
+    data?: ChatSession[];
+    message?: string;
+  };
+
   type BaseResponseListCinema = {
     code?: number;
     data?: Cinema[];
@@ -93,6 +101,12 @@ declare namespace API {
   type BaseResponseListHall = {
     code?: number;
     data?: Hall[];
+    message?: string;
+  };
+
+  type BaseResponseListMapStringObject = {
+    code?: number;
+    data?: Record<string, any>[];
     message?: string;
   };
 
@@ -340,6 +354,10 @@ declare namespace API {
     seatIds?: number[];
   };
 
+  type createParams = {
+    userId: number;
+  };
+
   type DashboardVO = {
     todayOrders?: number;
     todayRevenue?: number;
@@ -379,6 +397,7 @@ declare namespace API {
     message: string;
     conversationId: string;
     userId?: number;
+    city?: string;
   };
 
   type Film = {
@@ -415,11 +434,19 @@ declare namespace API {
     status: number;
   };
 
+  type geocodeParams = {
+    address: string;
+  };
+
   type getByKeyParams = {
     configKey: string;
   };
 
   type getByUserParams = {
+    userId: number;
+  };
+
+  type getCurrentSessionParams = {
     userId: number;
   };
 
@@ -504,6 +531,10 @@ declare namespace API {
     sessionId: number;
   };
 
+  type listByUserParams = {
+    userId: number;
+  };
+
   type listFilmParams = {
     filmQueryRequest: FilmQueryRequest;
   };
@@ -566,6 +597,9 @@ declare namespace API {
     count?: number;
     status?: string;
     cancelReason?: string;
+    refundAmount?: number;
+    refundTradeNo?: string;
+    refundTime?: string;
     alipayTradeNo?: string;
     alipayStatus?: string;
     paidAt?: string;
@@ -760,6 +794,13 @@ declare namespace API {
     orderId: number;
   };
 
+  type placeSearchParams = {
+    keyword: string;
+    city?: string;
+    page?: number;
+    pageSize?: number;
+  };
+
   type postParams = {
     signature: string;
     timestamp: string;
@@ -772,6 +813,10 @@ declare namespace API {
   type recommendedParams = {
     limit?: number;
     type?: string;
+  };
+
+  type refundOrderParams = {
+    id: number;
   };
 
   type remove1Params = {
@@ -812,6 +857,11 @@ declare namespace API {
 
   type removeParams = {
     id: number;
+  };
+
+  type renameParams = {
+    id: number;
+    name: string;
   };
 
   type resetByUserParams = {

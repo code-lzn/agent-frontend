@@ -78,18 +78,24 @@ const ConfigPage: React.FC = () => {
   }, [dirty]);
 
   const handleSaveAll = async () => {
-    // 高风险配置项二次确认（PRD 3.3.4 交互规则⑤：锁座时长 / 订单超时）
+    // 推荐策略权重 5 项之和必须等于 100（PRD 3.6.2）
     const values = form.getFieldsValue(true);
-    const changedHighRisk = ['lockDuration', 'orderTimeoutMinutes'].filter(
+    const weightKeys = ['priceWeight', 'scoreWeight', 'distanceWeight', 'timeWeight', 'seatQualityWeight'];
+    const weightSum = weightKeys.reduce((sum, k) => sum + (Number(values[k]) || 0), 0);
+    if (weightSum !== 100) {
+      message.error(`推荐策略权重之和必须等于 100%，当前为 ${weightSum}%`);
+      return;
+    }
+
+    // 高风险配置项二次确认（PRD 3.3.4 交互规则⑤：锁座时长）
+    const changedHighRisk = ['lockDuration'].filter(
       (key) => values[key] !== loadedRef.current[key],
     );
     if (changedHighRisk.length > 0) {
       const ok = await new Promise<boolean>((resolve) => {
         Modal.confirm({
           title: '高风险配置修改确认',
-          content: `${changedHighRisk
-            .map((k) => (k === 'lockDuration' ? '锁座时长' : '订单超时'))
-            .join('、')}已修改，该配置会影响新生成的订单，是否确认保存？`,
+          content: '锁座时长已修改，该配置会影响新生成的订单，是否确认保存？',
           okText: '确认保存',
           cancelText: '再想想',
           onOk: () => resolve(true),
@@ -144,9 +150,9 @@ const ConfigPage: React.FC = () => {
           priceWeight: getConfigValue('priceWeight', 30),
           scoreWeight: getConfigValue('scoreWeight', 25),
           distanceWeight: getConfigValue('distanceWeight', 20),
-          ratingWeight: getConfigValue('ratingWeight', 25),
+          timeWeight: getConfigValue('timeWeight', 15),
+          seatQualityWeight: getConfigValue('seatQualityWeight', 10),
           maxRecommendations: getConfigValue('maxRecommendations', 10),
-          orderTimeoutMinutes: getConfigValue('orderTimeoutMinutes', 15),
           refundTimeoutHours: getConfigValue('refundTimeoutHours', 24),
         }}
         onValuesChange={markDirty}
@@ -165,9 +171,6 @@ const ConfigPage: React.FC = () => {
             <div className="config-form-grid">
               <Form.Item name="lockDuration" label={<span><ClockCircleOutlined /> 锁座时长（分钟）</span>}>
                 <InputNumber min={1} max={60} style={{ width: 200 }} />
-              </Form.Item>
-              <Form.Item name="orderTimeoutMinutes" label={<span><ClockCircleOutlined /> 订单超时（分钟）</span>}>
-                <InputNumber min={5} max={60} style={{ width: 200 }} />
               </Form.Item>
               <Form.Item name="refundTimeoutHours" label={<span><ClockCircleOutlined /> 可退款时限（小时）</span>}>
                 <InputNumber min={0} max={720} style={{ width: 200 }} />
@@ -193,7 +196,7 @@ const ConfigPage: React.FC = () => {
               <div className="card-header">
                 <SlidersOutlined className="card-icon" />
                 <span className="card-title">推荐策略权重</span>
-                <span className="card-subtitle">（总和建议为100%）</span>
+                <span className="card-subtitle">（5项之和必须等于100%）</span>
               </div>
             }
           >
@@ -222,8 +225,12 @@ const ConfigPage: React.FC = () => {
                 rules={[{ required: true, message: '请输入距离权重' }]}>
                 <InputNumber min={0} max={100} style={{ width: 180 }} />
               </Form.Item>
-              <Form.Item name="ratingWeight" label={<span><PercentageOutlined /> 好评权重(%)</span>}
-                rules={[{ required: true, message: '请输入好评权重' }]}>
+              <Form.Item name="timeWeight" label={<span><PercentageOutlined /> 时间权重(%)</span>}
+                rules={[{ required: true, message: '请输入时间权重' }]}>
+                <InputNumber min={0} max={100} style={{ width: 180 }} />
+              </Form.Item>
+              <Form.Item name="seatQualityWeight" label={<span><PercentageOutlined /> 座位质量权重(%)</span>}
+                rules={[{ required: true, message: '请输入座位质量权重' }]}>
                 <InputNumber min={0} max={100} style={{ width: 180 }} />
               </Form.Item>
             </div>

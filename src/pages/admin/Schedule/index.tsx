@@ -61,8 +61,16 @@ const ScheduleListPage: React.FC = () => {
         list3(),
       ]);
       const schedules = (scheduleRes as any)?.data || scheduleRes || [];
-      // 新增的场次放最前面（按 id 倒序）
-      schedules.sort((a: API.Schedule, b: API.Schedule) => Number(b.id) - Number(a.id));
+      // 排序：今天+未来日期的场次在最上面（今天最前，按日期升序、开场时间升序），已过日期的场次放最后
+      const todayStr = new Date().toISOString().split('T')[0];
+      schedules.sort((a: API.Schedule, b: API.Schedule) => {
+        const aPast = (a.showDate || '') < todayStr;
+        const bPast = (b.showDate || '') < todayStr;
+        if (aPast !== bPast) return aPast ? 1 : -1;
+        const dateCmp = (a.showDate || '').localeCompare(b.showDate || '');
+        if (dateCmp !== 0) return dateCmp;
+        return (a.startTime || '').localeCompare(b.startTime || '');
+      });
       setSchedules(schedules);
 
       const fMap: Record<number, API.Film> = {};
@@ -204,7 +212,7 @@ const ScheduleListPage: React.FC = () => {
           rowKey="id"
           loading={loading}
           pagination={{
-            pageSize: 15,
+            defaultPageSize: 15,
             showSizeChanger: true,
             showTotal: (t) => `共 ${t} 场`,
             pageSizeOptions: ['15', '30', '50'],

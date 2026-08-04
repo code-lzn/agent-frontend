@@ -293,7 +293,7 @@ const UserListPage: React.FC = () => {
             defaultCollapsed: true,
           }}
           pagination={{
-            pageSize: 10,
+            defaultPageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `共 ${total} 条`,
             pageSizeOptions: ['10', '20', '50'],

@@ -64,6 +64,20 @@ export async function adminList(
   });
 }
 
+/** 此处后端没有提供注释 POST /order/admin/refund/${param0} */
+export async function adminRefund(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.adminRefundParams,
+  options?: { [key: string]: any },
+) {
+  const { id: param0, ...queryParams } = params;
+  return request<API.BaseResponseBoolean>(`/order/admin/refund/${param0}`, {
+    method: 'POST',
+    params: { ...queryParams },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /order/cancel/${param0} */
 export async function cancelOrder(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -127,31 +141,6 @@ export async function lockSeat(
   });
 }
 
-/** 前台 - 申请退款 POST /order/refund/${param0} */
-export async function refundOrder(
-  params: { id: number },
-  options?: { [key: string]: any },
-) {
-  const { id: param0, ...queryParams } = params;
-  return request<API.BaseResponseBoolean>(`/order/refund/${param0}`, {
-    method: 'POST',
-    params: { ...queryParams },
-    ...(options || {}),
-  });
-}
-
-/** 管理员退款 POST /order/admin/refund/${param0} */
-export async function adminRefund(
-  params: API.adminRefundParams,
-  options?: { [key: string]: any },
-) {
-  const { id: param0, ...queryParams } = params;
-  return request<API.BaseResponseBoolean>(`/order/admin/refund/${param0}`, {
-    method: 'POST',
-    params: { ...queryParams },
-    ...(options || {}),
-  });
-}
 /** 此处后端没有提供注释 POST /order/pay */
 export async function payOrder(
   body: API.PayOrderRequest,
@@ -163,6 +152,20 @@ export async function payOrder(
       'Content-Type': 'application/json',
     },
     data: body,
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 POST /order/refund/${param0} */
+export async function refundOrder(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.refundOrderParams,
+  options?: { [key: string]: any },
+) {
+  const { id: param0, ...queryParams } = params;
+  return request<API.BaseResponseBoolean>(`/order/refund/${param0}`, {
+    method: 'POST',
+    params: { ...queryParams },
     ...(options || {}),
   });
 }
