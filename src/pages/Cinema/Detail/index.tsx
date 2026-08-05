@@ -2,7 +2,7 @@ import { getInfo7 } from '@/api/cinemaController';
 import { listSchedule } from '@/api/scheduleController';
 import { listAll2 } from '@/api/filmController';
 import { useModel } from '@umijs/max';
-import { Button, Card, Empty, Image, Modal, Spin, Tag, Typography, message } from 'antd';
+import { Button, Card, Empty, Image, Modal, Radio, Spin, Tag, Typography, message } from 'antd';
 import { EnvironmentOutlined, PhoneOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from '@umijs/max';
@@ -22,6 +22,21 @@ const CinemaDetailPage: React.FC = () => {
   const [cinema, setCinema] = useState<Cinema | null>(null);
   const [schedules, setSchedules] = useState<ScheduleVO[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 日期选择（7天：今天～周六）
+  const todayDate = new Date();
+  const dateOptions = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() + i);
+    const dayLabels = ['今天', '明天'];
+    const weekLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    return {
+      label: i < 2 ? dayLabels[i] : weekLabels[d.getDay()],
+      value: d.toISOString().split('T')[0],
+    };
+  });
+  const [selDate, setSelDate] = useState(dateOptions[0].value);
+  const selDateLabel = dateOptions.find((d) => d.value === selDate)?.label || selDate;
 
   // 游客点击场次：先弹登录确认框
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -79,19 +94,22 @@ const CinemaDetailPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // 按影片分组排期（过滤已过期的场次）
+  // 按日期筛选 + 按影片分组排期（过滤已过期的场次）
   const filmGroups = useMemo(() => {
     const nowTs = Date.now();
     const validSchedules = schedules.filter((s) => {
+      // 有 showDate 则只展示选中日期；没有 showDate 的保留（兼容后端未返回日期的情况）
+      if (s.showDate && s.showDate !== selDate) return false;
       if (!s.showDate || !s.startTime) return true;
       const [y, mo, d] = s.showDate.split('-').map(Number);
       const [hh, mm] = s.startTime.split(':').map(Number);
       return new Date(y, mo - 1, d, hh, mm).getTime() > nowTs;
     });
 
-    const map: Record<number, { filmName: string; filmPoster: string; filmType: string; filmDuration: number; filmRating: number; schedules: ScheduleVO[] }> = {};
+    // key 用 string 避免 Snowflake ID 超过 JS Number 安全范围导致精度丢失
+    const map: Record<string, { filmName: string; filmPoster: string; filmType: string; filmDuration: number; filmRating: number; schedules: ScheduleVO[] }> = {};
     validSchedules.forEach((s) => {
-      const fid = s.filmId!;
+      const fid = String(s.filmId!);
       if (!map[fid]) {
         map[fid] = {
           filmName: s.filmName || '',
@@ -104,8 +122,8 @@ const CinemaDetailPage: React.FC = () => {
       }
       map[fid].schedules.push(s);
     });
-    return Object.entries(map).map(([fid, g]) => ({ filmId: Number(fid), ...g }));
-  }, [schedules]);
+    return Object.entries(map).map(([fid, g]) => ({ filmId: fid, ...g }));
+  }, [schedules, selDate]);
 
   const parseTags = (tags?: string) => {
     if (!tags) return [];
@@ -181,8 +199,19 @@ const CinemaDetailPage: React.FC = () => {
 
       {/* 排期列表 */}
       <div className="schedule-section">
+        {/* 日期选择器 */}
+        <Card className="date-card">
+          <Radio.Group value={selDate} onChange={(e) => setSelDate(e.target.value)} size="middle">
+            {dateOptions.map((d) => (
+              <Radio.Button key={d.value} value={d.value}>
+                {d.label}
+              </Radio.Button>
+            ))}
+          </Radio.Group>
+        </Card>
+
         <Title level={4} style={{ fontWeight: 700, marginBottom: 16 }}>
-          正在热映
+          正在热映 · {selDateLabel}
         </Title>
 
         {loading ? (

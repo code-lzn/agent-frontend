@@ -78,6 +78,23 @@
   margin-top: 0;
 }
 
+/* 日期选择卡片 */
+.date-card {
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.date-card .ant-card-body {
+  padding: 14px 20px;
+}
+.date-card .ant-radio-group {
+  display: flex;
+  gap: 8px;
+}
+.date-card .ant-radio-button-wrapper {
+  border-radius: 6px;
+  border-color: #e8e8e8;
+}
+
 .film-schedule-list {
   display: flex;
   flex-direction: column;

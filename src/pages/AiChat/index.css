@@ -245,9 +245,10 @@
   width: 18px; height: 16px; border-radius: 3px 3px 2px 2px;
   border: 1px solid #b3d9f2; background: #e8f4fd;
 }
-.ai-seat-dot.sold { background: #e8e8e8; border-color: #ddd; }
+.ai-seat-dot.sold { background: #e8e8e8; border-color: #ddd; cursor: not-allowed; }
 .ai-seat-dot.vip { background: #fff8e1; border-color: #ffe082; }
-.ai-seat-dot.free { background: #e8f4fd; border-color: #b3d9f2; }
+.ai-seat-dot.free { background: #e8f4fd; border-color: #b3d9f2; cursor: pointer; }
+.ai-seat-dot.selected { background: #FF4D4F !important; border-color: #c53030 !important; transform: scale(1.15); box-shadow: 0 0 6px rgba(255,77,79,.35); }
 
 /* ===== 订单卡片 ===== */
 .ai-order-card {
@@ -455,6 +456,38 @@
   0%, 100% { opacity: 0.2; transform: scale(0.8); }
   50% { opacity: 1; transform: scale(1); }
 }
+
+/* ===== 历史按钮 ===== */
+.history-toggle-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #f5f7fa; border: 1px solid #e8e8e8;
+  color: #909399; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; font-size: 15px;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.history-toggle-btn:hover { color: #FF4D4F; border-color: #FF4D4F; background: #fff5f5; }
+
+/* ===== 新建对话按钮 ===== */
+.drawer-new-btn { cursor: pointer; color: #FF4D4F; font-size: 13px; white-space: nowrap; }
+.drawer-new-btn:hover { opacity: .8; }
+
+/* ===== 会话列表 ===== */
+.session-group { margin-bottom: 12px; }
+.session-group-title { font-size: 12px; font-weight: 600; color: #999; padding: 4px 4px 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
+.session-list { display: flex; flex-direction: column; gap: 2px; }
+.session-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  transition: background .15s;
+}
+.session-item:hover { background: #f5f7fa; }
+.session-item-active { background: #fff5f5 !important; border: 1px solid #ffd8d8; }
+.session-icon { font-size: 18px; flex-shrink: 0; }
+.session-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.session-name { font-size: 13px; font-weight: 500; color: #303133; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-time { font-size: 11px; color: #999; }
+.session-del { font-size: 14px; color: #ccc; flex-shrink: 0; transition: color .15s; }
+.session-del:hover { color: #FF4D4F; }
 
 @media (max-width: 900px) {
   .ai-chat-wrap { flex-direction: column; height: auto; }

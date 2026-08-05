@@ -202,7 +202,7 @@ const OrderDetailPage: React.FC = () => {
           </div>
         )}
 
-        {order.status === 'paid' && !hasCheckedTicket && (
+        {order.status === 'paid' && (
           <Card style={{ marginTop: 16 }}>
             <div style={{ textAlign: 'center' }}>
               <Statistic title="已支付" value={order.totalPrice} precision={2} prefix="¥" />
@@ -216,16 +216,6 @@ const OrderDetailPage: React.FC = () => {
               >
                 申请退款
               </Button>
-            </div>
-          </Card>
-        )}
-
-        {order.status === 'paid' && hasCheckedTicket && (
-          <Card style={{ marginTop: 16 }}>
-            <div style={{ textAlign: 'center' }}>
-              <Statistic title="已支付" value={order.totalPrice} precision={2} prefix="¥" />
-              <Divider />
-              <span style={{ color: '#999' }}>已有票核销使用，无法退款</span>
             </div>
           </Card>
         )}
