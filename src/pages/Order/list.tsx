@@ -115,6 +115,11 @@ const OrderListPage: React.FC = () => {
     refunded: '已退款',
   };
 
+  const isMovieStarted = (scheduleTime?: string) => {
+    if (!scheduleTime) return false;
+    try { return new Date(scheduleTime).getTime() < Date.now(); } catch { return false; }
+  };
+
   const renderOrder = (order: OrderVO) => {
     const st = order.status || 'pending';
     return (
@@ -192,15 +197,19 @@ const OrderListPage: React.FC = () => {
               >
                 查看
               </button>
-              <button
-                className="order-action-link"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRefundOrder(order.id!, order.totalPrice);
-                }}
-              >
-                申请退款
-              </button>
+              {isMovieStarted(order.scheduleTime) ? (
+                <span style={{ fontSize: 12, color: '#999' }}>已开场</span>
+              ) : (
+                <button
+                  className="order-action-link"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRefundOrder(order.id!, order.totalPrice);
+                  }}
+                >
+                  申请退款
+                </button>
+              )}
             </>
           ) : (
             <button

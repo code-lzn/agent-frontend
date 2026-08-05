@@ -198,23 +198,33 @@ const OrderDetailPage: React.FC = () => {
           </div>
         )}
 
-        {order.status === 'paid' && (
-          <Card style={{ marginTop: 16 }}>
-            <div style={{ textAlign: 'center' }}>
-              <Statistic title="已支付" value={order.totalPrice} precision={2} prefix="¥" />
-              <Divider />
-              <Button
-                type="default"
-                size="large"
-                danger
-                loading={refunding}
-                onClick={handleRefund}
-              >
-                申请退款
-              </Button>
-            </div>
-          </Card>
-        )}
+        {order.status === 'paid' && (() => {
+          const started = (() => {
+            if (!order.scheduleTime) return false;
+            try { return new Date(order.scheduleTime).getTime() < Date.now(); } catch { return false; }
+          })();
+          return (
+            <Card style={{ marginTop: 16 }}>
+              <div style={{ textAlign: 'center' }}>
+                <Statistic title="已支付" value={order.totalPrice} precision={2} prefix="¥" />
+                <Divider />
+                {started ? (
+                  <span style={{ color: '#999', fontSize: 14 }}>电影已开场，不可退款</span>
+                ) : (
+                  <Button
+                    type="default"
+                    size="large"
+                    danger
+                    loading={refunding}
+                    onClick={handleRefund}
+                  >
+                    申请退款
+                  </Button>
+                )}
+              </div>
+            </Card>
+          );
+        })()}
 
         {order.status === 'refunded' && (
           <Card style={{ marginTop: 16 }}>

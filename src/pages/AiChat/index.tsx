@@ -1,7 +1,9 @@
 import { resetConversation1 } from '@/api/movieAgentController';
+import { getCurrentSession, listByUser as listSessions, create as createSession, remove8 as removeSession } from '@/api/chatSessionController';
+import { listBySession } from '@/api/chatHistoryController';
 import { history, useModel } from '@umijs/max';
-import { Input } from 'antd';
-import { ArrowUpOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Drawer, Empty, Input, message } from 'antd';
+import { ArrowUpOutlined, MenuOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './index.css';
 
@@ -19,6 +21,14 @@ interface TicketFlow {
   schedule?: any;
   seats?: any[];
   order?: any;
+}
+
+interface SessionItem {
+  id: number;
+  sessionName: string;
+  userId: number;
+  editTime: string;
+  createTime: string;
 }
 
 const STEPS = ['选择影片', '选择影院', '选择场次', '选择座位', '确认订单', '支付出票'];
@@ -39,7 +49,7 @@ function parseSSELine(raw: string): { text?: string; card?: any } | null {
     // 卡片事件
     if (json.type === 'card' || json.cardType) return { card: json };
     // 工具执行事件 → 状态提示
-    if (json.type === 'tool_start') return { text: json.d || `正在${json.toolName}...` };
+    if (json.type === 'tool_start') return { text: `⏳ ${json.d || json.toolName || '处理中'}...\n` };
     if (json.type === 'tool_end') return { text: '' }; // 工具结束，不显示
     if (json.type === 'error') return { text: `❌ ${json.d || json.message || '出错了'}` };
     // 普通文本
@@ -109,6 +119,69 @@ const ScheduleCards: React.FC<{ items: any[]; onSelect: (s: any) => void }> = ({
   );
 };
 
+// ====== 座位图卡片 ======
+const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, seatIds: number[]) => void }> = ({ data, onSelectSeats }) => {
+  const seats: any[] = data?.seats || [];
+  const hallName = data?.hallName || '';
+  const scheduleId = data?.scheduleId;
+  const price = data?.price ?? 0;
+  const [selected, setSelected] = useState<number[]>([]);
+
+  const rows: Record<number, any[]> = {};
+  seats.forEach((s: any) => {
+    const r = s.rowNum ?? 0;
+    if (!rows[r]) rows[r] = [];
+    rows[r].push(s);
+  });
+
+  const toggleSeat = (seatId: number, status: string) => {
+    if (status === 'sold' || status === 'locked') return;
+    setSelected((prev) => (prev.includes(seatId) ? prev.filter((id) => id !== seatId) : [...prev, seatId]));
+  };
+
+  return (
+    <div className="ai-seat-card">
+      <div className="ai-seat-header">
+        <span>🎯 {hallName}</span>
+        <span className="ai-seat-price">¥{price}/座</span>
+      </div>
+      <div style={{ display: 'flex', gap: 14, marginBottom: 8, fontSize: 11, color: '#999' }}>
+        <span><span className="ai-seat-dot free" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} /> 可选</span>
+        <span><span className="ai-seat-dot sold" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} /> 已售</span>
+      </div>
+      <div className="ai-seat-grid">
+        {Object.entries(rows)
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([rowNum, rowSeats]) => (
+            <div className="ai-seat-row" key={rowNum}>
+              <span className="ai-seat-rn">{rowNum}</span>
+              {rowSeats
+                .sort((a, b) => (a.colNum ?? 0) - (b.colNum ?? 0))
+                .map((seat) => (
+                  <div
+                    key={seat.id}
+                    className={`ai-seat-dot ${seat.status === 'sold' || seat.status === 'locked' ? 'sold' : seat.zone === 'vip' ? 'vip' : 'free'} ${selected.includes(seat.id) ? 'selected' : ''}`}
+                    onClick={() => toggleSeat(seat.id, seat.status)}
+                    title={seat.seatLabel}
+                  />
+                ))}
+            </div>
+          ))}
+      </div>
+      {selected.length > 0 && (
+        <div style={{ marginTop: 12, textAlign: 'right' }}>
+          <button
+            style={{ height: 36, padding: '0 24px', borderRadius: 8, border: 'none', background: '#FF4D4F', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' }}
+            onClick={() => onSelectSeats(scheduleId, selected)}
+          >
+            确认选座（{selected.length}座 ¥{(selected.length * price).toFixed(2)}）
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const OrderCard: React.FC<{ data: any; onPay: () => void }> = ({ data, onPay }) => (
   <div className="ai-order-card">
     <div className="ai-order-row"><span>影片</span><b>{data.filmName}</b></div>
@@ -132,15 +205,23 @@ const AiChatPage: React.FC = () => {
   const { initialState } = useModel('@@initialState');
   const currentUser = initialState?.currentUser;
 
-  // 持久化 conversationId（sessionStorage，刷新不丢失）
-  const [conversationId] = useState(() => {
-    const key = `ai_conv_${currentUser?.id || 'guest'}`;
+  // 游客 conversationId（sessionStorage 持久化）
+  const [guestConvId] = useState(() => {
+    const key = 'ai_guest_conv';
     const saved = sessionStorage.getItem(key);
     if (saved) return saved;
     const id = String(Date.now());
     sessionStorage.setItem(key, id);
     return id;
   });
+
+  // 登录用户的会话管理
+  const isLoggedIn = !!currentUser?.id;
+  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [sessions, setSessions] = useState<SessionItem[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const activeConvId = sessionId != null ? String(sessionId) : guestConvId;
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'ai', content: '你好！我是 AI 观影助手 🎬\n告诉我你的需求，比如"想看周末的喜剧片"或"帮我选IMAX哪吒"，我帮你一站式搞定选座购票～', timestamp: Date.now(), cards: [] },
@@ -154,6 +235,94 @@ const AiChatPage: React.FC = () => {
   useEffect(() => {
     msgsRef.current?.scrollTo({ top: msgsRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
+
+  // ---- 会话初始化（仅登录用户） ----
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    (async () => {
+      try {
+        const resList = await listSessions({ userId: currentUser!.id });
+        const list = (resList as any)?.data || [];
+        setSessions(list);
+        const resCur = await getCurrentSession({ userId: currentUser!.id });
+        const cur = (resCur as any)?.data;
+        if (cur?.id) {
+          setSessionId(cur.id);
+          await loadHistory(cur.id);
+        }
+      } catch { /* ignore */ }
+    })();
+  }, [isLoggedIn]);
+
+  // ---- 加载历史消息 ----
+  const loadHistory = useCallback(async (sid: number) => {
+    setLoadingHistory(true);
+    setMessages([]);
+    try {
+      const res = await listBySession({ sessionId: sid });
+      const historyList: any[] = (res as any)?.data || [];
+      if (historyList.length > 0) {
+        const msgs: ChatMessage[] = historyList.map((h) => ({
+          role: (h.messageType === 'user' ? 'user' : 'ai') as 'user' | 'ai',
+          content: h.message || '',
+          timestamp: Date.parse(h.createTime || '') || Date.now(),
+          cards: [],
+        }));
+        setMessages(msgs);
+      } else {
+        setMessages([{ role: 'ai', content: '你好！我是 AI 观影助手 🎬\n告诉我你的需求，比如"想看周末的喜剧片"或"帮我选IMAX哪吒"，我帮你一站式搞定选座购票～', timestamp: Date.now(), cards: [] }]);
+      }
+    } catch {
+      setMessages([{ role: 'ai', content: '你好！我是 AI 观影助手 🎬', timestamp: Date.now(), cards: [] }]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, []);
+
+  // ---- 会话操作 ----
+  const newSession = useCallback(async () => {
+    if (!isLoggedIn) return;
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    setSending(false);
+    try {
+      const res = await createSession({ userId: currentUser!.id });
+      const s = (res as any)?.data;
+      if (s?.id) {
+        setSessionId(s.id);
+        setMessages([{ role: 'ai', content: '新对话已创建，有什么想看的？', timestamp: Date.now(), cards: [] }]);
+        setFlow({ step: 0 });
+        setHistoryOpen(false);
+        const listRes = await listSessions({ userId: currentUser!.id });
+        setSessions((listRes as any)?.data || []);
+      }
+    } catch { message.error('创建会话失败'); }
+  }, [isLoggedIn, currentUser]);
+
+  const switchSession = useCallback(async (sid: number) => {
+    if (sid === sessionId) { setHistoryOpen(false); return; }
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    setSessionId(sid);
+    setSending(false);
+    setHistoryOpen(false);
+    setFlow({ step: 0 });
+    await loadHistory(sid);
+  }, [sessionId, loadHistory]);
+
+  const deleteSession = useCallback(async (sid: number) => {
+    try {
+      await removeSession({ id: sid });
+      const listRes = await listSessions({ userId: currentUser!.id });
+      const list = (listRes as any)?.data || [];
+      setSessions(list);
+      if (sid === sessionId) {
+        if (list.length > 0) {
+          switchSession(list[0].id);
+        } else {
+          newSession();
+        }
+      }
+    } catch { message.error('删除失败'); }
+  }, [currentUser, sessionId, switchSession, newSession]);
 
   // 根据卡片类型更新购票进度
   const updateFlow = (cards: any[]) => {
@@ -185,8 +354,8 @@ const AiChatPage: React.FC = () => {
 
     // 重置对话
     if (trimmed === '__reset__') {
-      try { await resetConversation1({ conversationId }); } catch {}
-      setMessages([messages[0]]);
+      try { await resetConversation1({ conversationId: activeConvId }); } catch {}
+      setMessages([{ role: 'ai', content: '对话已重置', timestamp: Date.now(), cards: [] }]);
       setFlow({ step: 0 });
       return;
     }
@@ -200,14 +369,14 @@ const AiChatPage: React.FC = () => {
     abortRef.current = controller;
 
     const baseUrl = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8123/api';
-    const params = new URLSearchParams({ message: trimmed, conversationId });
+    const params = new URLSearchParams({ message: trimmed, conversationId: activeConvId });
     if (currentUser?.id) params.set('userId', String(currentUser.id));
 
     let aiText = '';
     const cards: any[] = [];
 
     try {
-      const res = await fetch(`${baseUrl}/movie-agent/chat-stream?${params}`, {
+      const res = await fetch(`${baseUrl}/movie-agent/smart-stream?${params}`, {
         signal: controller.signal,
         credentials: 'include',
       });
@@ -219,6 +388,7 @@ const AiChatPage: React.FC = () => {
 
       const decoder = new TextDecoder();
       let buf = '';
+      let currentEvent = '';
 
       // 先添加空的 AI 消息占位
       setMessages((prev) => [...prev, { role: 'ai', content: '', timestamp: Date.now(), cards: [] }]);
@@ -232,13 +402,19 @@ const AiChatPage: React.FC = () => {
         buf = lines.pop() || '';
 
         for (const line of lines) {
+          // SSE event 类型行
+          if (line.startsWith('event:')) {
+            currentEvent = line.slice(6).trim();
+            continue;
+          }
+
           const parsed = parseSSELine(line);
           if (!parsed) continue;
 
           if (parsed.card) {
             cards.push(parsed.card);
           }
-          if (parsed.text) {
+          if (parsed.text != null) {
             aiText += parsed.text;
             // 流式更新最后一条消息
             setMessages((prev) => {
@@ -246,7 +422,16 @@ const AiChatPage: React.FC = () => {
               return [...rest, { role: 'ai', content: aiText, timestamp: Date.now(), cards: [...cards] }];
             });
           }
+
+          // done 事件 → 结束流
+          if (currentEvent === 'done') {
+            currentEvent = '';
+            controller.abort();
+            break;
+          }
         }
+
+        if (currentEvent === 'done') { currentEvent = ''; break; }
       }
 
       // 流结束：更新卡片和进度
@@ -255,6 +440,13 @@ const AiChatPage: React.FC = () => {
         const rest = prev.slice(0, -1);
         return [...rest, { role: 'ai', content: aiText || '（收到回复）', timestamp: Date.now(), cards: [...cards] }];
       });
+      // 刷新会话列表
+      if (isLoggedIn) {
+        try {
+          const listRes = await listSessions({ userId: currentUser!.id });
+          setSessions((listRes as any)?.data || []);
+        } catch { /* ignore */ }
+      }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         setMessages((prev) => [...prev, { role: 'ai', content: '😵 连接中断，请重试', timestamp: Date.now(), cards: [] }]);
@@ -263,7 +455,7 @@ const AiChatPage: React.FC = () => {
       setSending(false);
       abortRef.current = null;
     }
-  }, [sending, conversationId, currentUser?.id, messages]);
+  }, [sending, activeConvId, currentUser?.id, isLoggedIn]);
 
   // 渲染卡片
   const renderCards = (cards: any[]) => {
@@ -286,6 +478,10 @@ const AiChatPage: React.FC = () => {
         ) : null;
       }
 
+      if (ct === 'seat_map') {
+        return <SeatMapCard key={i} data={data} onSelectSeats={(scheduleId, seatIds) => sendMessage(`确认选座，场次ID=${scheduleId}，座位ID=${seatIds.join(',')}`)} />;
+      }
+
       if (ct === 'order_confirm' || ct === 'order') {
         return <OrderCard key={i} data={data} onPay={() => sendMessage('确认下单，帮我创建订单')} />;
       }
@@ -294,17 +490,92 @@ const AiChatPage: React.FC = () => {
     });
   };
 
+  const formatTime = (t?: string) => {
+    if (!t) return '';
+    const d = new Date(t);
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    return `${d.getMonth() + 1}-${d.getDate()}`;
+  };
+
   return (
     <div className="ai-chat-wrap">
+      {/* 历史会话抽屉 */}
+      {isLoggedIn && (
+        <Drawer
+          title="对话历史"
+          placement="left"
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          width={300}
+          extra={<span className="drawer-new-btn" onClick={newSession}><PlusOutlined /> 新对话</span>}
+        >
+          {/* 按日期分组 */}
+          {(() => {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(today.getTime() - 86400000);
+            const weekAgo = new Date(today.getTime() - 7 * 86400000);
+
+            const groups: { label: string; items: SessionItem[] }[] = [];
+            const grouped = new Set<number>();
+
+            const addGroup = (label: string, filter: (d: Date) => boolean) => {
+              const items = sessions.filter((s) => {
+                if (grouped.has(s.id)) return false;
+                const d = new Date(s.editTime || s.createTime);
+                return filter(d);
+              });
+              items.forEach((s) => grouped.add(s.id));
+              if (items.length > 0) groups.push({ label, items });
+            };
+
+            addGroup('今天', (d) => d >= today);
+            addGroup('昨天', (d) => d >= yesterday && d < today);
+            addGroup('本周', (d) => d >= weekAgo && d < yesterday);
+            addGroup('更早', () => true);
+
+            if (groups.length === 0) return <Empty description="暂无对话记录" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
+
+            return groups.map((grp) => (
+              <div key={grp.label} className="session-group">
+                <div className="session-group-title">{grp.label}</div>
+                {grp.items.map((s) => (
+                  <div
+                    key={s.id}
+                    className={`session-item ${s.id === sessionId ? 'session-item-active' : ''}`}
+                    onClick={() => switchSession(s.id)}
+                  >
+                    <span className="session-icon">💬</span>
+                    <div className="session-content">
+                      <span className="session-name">{s.sessionName || '新对话'}</span>
+                      <span className="session-time">{formatTime(s.editTime || s.createTime)}</span>
+                    </div>
+                    <DeleteOutlined
+                      className="session-del"
+                      onClick={(e) => { e.stopPropagation(); deleteSession(s.id); }}
+                    />
+                  </div>
+                ))}
+              </div>
+            ));
+          })()}
+        </Drawer>
+      )}
+
       {/* 对话区 */}
       <div className="chat-main">
         <div className="ch-header">
+          {isLoggedIn && <MenuOutlined className="history-toggle-btn" onClick={() => setHistoryOpen(true)} />}
           <div className="ch-avatar">🤖</div>
           <div style={{ flex: 1 }}>
-            <div className="ch-title">AI 观影助手<span className="ch-status"><span className="status-dot" />在线</span></div>
+            <div className="ch-title">
+              {isLoggedIn ? (sessions.find(s => s.id === sessionId)?.sessionName || 'AI 观影助手') : 'AI 观影助手'}
+              <span className="ch-status"><span className="status-dot" />在线</span>
+            </div>
             <div className="ch-sub">说一句话，帮你选座购票</div>
           </div>
-          <button className="reset-btn" title="新对话" onClick={() => sendMessage('__reset__')}><ReloadOutlined /></button>
+          {isLoggedIn && <button className="reset-btn" title="新对话" onClick={newSession}><PlusOutlined /></button>}
         </div>
 
         <div className="chat-msgs" ref={msgsRef}>
