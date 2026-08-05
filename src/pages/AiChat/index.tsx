@@ -1,6 +1,8 @@
 import { resetConversation1 } from '@/api/movieAgentController';
 import { getCurrentSession, listByUser as listSessions, create as createSession, remove8 as removeSession } from '@/api/chatSessionController';
 import { listBySession } from '@/api/chatHistoryController';
+import { listSchedule } from '@/api/scheduleController';
+import { getSeatMap } from '@/api/seatController';
 import { history, useModel } from '@umijs/max';
 import { Drawer, Empty, Input, message } from 'antd';
 import { ArrowUpOutlined, MenuOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -119,6 +121,32 @@ const ScheduleCards: React.FC<{ items: any[]; onSelect: (s: any) => void }> = ({
   );
 };
 
+// ====== 影院列表卡片（点击直接查该影院+当前影片的场次） ======
+const CinemaCards: React.FC<{ items: any[]; filmId?: string; onSelectCinema: (cinemaId: string, cinemaName: string) => void }> = ({ items, filmId, onSelectCinema }) => (
+  <div className="card-group">
+    {items.map((c: any, i: number) => {
+      const name = c?.name || c?.cinemaName || '';
+      const addr = c?.address || c?.cinemaAddress || '';
+      const tags = c?.tags ? String(c.tags).split(',').filter(Boolean) : [];
+      const cid = c?.cinemaId || c?.id;
+      return (
+        <div key={cid || i} className="ai-film-card" style={{ width: 200 }}>
+          <div className="ai-film-poster" style={{ background: 'linear-gradient(135deg,#1a1a3a,#2d2d5e)', fontSize: '2.5rem' }}>🎬</div>
+          <div className="ai-film-info">
+            <div className="ai-film-name">{name}</div>
+            {addr && <div className="ai-film-type">📍 {addr}</div>}
+            {tags.length > 0 && <div className="ai-film-type">{tags.slice(0, 3).join(' · ')}</div>}
+            {c?.basePrice != null && <div className="ai-film-rating">¥{c.basePrice} 起</div>}
+            <div className="ai-film-actions">
+              <button className="btn-solid" onClick={() => onSelectCinema(String(cid), name)}>选这家 → 看场次</button>
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+);
+
 // ====== 座位图卡片 ======
 const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, seatIds: number[]) => void }> = ({ data, onSelectSeats }) => {
   const seats: any[] = data?.seats || [];
@@ -223,9 +251,17 @@ const AiChatPage: React.FC = () => {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const activeConvId = sessionId != null ? String(sessionId) : guestConvId;
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'ai', content: '你好！我是 AI 观影助手 🎬\n告诉我你的需求，比如"想看周末的喜剧片"或"帮我选IMAX哪吒"，我帮你一站式搞定选座购票～', timestamp: Date.now(), cards: [] },
-  ]);
+  // 用稳定 key 缓存消息（含卡片），刷新不丢
+  const msgCacheKey = `ai_msgs_${currentUser?.id || guestConvId}`;
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const cached = sessionStorage.getItem(msgCacheKey);
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return [
+      { role: 'ai', content: '你好！我是 AI 观影助手 🎬\n告诉我你的需求，比如"想看周末的喜剧片"或"帮我选IMAX哪吒"，我帮你一站式搞定选座购票～', timestamp: Date.now(), cards: [] },
+    ];
+  });
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const [flow, setFlow] = useState<TicketFlow>({ step: 0 });
@@ -235,6 +271,16 @@ const AiChatPage: React.FC = () => {
   useEffect(() => {
     msgsRef.current?.scrollTo({ top: msgsRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
+
+  // 消息变化时存 sessionStorage
+  const lastSavedRef = useRef('');
+  useEffect(() => {
+    const json = JSON.stringify(messages);
+    if (json !== lastSavedRef.current) {
+      lastSavedRef.current = json;
+      try { sessionStorage.setItem(msgCacheKey, json); } catch {}
+    }
+  }, [messages, msgCacheKey]);
 
   // ---- 会话初始化（仅登录用户） ----
   useEffect(() => {
@@ -257,6 +303,14 @@ const AiChatPage: React.FC = () => {
   // ---- 加载历史消息 ----
   const loadHistory = useCallback(async (sid: number) => {
     setLoadingHistory(true);
+    // 优先用 sessionStorage 缓存（含卡片数据）
+    const cacheKey2 = `ai_msgs_${currentUser?.id || guestConvId}`;
+    const cached = (() => { try { const c = sessionStorage.getItem(cacheKey2); return c ? JSON.parse(c) : null; } catch { return null; } })();
+    if (cached && cached.length > 0) {
+      setMessages(cached);
+      setLoadingHistory(false);
+      return;
+    }
     setMessages([]);
     try {
       const res = await listBySession({ sessionId: sid });
@@ -270,14 +324,14 @@ const AiChatPage: React.FC = () => {
         }));
         setMessages(msgs);
       } else {
-        setMessages([{ role: 'ai', content: '你好！我是 AI 观影助手 🎬\n告诉我你的需求，比如"想看周末的喜剧片"或"帮我选IMAX哪吒"，我帮你一站式搞定选座购票～', timestamp: Date.now(), cards: [] }]);
+        setMessages([{ role: 'ai', content: '你好！我是 AI 观影助手 🎬\n告诉我你的需求...', timestamp: Date.now(), cards: [] }]);
       }
     } catch {
       setMessages([{ role: 'ai', content: '你好！我是 AI 观影助手 🎬', timestamp: Date.now(), cards: [] }]);
     } finally {
       setLoadingHistory(false);
     }
-  }, []);
+  }, [currentUser?.id, guestConvId]);
 
   // ---- 会话操作 ----
   const newSession = useCallback(async () => {
@@ -457,6 +511,64 @@ const AiChatPage: React.FC = () => {
     }
   }, [sending, activeConvId, currentUser?.id, isLoggedIn]);
 
+  // 记录当前影片卡片中的 filmId，用于后续影院→场次查询
+  const currentFilmIdRef = useRef<string>('');
+
+  // 影院卡片点击：直接调 listSchedule API，绕过后端 AI 避免查全量
+  const handleCinemaSelect = useCallback(async (cinemaId: string, cinemaName: string) => {
+    const fid = currentFilmIdRef.current;
+    if (!fid) {
+      sendMessage(`就选这家影院：${cinemaName}，影院ID=${cinemaId}`);
+      return;
+    }
+    const userMsg: ChatMessage = { role: 'user', content: `就选这家影院：${cinemaName}`, timestamp: Date.now() };
+    setMessages((prev) => [...prev, userMsg]);
+    try {
+      const res = await listSchedule({ filmId: fid, cinemaId } as any);
+      const rawData = (res as any)?.data || [];
+      // 去重+有座位+排序+限30条（日期过滤由后端 queryScheduleList 处理）
+      const seen = new Set<string>();
+      const data = rawData
+        .filter((s: any) => Number(s.availableSeats) > 0 || s.availableSeats == null)
+        .filter((s: any) => {
+          const key = `${s.showDate}|${s.startTime}|${s.hallName}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .sort((a: any, b: any) => (a.showDate + a.startTime).localeCompare(b.showDate + b.startTime))
+        .slice(0, 30);
+      if (data.length === 0) {
+        setMessages((prev) => [...prev, { role: 'ai', content: `😔 ${cinemaName}暂无《流浪地球》的排期，换一家试试～`, timestamp: Date.now(), cards: [] }]);
+        return;
+      }
+      const cardPayload = { type: 'card', cardType: 'schedule_list', data: { sessions: data, total: data.length } };
+      setMessages((prev) => [...prev, { role: 'ai', content: `✅ ${cinemaName}的场次如下，选一个吧～`, timestamp: Date.now(), cards: [cardPayload] }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: 'ai', content: '😵 加载场次失败，请重试', timestamp: Date.now(), cards: [] }]);
+    }
+  }, []);
+
+  // 场次卡片点击：直接调 getSeatMap API，不靠后端 AI
+  const handleScheduleSelect = useCallback(async (s: any) => {
+    const sid = s.scheduleId || s.id;
+    const label = `${s.cinemaName || ''} ${s.hallName} ${s.startTime}`.trim();
+    const userMsg: ChatMessage = { role: 'user', content: `选这个场次：${label}`, timestamp: Date.now() };
+    setMessages((prev) => [...prev, userMsg]);
+    try {
+      const res = await getSeatMap({ scheduleId: String(sid) } as any);
+      const data = (res as any)?.data;
+      if (!data || !data.seats || data.seats.length === 0) {
+        setMessages((prev) => [...prev, { role: 'ai', content: `😔 ${label} 暂无可用座位`, timestamp: Date.now(), cards: [] }]);
+        return;
+      }
+      const cardPayload = { type: 'card', cardType: 'seat_map', data };
+      setMessages((prev) => [...prev, { role: 'ai', content: `🎯 ${data.hallName || ''} 座位图，点击选座：`, timestamp: Date.now(), cards: [cardPayload] }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: 'ai', content: '😵 加载座位图失败，请重试', timestamp: Date.now(), cards: [] }]);
+    }
+  }, []);
+
   // 渲染卡片
   const renderCards = (cards: any[]) => {
     if (!cards?.length) return null;
@@ -467,15 +579,42 @@ const AiChatPage: React.FC = () => {
       if (ct === 'movie_list' || ct === 'film_list') {
         const list = data?.list || data?.records || data?.films || (Array.isArray(data) ? data : []);
         const items = Array.isArray(list) ? list : [];
-        return items.length > 0 ? <FilmCards key={i} items={items} onSelect={(name) => sendMessage(`我要看《${name}》`)} /> : null;
+        if (items.length === 0) {
+          return <div key={i} style={{ marginTop: 10, padding: '12px 16px', background: '#fffbe6', borderRadius: 8, border: '1px solid #ffe58f', fontSize: 13, color: '#ad6800' }}>⚠️ 没有搜到符合条件的影片，换个关键词试试～</div>;
+        }
+        // 记住当前影片ID，后续选影院时直接调 API 查场次
+        if (items[0]?.filmId) currentFilmIdRef.current = String(items[0].filmId);
+        return (
+          <div key={i}>
+            <FilmCards items={items} onSelect={(name) => sendMessage(`我要看《${name}》，有哪些影院放映`)} />
+            {items.length === 1 && (
+              <button
+                style={{ marginTop: 8, height: 32, padding: '0 14px', borderRadius: 6, border: '1px solid #FF4D4F', background: '#fff', color: '#FF4D4F', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}
+                onClick={() => sendMessage(`帮我查《${items[0].name}》在哪些影院上映`)}
+              >
+                🎬 查看放映影院 →
+              </button>
+            )}
+          </div>
+        );
+      }
+
+      if (ct === 'cinema_list') {
+        const list = data?.cinemas || data?.list || data?.records || (Array.isArray(data) ? data : []);
+        const items = Array.isArray(list) ? list : [];
+        if (items.length === 0) {
+          return <div key={i} style={{ marginTop: 10, padding: '12px 16px', background: '#fffbe6', borderRadius: 8, border: '1px solid #ffe58f', fontSize: 13, color: '#ad6800' }}>⚠️ 暂无符合条件的影院</div>;
+        }
+        return <CinemaCards key={i} items={items} filmId={currentFilmIdRef.current} onSelectCinema={handleCinemaSelect} />;
       }
 
       if (ct === 'session_list' || ct === 'schedule_list') {
-        const list = data?.schedules || data?.list || data?.records || (Array.isArray(data) ? data : []);
+        const list = data?.sessions || data?.schedules || data?.list || data?.records || (Array.isArray(data) ? data : []);
         const items = Array.isArray(list) ? list : [];
-        return items.length > 0 ? (
-          <ScheduleCards key={i} items={items} onSelect={(s) => sendMessage(`选这个场次：${s.cinemaName} ${s.hallName} ${s.startTime}，场次ID=${s.id || s.scheduleId}`)} />
-        ) : null;
+        if (items.length === 0) {
+          return <div key={i} style={{ marginTop: 10, padding: '12px 16px', background: '#fffbe6', borderRadius: 8, border: '1px solid #ffe58f', fontSize: 13, color: '#ad6800' }}>⚠️ 该日期暂无场次，换一天试试～</div>;
+        }
+        return <ScheduleCards key={i} items={items} onSelect={handleScheduleSelect} />;
       }
 
       if (ct === 'seat_map') {
