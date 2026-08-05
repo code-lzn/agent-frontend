@@ -1,12 +1,12 @@
 import { getSeatMap } from '@/api/seatController';
-import { createOrder, payOrder } from '@/api/orderController';
+import { createOrder } from '@/api/orderController';
 import { getFilm } from '@/api/filmController';
 import { getInfo3 as getSchedule } from '@/api/scheduleController';
 import { getInfo7 as getCinema } from '@/api/cinemaController';
 import { Button, Card, Col, Descriptions, Divider, message, Row, Spin, Statistic, Tag, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from '@umijs/max';
-import type { OrderVO, SeatMapVO, Film, Schedule } from '@/api/typings';
+import type { SeatMapVO, Film, Schedule } from '@/api/typings';
 
 const { Text, Title } = Typography;
 
@@ -22,7 +22,6 @@ const OrderConfirmPage: React.FC = () => {
   const [cinemaName, setCinemaName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [order, setOrder] = useState<OrderVO | null>(null);
 
   useEffect(() => {
     if (!scheduleId || seatIds.length === 0) {
@@ -76,37 +75,28 @@ const OrderConfirmPage: React.FC = () => {
   const totalPrice = vipTotal + regularTotal;
 
   const handleCreateOrder = async () => {
+    if (submitting) return; // 防重复点击
+
+    // 检查场次是否已开场
+    if (schedule?.showDate && schedule?.startTime) {
+      const [y, mo, d] = schedule.showDate.split('-').map(Number);
+      const [hh, mm] = schedule.startTime.split(':').map(Number);
+      if (new Date(y, mo - 1, d, hh, mm).getTime() <= Date.now()) {
+        message.error('该场次已开场，无法购票');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const res = await createOrder({ scheduleId, seatIds });
       if (res.data) {
-        setOrder(res.data);
         message.success('订单创建成功');
+        // 直接跳转订单详情页，替换当前历史记录，防止回退重复下单
+        navigate(`/order/${res.data.id}`, { replace: true });
       }
     } catch (e: any) {
       message.error('创建订单失败：' + (e.message || ''));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handlePay = async () => {
-    if (!order?.id) return;
-    setSubmitting(true);
-    try {
-      const res = await payOrder({ orderId: order.id });
-      if (res.data?.payForm) {
-        const div = document.createElement('div');
-        div.innerHTML = res.data.payForm;
-        document.body.appendChild(div);
-        const form = div.querySelector('form');
-        if (form) {
-          form.submit();
-        }
-      }
-    } catch (e: any) {
-      message.error('支付失败：' + (e.message || ''));
-    } finally {
       setSubmitting(false);
     }
   };
@@ -201,75 +191,26 @@ const OrderConfirmPage: React.FC = () => {
 
         <Col xs={24} lg={8}>
           <Card>
-            {!order ? (
-              <div style={{ textAlign: 'center' }}>
-                <Statistic title="应付金额" value={totalPrice} precision={2} prefix="¥" />
-                <Divider />
-                <Button
-                  type="primary"
-                  size="large"
-                  block
-                  loading={submitting}
-                  onClick={handleCreateOrder}
-                  style={{ borderRadius: 8 }}
-                >
-                  确认下单
-                </Button>
-                <div style={{ marginTop: 8 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    请在15分钟内完成支付，超时订单将自动取消
-                  </Text>
-                </div>
+            <div style={{ textAlign: 'center' }}>
+              <Statistic title="应付金额" value={totalPrice} precision={2} prefix="¥" />
+              <Divider />
+              <Button
+                type="primary"
+                size="large"
+                block
+                loading={submitting}
+                disabled={submitting}
+                onClick={handleCreateOrder}
+                style={{ borderRadius: 8 }}
+              >
+                确认下单
+              </Button>
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  下单后请在15分钟内完成支付，超时订单将自动取消
+                </Text>
               </div>
-            ) : order.status === 'pending' ? (
-              <div style={{ textAlign: 'center' }}>
-                <Statistic title="待支付" value={totalPrice} precision={2} prefix="¥" />
-                <Tag color="orange" style={{ marginTop: 8 }}>
-                  订单号：{order.orderNo}
-                </Tag>
-                <Divider />
-                <Button
-                  type="primary"
-                  size="large"
-                  block
-                  loading={submitting}
-                  onClick={handlePay}
-                  style={{ borderRadius: 8 }}
-                >
-                  去支付（支付宝沙箱）
-                </Button>
-                <div style={{ marginTop: 8 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    测试环境直接支付成功
-                  </Text>
-                </div>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center' }}>
-                <Statistic
-                  title="支付状态"
-                  value={
-                    order.status === 'paid'
-                      ? '支付成功'
-                      : order.status === 'cancelled'
-                      ? '已取消'
-                      : order.status
-                  }
-                  valueStyle={{
-                    color: order.status === 'paid' ? '#52c41a' : '#e53e3e',
-                  }}
-                />
-                <Divider />
-                <Button
-                  type="primary"
-                  block
-                  onClick={() => navigate(`/order/${order.id}`)}
-                  style={{ borderRadius: 8 }}
-                >
-                  查看订单详情
-                </Button>
-              </div>
-            )}
+            </div>
           </Card>
         </Col>
       </Row>

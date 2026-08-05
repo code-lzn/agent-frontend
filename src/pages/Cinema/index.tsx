@@ -34,20 +34,14 @@ const CinemaListPage: React.FC = () => {
     setLoading(true);
     list4()
       .then((res) => {
-        console.log('[CinemaList] 原始响应:', JSON.stringify(res));
         const data = (res as any)?.data;
-        console.log('[CinemaList] 解析后 data:', data, 'isArray:', Array.isArray(data));
         if (data && Array.isArray(data)) {
-          console.log(`[CinemaList] 共 ${data.length} 家影院:`);
-          data.forEach((c: Cinema) => console.log(`  id=${c.id}, name=${c.name}, city="${c.city}" → 归一化="${normalizeCity(c.city || '')}"`));
           setCinemas(data);
         } else if (Array.isArray(res)) {
-          // 可能 res 直接就是数组
-          console.log('[CinemaList] res 是数组，共', res.length, '条');
           setCinemas(res as any);
         }
       })
-      .catch((e) => console.error('[CinemaList] 加载失败:', e))
+      .catch((e) => console.error(e))
       .finally(() => setLoading(false));
   }, []);
 
@@ -93,17 +87,11 @@ const CinemaListPage: React.FC = () => {
   // 按城市筛选（归一化匹配）
   const filtered = useMemo(() => {
     if (!selCity) return cinemas;
-    const result = cinemas.filter((c) => normalizeCity(c.city || '') === selCity);
-    console.log(`[CinemaList] 筛选城市="${selCity}", 总数${cinemas.length} → 筛选后${result.length}`);
-    if (result.length === 0 && cinemas.length > 0) {
-      console.log('[CinemaList] ⚠️ 筛选为空！所有影院城市值:', cinemas.map(c => `"${c.city}"`));
-    }
-    return result;
+    return cinemas.filter((c) => normalizeCity(c.city || '') === selCity);
   }, [cinemas, selCity]);
 
   // 跳转影院详情（带城市参数，返回时可恢复）
   const goToCinema = useCallback((cinema: Cinema) => {
-    console.log('[CinemaList] 点击影院:', cinema.id, cinema.name);
     history.push(`/cinema/${cinema.id}?city=${encodeURIComponent(selCity)}`);
   }, [selCity]);
 

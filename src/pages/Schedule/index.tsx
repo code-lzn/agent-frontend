@@ -51,8 +51,19 @@ const SchedulePage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [filmId, selDate]);
 
+  // 过滤：只要选中日期的场次 + 已过期的去掉
+  const nowTs = Date.now();
+  const validSchedules = schedules.filter((s) => {
+    // 精确匹配选中日期
+    if (s.showDate !== selDate) return false;
+    if (!s.startTime) return true;
+    const [y, mo, d] = s.showDate.split('-').map(Number);
+    const [hh, mm] = s.startTime.split(':').map(Number);
+    return new Date(y, mo - 1, d, hh, mm).getTime() > nowTs;
+  });
+
   const groups: Record<number, { name: string; address: string; schedules: ScheduleVO[] }> = {};
-  schedules.forEach((s) => {
+  validSchedules.forEach((s) => {
     if (!groups[s.cinemaId!]) {
       groups[s.cinemaId!] = { name: s.cinemaName || '', address: s.cinemaAddress || '', schedules: [] };
     }
