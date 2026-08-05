@@ -1,5 +1,5 @@
 import { cancelOrder, getOrderDetail, payOrder, refundOrder } from '@/api/orderController';
-import { Button, Card, Divider, message, Modal, Spin, Statistic } from 'antd';
+import { Button, Card, Divider, message, Modal, Spin, Statistic, Tag } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { history, useParams } from '@umijs/max';
 import React, { useEffect, useState } from 'react';
@@ -23,11 +23,13 @@ function formatRemain(sec: number) {
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-/** 从订单号生成取票码（取后12位数字，4位一组） */
-function makeTicketCode(orderNo?: string) {
-  const digits = (orderNo || '').replace(/\D/g, '').slice(-12);
-  return (digits.match(/.{1,4}/g) || []).join(' ') || orderNo || '-';
-}
+/** 票状态映射 */
+const TICKET_STATUS_MAP: Record<number, { text: string; color: string }> = {
+  0: { text: '未使用', color: 'success' },
+  1: { text: '已核销', color: 'default' },
+  2: { text: '已退票', color: 'warning' },
+  3: { text: '已过期', color: 'error' },
+};
 
 const OrderDetailPage: React.FC = () => {
   const { id } = useParams();
@@ -151,7 +153,9 @@ const OrderDetailPage: React.FC = () => {
   if (!order) return null;
 
   const st = order.status || 'pending';
-  const ticketCode = makeTicketCode(order.orderNo);
+  const tickets = order.tickets || [];
+  // 有任一票已核销 → 整单禁止退款
+  const hasCheckedTicket = tickets.some((t) => t.status === 1);
 
   return (
     <div className="order-detail-layout">
@@ -198,7 +202,7 @@ const OrderDetailPage: React.FC = () => {
           </div>
         )}
 
-        {order.status === 'paid' && (
+        {order.status === 'paid' && !hasCheckedTicket && (
           <Card style={{ marginTop: 16 }}>
             <div style={{ textAlign: 'center' }}>
               <Statistic title="已支付" value={order.totalPrice} precision={2} prefix="¥" />
@@ -212,6 +216,16 @@ const OrderDetailPage: React.FC = () => {
               >
                 申请退款
               </Button>
+            </div>
+          </Card>
+        )}
+
+        {order.status === 'paid' && hasCheckedTicket && (
+          <Card style={{ marginTop: 16 }}>
+            <div style={{ textAlign: 'center' }}>
+              <Statistic title="已支付" value={order.totalPrice} precision={2} prefix="¥" />
+              <Divider />
+              <span style={{ color: '#999' }}>已有票核销使用，无法退款</span>
             </div>
           </Card>
         )}
@@ -267,9 +281,33 @@ const OrderDetailPage: React.FC = () => {
           </div>
         ) : st === 'paid' ? (
           <>
-            <div className="ticket-box">
-              <div className="tl">取票码</div>
-              <div className="tc">{ticketCode}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {tickets.length > 0 ? (
+                tickets.map((t) => {
+                  const ts = TICKET_STATUS_MAP[t.status || 0] || TICKET_STATUS_MAP[0];
+                  const used = t.status === 1;
+                  return (
+                    <div
+                      key={t.ticketCode || t.seatId}
+                      className="ticket-box"
+                      style={used ? { opacity: 0.55 } : undefined}
+                    >
+                      <div className="tl">
+                        {t.seatLabel}
+                        <Tag color={ts.color} style={{ marginLeft: 6 }}>
+                          {ts.text}
+                        </Tag>
+                      </div>
+                      <div className="tc">{t.ticketCode}</div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="ticket-box">
+                  <div className="tl">取票码</div>
+                  <div className="tc">{order.orderNo}</div>
+                </div>
+              )}
             </div>
             <div className="os-actions">
               <button className="os-btn sec" onClick={() => history.push('/order/list')}>

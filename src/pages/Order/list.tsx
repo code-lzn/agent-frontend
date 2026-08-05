@@ -192,15 +192,18 @@ const OrderListPage: React.FC = () => {
               >
                 查看
               </button>
-              <button
-                className="order-action-link"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRefundOrder(order.id!, order.totalPrice);
-                }}
-              >
-                申请退款
-              </button>
+              {/* 有任一票已核销 → 整单禁止退款，隐藏入口 */}
+              {!(order.tickets || []).some((t) => t.status === 1) && (
+                <button
+                  className="order-action-link"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRefundOrder(order.id!, order.totalPrice);
+                  }}
+                >
+                  申请退款
+                </button>
+              )}
             </>
           ) : (
             <button

@@ -2,7 +2,7 @@ import { adminCancel, adminDetail, adminList, adminRefund } from '@/api/orderCon
 import { ExclamationCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Badge, Button, Card, Descriptions, message, Modal, Space, Tabs } from 'antd';
+import { Badge, Button, Card, Descriptions, message, Modal, Space, Tabs, Tag } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import './index.css';
@@ -15,6 +15,14 @@ const statusMap: Record<string, { status: 'processing' | 'success' | 'default' |
   cancelled: { status: 'default', text: '已取消' },
   completed: { status: 'success', text: '已完成' },
   refunded: { status: 'warning', text: '已退款' },
+};
+
+/** 票状态映射 */
+const TICKET_STATUS_MAP: Record<number, { text: string; color: string }> = {
+  0: { text: '未使用', color: 'success' },
+  1: { text: '已核销', color: 'default' },
+  2: { text: '已退票', color: 'warning' },
+  3: { text: '已过期', color: 'error' },
 };
 
 const OrderListPage: React.FC = () => {
@@ -99,11 +107,14 @@ const OrderListPage: React.FC = () => {
               取消
             </Button>
           )}
-          {record.status === 'paid' && (
-            <Button type="link" size="small" danger onClick={() => handleRefund(record)}>
-              退款
-            </Button>
-          )}
+          {record.status === 'paid' &&
+            ((record as any).hasCheckedTicket ? (
+              <Tag color="default">已核销</Tag>
+            ) : (
+              <Button type="link" size="small" danger onClick={() => handleRefund(record)}>
+                退款
+              </Button>
+            ))}
         </Space>
       ),
     },
@@ -250,6 +261,22 @@ const OrderListPage: React.FC = () => {
               ) : '-'}
             </Descriptions.Item>
             <Descriptions.Item label="放映时间">{detailData.scheduleTime || '-'}</Descriptions.Item>
+            <Descriptions.Item label="电子票" span={2}>
+              {(detailData as API.OrderVO).tickets?.length ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {(detailData as API.OrderVO).tickets!.map((t) => {
+                    const ts = TICKET_STATUS_MAP[t.status || 0] || TICKET_STATUS_MAP[0];
+                    return (
+                      <div key={t.ticketCode || t.seatId} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{ fontFamily: 'monospace', letterSpacing: 1, fontWeight: 600 }}>{t.ticketCode}</span>
+                        <span style={{ color: '#909399' }}>{t.seatLabel}</span>
+                        <Tag color={ts.color}>{ts.text}</Tag>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="订单金额">
               <span style={{ color: '#cf1322', fontWeight: 600 }}>
                 ¥{Number(detailData.totalPrice).toFixed(2)}

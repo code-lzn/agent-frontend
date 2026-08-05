@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Card,
+  Input,
   message,
   Modal,
   Space,
@@ -16,7 +17,7 @@ import {
   Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import SeatViewModal from './SeatViewModal';
 import './index.css';
 
@@ -50,6 +51,18 @@ const ScheduleListPage: React.FC = () => {
   const [cinemaMap, setCinemaMap] = useState<Record<number, API.Cinema>>({});
   const [hallMap, setHallMap] = useState<Record<number, API.Hall>>({});
   const [seatView, setSeatView] = useState<API.Schedule | null>(null);
+
+  // 影片/影院名称模糊搜索（客户端过滤，参照影院列表）
+  const [keyword, setKeyword] = useState('');
+  const filteredSchedules = useMemo(() => {
+    if (!keyword.trim()) return schedules;
+    const kw = keyword.trim().toLowerCase();
+    return schedules.filter((s) => {
+      const filmName = filmMap[s.filmId!]?.name || '';
+      const cinemaName = cinemaMap[s.cinemaId!]?.name || '';
+      return filmName.toLowerCase().includes(kw) || cinemaName.toLowerCase().includes(kw);
+    });
+  }, [schedules, filmMap, cinemaMap, keyword]);
 
   const loadData = async () => {
     setLoading(true);
@@ -189,7 +202,14 @@ const ScheduleListPage: React.FC = () => {
         title={
           <div className="card-header">
             <span className="card-title">场次列表</span>
-            <span className="card-count">共 {schedules.length} 场</span>
+            <span className="card-count">共 {filteredSchedules.length} 场</span>
+            <Input.Search
+              allowClear
+              placeholder="搜索影片 / 影院名称"
+              style={{ width: 240, marginLeft: 'auto' }}
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
           </div>
         }
         extra={
@@ -208,7 +228,7 @@ const ScheduleListPage: React.FC = () => {
       >
         <Table<API.Schedule>
           columns={columns}
-          dataSource={schedules}
+          dataSource={filteredSchedules}
           rowKey="id"
           loading={loading}
           pagination={{

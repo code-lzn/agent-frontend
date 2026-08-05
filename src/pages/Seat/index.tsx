@@ -6,6 +6,10 @@ import type { Seat, SeatMapVO } from '@/api/typings';
 
 const { Text, Title } = Typography;
 
+// 过道渲染尺寸（列间加宽 / 行间加高）
+const AISLE_COL_GAP = 18;
+const AISLE_ROW_HEIGHT = 14;
+
 const SeatPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -97,11 +101,21 @@ const SeatPage: React.FC = () => {
 
   if (!seatMap) return null;
 
-  const seatsByRow: Record<number, Seat[]> = {};
+  // 按物理格索引：rowNum → { colNum → seat }，缺口（柱子/过道）自然留白
+  const seatByPos: Record<number, Record<number, Seat>> = {};
   seatMap.seats?.forEach((seat) => {
-    if (!seatsByRow[seat.rowNum!]) seatsByRow[seat.rowNum!] = [];
-    seatsByRow[seat.rowNum!].push(seat);
+    if (seat.rowNum == null || seat.colNum == null) return;
+    if (!seatByPos[seat.rowNum]) seatByPos[seat.rowNum] = {};
+    seatByPos[seat.rowNum][seat.colNum] = seat;
   });
+
+  /** 该行实际物理列数（考虑 rowOverrides） */
+  const getRowCols = (rowNum: number): number =>
+    seatMap.rowOverrides?.[rowNum] ?? seatMap.colCount ?? 0;
+
+  const aisleRowSet = new Set(seatMap.aisleRows || []);
+  const aisleColSet = new Set(seatMap.aisleCols || []);
+  const rowCount = seatMap.rowCount ?? 0;
 
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto' }}>
@@ -168,33 +182,18 @@ const SeatPage: React.FC = () => {
               </Text>
             </div>
 
-            {/* 座位网格 */}
+            {/* 座位网格：按物理格遍历，空位留白、过道加宽 */}
             <div style={{ overflowX: 'auto', padding: '0 8px' }}>
-              {Object.entries(seatsByRow).map(([rowNum, rowSeats]) => (
-                <div
-                  key={rowNum}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: 5,
-                    marginBottom: 5,
-                    alignItems: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 24,
-                      textAlign: 'right',
-                      fontSize: 11,
-                      color: '#999',
-                      marginRight: 6,
-                    }}
-                  >
-                    {rowNum}
-                  </span>
-                  {rowSeats
-                    .sort((a, b) => (a.colNum || 0) - (b.colNum || 0))
-                    .map((seat) => (
+              {Array.from({ length: rowCount }, (_, ri) => {
+                const r = ri + 1;
+                const rowCols = getRowCols(r);
+                const rowSeats = seatByPos[r] || {};
+                const cells: React.ReactNode[] = [];
+
+                for (let c = 1; c <= rowCols; c++) {
+                  const seat = rowSeats[c];
+                  if (seat) {
+                    cells.push(
                       <div
                         key={seat.id}
                         onClick={() => handleSeatClick(seat)}
@@ -213,21 +212,79 @@ const SeatPage: React.FC = () => {
                         }}
                       >
                         {seat.colNum}
-                      </div>
-                    ))}
-                  <span
-                    style={{
-                      width: 24,
-                      textAlign: 'left',
-                      fontSize: 11,
-                      color: '#999',
-                      marginLeft: 6,
-                    }}
-                  >
-                    {rowNum}
-                  </span>
-                </div>
-              ))}
+                      </div>,
+                    );
+                  } else {
+                    // 空位格（柱子/缺口/少座区域）：留白
+                    cells.push(
+                      <div
+                        key={`blank-${c}`}
+                        style={{
+                          width: 32,
+                          height: 30,
+                          borderRadius: '4px 4px 3px 3px',
+                          background: '#fafafa',
+                          border: '1px dashed #eee',
+                        }}
+                      />,
+                    );
+                  }
+                  // 纵向过道：在过道列之后插入间隙
+                  if (aisleColSet.has(c)) {
+                    cells.push(<div key={`aisle-${c}`} style={{ width: AISLE_COL_GAP, flexShrink: 0 }} />);
+                  }
+                }
+
+                return (
+                  <div key={r}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: 5,
+                        marginBottom: 3,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 24,
+                          textAlign: 'right',
+                          fontSize: 11,
+                          color: '#999',
+                          marginRight: 6,
+                        }}
+                      >
+                        {r}
+                      </span>
+                      {cells}
+                      <span
+                        style={{
+                          width: 24,
+                          textAlign: 'left',
+                          fontSize: 11,
+                          color: '#999',
+                          marginLeft: 6,
+                        }}
+                      >
+                        {r}
+                      </span>
+                    </div>
+                    {/* 横向过道：行 r 之后 */}
+                    {aisleRowSet.has(r) && (
+                      <div
+                        style={{
+                          height: AISLE_ROW_HEIGHT,
+                          margin: '2px auto',
+                          width: '92%',
+                          background: 'repeating-linear-gradient(90deg, #fafafa, #fafafa 4px, #ffffff 4px, #ffffff 8px)',
+                          borderRadius: 3,
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* 图例 */}

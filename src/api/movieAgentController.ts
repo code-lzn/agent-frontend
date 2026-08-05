@@ -32,6 +32,21 @@ export async function doChatStream1(
   });
 }
 
+/** 此处后端没有提供注释 GET /movie-agent/pay-form */
+export async function payForm(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.payFormParams,
+  options?: { [key: string]: any },
+) {
+  return request<string>('/movie-agent/pay-form', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /movie-agent/reset */
 export async function resetConversation1(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

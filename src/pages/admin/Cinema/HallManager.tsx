@@ -62,9 +62,6 @@ const HallManager: React.FC<HallManagerProps> = ({ cinemaId }) => {
     form.setFieldsValue({
       name: hall.name,
       hallType: hall.hallType,
-      rowCount: hall.rowCount,
-      colCount: hall.colCount,
-      seatTemplate: tmpl,
     });
     // 同步网格
     const parsed = parseTemplate(tmpl);
@@ -78,11 +75,6 @@ const HallManager: React.FC<HallManagerProps> = ({ cinemaId }) => {
     setGridRowCount(rows);
     setGridColCount(cols);
     setGridTemplate(template);
-    form.setFieldsValue({
-      rowCount: rows,
-      colCount: cols,
-      seatTemplate: template,
-    });
   };
 
   const handleSubmit = async () => {
@@ -110,7 +102,11 @@ const HallManager: React.FC<HallManagerProps> = ({ cinemaId }) => {
       setEditingHall(null);
       loadHalls();
     } catch (e: any) {
-      if (e.errorFields) return;
+      if (e.errorFields) {
+        message.warning('请完善必填项后再保存');
+        return;
+      }
+      console.error('[HallManager] 保存影厅失败:', e);
       message.error(editingHall ? '更新失败' : '创建失败');
     }
   };
@@ -199,18 +195,13 @@ const HallManager: React.FC<HallManagerProps> = ({ cinemaId }) => {
         styles={{ body: { maxHeight: 600, overflowY: 'auto' } }}
       >
         {/* 基本信息 */}
-        <Form form={form} layout="vertical" initialValues={{ rowCount: 10, colCount: 10, seatTemplate: '{}' }}>
+        <Form form={form} layout="vertical">
           <Form.Item name="name" label="影厅名称" rules={[{ required: true, message: '请输入影厅名称' }]}>
             <Input placeholder="如 IMAX厅、2号厅" />
           </Form.Item>
           <Form.Item name="hallType" label="厅型" rules={[{ required: true, message: '请选择厅型' }]}>
             <Select options={HALL_TYPES.map((t) => ({ label: t, value: t }))} />
           </Form.Item>
-
-          {/* 隐藏字段，用于编辑器同步 */}
-          <Form.Item name="rowCount" hidden />
-          <Form.Item name="colCount" hidden />
-          <Form.Item name="seatTemplate" hidden />
 
           {/* 可视化座位网格编辑器 */}
           <Form.Item label="座位设计" style={{ marginBottom: 0 }}>

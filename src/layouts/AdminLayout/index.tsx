@@ -1,4 +1,5 @@
 import {
+  AuditOutlined,
   BarChartOutlined,
   CalendarOutlined,
   FileTextOutlined,
@@ -22,6 +23,7 @@ const menuItems = [
   { key: '/admin/cinema', icon: <HomeOutlined />, label: '影院管理' },
   { key: '/admin/schedule', icon: <CalendarOutlined />, label: '场次管理' },
   { key: '/admin/order', icon: <OrderedListOutlined />, label: '订单管理' },
+  { key: '/admin/ticket', icon: <AuditOutlined />, label: '票务核销' },
   { key: '/admin/user', icon: <UserOutlined />, label: '用户管理' },
   { key: '/admin/config', icon: <SettingOutlined />, label: '系统配置' },
 ];
@@ -32,6 +34,7 @@ const pageTitleMap: Record<string, string> = {
   '/admin/cinema': '影院管理',
   '/admin/schedule': '场次管理',
   '/admin/order': '订单管理',
+  '/admin/ticket': '票务核销',
   '/admin/user': '用户管理',
   '/admin/config': '系统配置',
 };

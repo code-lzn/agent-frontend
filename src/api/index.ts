@@ -2,7 +2,6 @@
 /* eslint-disable */
 // API 更新时间：
 // API 唯一标识：
-import * as aiController from './aiController';
 import * as alipayController from './alipayController';
 import * as chatHistoryController from './chatHistoryController';
 import * as chatSessionController from './chatSessionController';
@@ -19,6 +18,7 @@ import * as orderSeatController from './orderSeatController';
 import * as scheduleController from './scheduleController';
 import * as seatController from './seatController';
 import * as systemConfigController from './systemConfigController';
+import * as ticketController from './ticketController';
 import * as userController from './userController';
 import * as userPreferenceController from './userPreferenceController';
 import * as weixinPortalController from './weixinPortalController';
@@ -35,6 +35,7 @@ export default {
   chatHistoryController,
   weixinPortalController,
   userController,
+  ticketController,
   alipayController,
   orderController,
   movieGraphController,
@@ -42,5 +43,4 @@ export default {
   fileController,
   geoController,
   dashboardController,
-  aiController,
 };

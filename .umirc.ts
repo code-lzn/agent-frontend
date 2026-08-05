@@ -172,6 +172,11 @@ export default defineConfig({
           component: './admin/Order/index',
         },
         {
+          name: '票务核销',
+          path: '/admin/ticket',
+          component: './admin/Ticket/index',
+        },
+        {
           name: '用户管理',
           path: '/admin/user',
           component: './admin/User/index',

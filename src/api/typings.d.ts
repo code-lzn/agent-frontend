@@ -260,6 +260,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseTicketVO = {
+    code?: number;
+    data?: TicketVO;
+    message?: string;
+  };
+
   type BaseResponseUser = {
     code?: number;
     data?: User;
@@ -341,6 +347,10 @@ declare namespace API {
     updateTime?: string;
   };
 
+  type cinemaFilmsParams = {
+    cinemaId: number;
+  };
+
   type ConflictCheckRequest = {
     hallId?: number;
     showDate?: string;
@@ -367,24 +377,18 @@ declare namespace API {
     todaySchedules?: number;
   };
 
-  type DeleteRequest = {
-    id?: number;
+  type deleteOrderParams = {
+    id: number;
   };
 
-  type doChat1Params = {
-    message: string;
-    conversationId: string;
+  type DeleteRequest = {
+    id?: number;
   };
 
   type doChatStream1Params = {
     message: string;
     conversationId: string;
     userId?: number;
-  };
-
-  type doChatStream2Params = {
-    message: string;
-    conversationId: string;
   };
 
   type doChatStreamParams = {
@@ -546,7 +550,7 @@ declare namespace API {
   };
 
   type listScheduleParams = {
-    filmId: number;
+    filmId?: number;
     cinemaId?: number;
     showDate?: string;
   };
@@ -607,6 +611,7 @@ declare namespace API {
     isDelete?: boolean;
     createTime?: string;
     updateTime?: string;
+    hasCheckedTicket?: boolean;
   };
 
   type OrderSeat = {
@@ -637,7 +642,11 @@ declare namespace API {
     paidAt?: string;
     expireAt?: string;
     createTime?: string;
+    refundAmount?: number;
+    refundTime?: string;
+    cinemaTags?: string;
     seatLabels?: string[];
+    tickets?: TicketVO[];
   };
 
   type page4Params = {
@@ -781,6 +790,10 @@ declare namespace API {
     optimizeCountQuery?: boolean;
   };
 
+  type payFormParams = {
+    orderId: number;
+  };
+
   type PayOrderRequest = {
     orderId?: number;
   };
@@ -883,6 +896,12 @@ declare namespace API {
     checkPassword?: string;
   };
 
+  type returnPageParams = {
+    out_trade_no: string;
+    trade_no?: string;
+    total_amount?: string;
+  };
+
   type reverseParams = {
     lat: number;
     lng: number;
@@ -954,6 +973,9 @@ declare namespace API {
     hallType?: string;
     rowCount?: number;
     colCount?: number;
+    aisleRows?: number[];
+    aisleCols?: number[];
+    rowOverrides?: Record<string, any>;
     scheduleId?: number;
     price?: number;
     vipPrice?: number;
@@ -980,6 +1002,28 @@ declare namespace API {
     isDelete?: boolean;
     createTime?: string;
     updateTime?: string;
+  };
+
+  type TicketQueryRequest = {
+    ticketCode?: string;
+  };
+
+  type TicketVO = {
+    id?: number;
+    orderId?: number;
+    scheduleId?: number;
+    seatId?: number;
+    seatLabel?: string;
+    ticketCode?: string;
+    status?: number;
+    checkedInAt?: string;
+    checkedBy?: number;
+    orderNo?: string;
+    orderStatus?: string;
+    filmName?: string;
+    cinemaName?: string;
+    hallName?: string;
+    scheduleTime?: string;
   };
 
   type updateStatusParams = {
