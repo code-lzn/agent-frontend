@@ -3,9 +3,11 @@ import { getCurrentSession, listByUser as listSessions, create as createSession,
 import { listBySession } from '@/api/chatHistoryController';
 import { listSchedule } from '@/api/scheduleController';
 import { getSeatMap } from '@/api/seatController';
+import { createOrder, lockSeat, payOrder, mockPay } from '@/api/orderController';
+import { search as searchFilms } from '@/api/filmController';
 import { history, useModel } from '@umijs/max';
-import { Drawer, Empty, Input, message } from 'antd';
-import { ArrowUpOutlined, MenuOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Drawer, Empty, Input, message, Modal, Spin } from 'antd';
+import { ArrowUpOutlined, MenuOutlined, PlusOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './index.css';
 
@@ -65,7 +67,7 @@ function parseSSELine(raw: string): { text?: string; card?: any } | null {
 }
 
 // ====== 卡片组件 ======
-const FilmCards: React.FC<{ items: any[]; onSelect: (name: string) => void }> = ({ items, onSelect }) => (
+const FilmCards: React.FC<{ items: any[]; onSelect: (filmId: string, name: string) => void }> = ({ items, onSelect }) => (
   <div className="card-group">
     {items.map((m: any, i: number) => {
       const name = m?.name || m?.title || '';
@@ -82,7 +84,7 @@ const FilmCards: React.FC<{ items: any[]; onSelect: (name: string) => void }> = 
             {type && <div className="ai-film-type">{type}</div>}
             <div className="ai-film-actions">
               <button className="btn-ghost" onClick={() => filmId != null && history.push(`/film/${filmId}`)}>详情</button>
-              <button className="btn-solid" onClick={() => onSelect(name)}>选这部</button>
+              <button className="btn-solid" onClick={() => onSelect(String(filmId || ''), name)}>选这部</button>
             </div>
           </div>
         </div>
@@ -92,29 +94,54 @@ const FilmCards: React.FC<{ items: any[]; onSelect: (name: string) => void }> = 
 );
 
 const ScheduleCards: React.FC<{ items: any[]; onSelect: (s: any) => void }> = ({ items, onSelect }) => {
-  const groups: Record<string, { name: string; addr: string; items: any[] }> = {};
+  // 按日期分组，每组内按影院+时间展示
+  const dateGroups: Record<string, { label: string; cinemas: Record<string, { name: string; addr: string; items: any[] }> }> = {};
+
+  const formatDateLabel = (dateStr: string) => {
+    if (!dateStr) return '未知日期';
+    const today = new Date();
+    const d = new Date(dateStr);
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth()+1).padStart(2,'0')}-${String(tomorrow.getDate()).padStart(2,'0')}`;
+    if (dateStr === todayStr) return '今天';
+    if (dateStr === tomorrowStr) return '明天';
+    return `${d.getMonth()+1}月${d.getDate()}日`;
+  };
+
   items.forEach((s: any) => {
-    const cid = s.cinemaId || '0';
-    if (!groups[cid]) groups[cid] = { name: s.cinemaName || '', addr: s.cinemaAddress || '', items: [] };
-    groups[cid].items.push(s);
+    const date = s.showDate || '';
+    if (!dateGroups[date]) dateGroups[date] = { label: formatDateLabel(date), cinemas: {} };
+    const cid = String(s.cinemaId || '0');
+    if (!dateGroups[date].cinemas[cid]) {
+      dateGroups[date].cinemas[cid] = { name: s.cinemaName || '', addr: s.cinemaAddress || '', items: [] };
+    }
+    dateGroups[date].cinemas[cid].items.push(s);
   });
+
   return (
     <div className="ai-session-list">
-      {Object.entries(groups).map(([cid, g]) => (
-        <div key={cid} className="ai-session-group">
-          <div className="ai-session-cinema">
-            <span className="ai-cinema-name">{g.name}</span>
-            {g.addr && <span className="ai-cinema-addr">{g.addr}</span>}
-          </div>
-          <div className="ai-session-times">
-            {g.items.map((s: any, i: number) => (
-              <div key={s.id || i} className="ai-session-item" onClick={() => onSelect(s)}>
-                <div className="ai-time">{String(s.startTime || '').substring(0, 5)}</div>
-                <div className="ai-hall">{s.hallName} {s.hallType || ''}</div>
-                <div className="ai-price">¥{s.price}</div>
+      {Object.entries(dateGroups).map(([date, dg]) => (
+        <div key={date} className="ai-session-date-group">
+          <div className="ai-session-date-header">📅 {dg.label}</div>
+          {Object.entries(dg.cinemas).map(([cid, cg]) => (
+            <div key={cid} className="ai-session-group">
+              <div className="ai-session-cinema">
+                <span className="ai-cinema-name">{cg.name}</span>
+                {cg.addr && <span className="ai-cinema-addr">{cg.addr}</span>}
               </div>
-            ))}
-          </div>
+              <div className="ai-session-times">
+                {cg.items.map((s: any, i: number) => (
+                  <div key={s.id || i} className="ai-session-item" onClick={() => onSelect(s)}>
+                    <div className="ai-time">{String(s.startTime || '').substring(0, 5)}</div>
+                    <div className="ai-hall">{s.hallName} {s.hallType || ''}</div>
+                    <div className="ai-price">¥{s.price}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       ))}
     </div>
@@ -122,7 +149,7 @@ const ScheduleCards: React.FC<{ items: any[]; onSelect: (s: any) => void }> = ({
 };
 
 // ====== 影院列表卡片（点击直接查该影院+当前影片的场次） ======
-const CinemaCards: React.FC<{ items: any[]; filmId?: string; onSelectCinema: (cinemaId: string, cinemaName: string) => void }> = ({ items, filmId, onSelectCinema }) => (
+const CinemaCards: React.FC<{ items: any[]; filmId?: string; onSelectCinema: (cinemaId: string, cinemaName: string, cardFilmId?: string) => void }> = ({ items, filmId, onSelectCinema }) => (
   <div className="card-group">
     {items.map((c: any, i: number) => {
       const name = c?.name || c?.cinemaName || '';
@@ -138,7 +165,7 @@ const CinemaCards: React.FC<{ items: any[]; filmId?: string; onSelectCinema: (ci
             {tags.length > 0 && <div className="ai-film-type">{tags.slice(0, 3).join(' · ')}</div>}
             {c?.basePrice != null && <div className="ai-film-rating">¥{c.basePrice} 起</div>}
             <div className="ai-film-actions">
-              <button className="btn-solid" onClick={() => onSelectCinema(String(cid), name)}>选这家 → 看场次</button>
+              <button className="btn-solid" onClick={() => onSelectCinema(String(cid), name, c?.filmId || filmId)}>选这家 → 看场次</button>
             </div>
           </div>
         </div>
@@ -148,7 +175,7 @@ const CinemaCards: React.FC<{ items: any[]; filmId?: string; onSelectCinema: (ci
 );
 
 // ====== 座位图卡片 ======
-const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, seatIds: number[]) => void }> = ({ data, onSelectSeats }) => {
+const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, seatIds: number[], seatData: any) => void }> = ({ data, onSelectSeats }) => {
   const seats: any[] = data?.seats || [];
   const hallName = data?.hallName || '';
   const scheduleId = data?.scheduleId;
@@ -200,7 +227,7 @@ const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, sea
         <div style={{ marginTop: 12, textAlign: 'right' }}>
           <button
             style={{ height: 36, padding: '0 24px', borderRadius: 8, border: 'none', background: '#FF4D4F', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' }}
-            onClick={() => onSelectSeats(scheduleId, selected)}
+            onClick={() => onSelectSeats(scheduleId, selected, data)}
           >
             确认选座（{selected.length}座 ¥{(selected.length * price).toFixed(2)}）
           </button>
@@ -210,23 +237,66 @@ const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, sea
   );
 };
 
-const OrderCard: React.FC<{ data: any; onPay: () => void }> = ({ data, onPay }) => (
-  <div className="ai-order-card">
-    <div className="ai-order-row"><span>影片</span><b>{data.filmName}</b></div>
-    <div className="ai-order-row"><span>影院</span><b>{data.cinemaName}</b></div>
-    <div className="ai-order-row"><span>场次</span><b>{data.showDate} {String(data.startTime || '').substring(0, 5)}</b></div>
-    <div className="ai-order-row"><span>影厅</span><b>{data.hallName}</b></div>
-    <div className="ai-order-row"><span>座位</span><b>{Array.isArray(data.seatLabels) ? data.seatLabels.join('、') : data.seatLabels || '-'}</b></div>
-    <div className="ai-order-total">合计 <span>¥{Number(data.totalPrice || 0).toFixed(2)}</span></div>
-    <div className="ai-order-actions">
-      {data.orderId ? (
-        <button className="btn-solid" onClick={() => history.push(`/order/${data.orderId}`)}>查看订单并支付</button>
-      ) : (
-        <button className="btn-solid" onClick={onPay}>确认下单</button>
+const OrderCard: React.FC<{ data: any; onPay: (orderId: number) => void; paying?: boolean }> = ({ data, onPay, paying }) => {
+  const orderId = data?.orderId || data?.id;
+  const [countdown, setCountdown] = useState<number>(0);
+
+  // 计算支付倒计时
+  useEffect(() => {
+    const expireAt = data?.expireAt;
+    if (!expireAt) return;
+    const calcRemaining = () => {
+      try {
+        const remaining = Math.max(0, Math.floor((new Date(expireAt).getTime() - Date.now()) / 1000));
+        setCountdown(remaining);
+        return remaining;
+      } catch { return 0; }
+    };
+    calcRemaining();
+    const timer = setInterval(() => {
+      const r = calcRemaining();
+      if (r <= 0) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [data?.expireAt]);
+
+  const fmtCountdown = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="ai-order-card">
+      <div className="ai-order-row"><span>影片</span><b>{data.filmName}</b></div>
+      <div className="ai-order-row"><span>影院</span><b>{data.cinemaName}</b></div>
+      <div className="ai-order-row"><span>场次</span><b>{data.scheduleTime || `${data.showDate || ''} ${String(data.startTime || '').substring(0, 5)}`}</b></div>
+      <div className="ai-order-row"><span>影厅</span><b>{data.hallName}</b></div>
+      <div className="ai-order-row"><span>座位</span><b>{Array.isArray(data.seatLabels) ? data.seatLabels.join('、') : data.seatLabels || '-'}</b></div>
+      <div className="ai-order-row"><span>订单号</span><b style={{fontSize:11,color:'#999'}}>{data.orderNo || '-'}</b></div>
+      <div className="ai-order-total">
+        合计 <span>¥{Number(data.totalPrice || 0).toFixed(2)}</span>
+      </div>
+      {countdown > 0 && (
+        <div className={`ai-order-countdown ${countdown < 60 ? 'urgent' : ''}`}>
+          ⏱ 支付剩余 <b>{fmtCountdown(countdown)}</b>
+        </div>
       )}
+      <div className="ai-order-actions">
+        {orderId ? (
+          <>
+            <button className="btn-solid" onClick={() => onPay(orderId)} disabled={paying}>
+              {paying ? '支付中...' : `💳 立即支付 ¥${Number(data.totalPrice || 0).toFixed(2)}`}
+            </button>
+            <button className="btn-ghost" onClick={() => history.push(`/order/${orderId}`)}>查看订单</button>
+          </>
+        ) : (
+          <button className="btn-solid" onClick={() => onPay(0)}>确认下单</button>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ====== 主组件 ======
 const AiChatPage: React.FC = () => {
@@ -401,6 +471,80 @@ const AiChatPage: React.FC = () => {
     });
   };
 
+  // ★ 发送消息前先尝试本地处理（查影片→查影院，避免走后端 AI 返回不准确的影院列表）
+  const tryLocalFilmSearch = useCallback(async (text: string): Promise<boolean> => {
+    // 匹配 "《xxx》" 或 "我要看xxx" 或 "xxx有哪些影院" 等模式
+    const bookPattern = /《(.+?)》/;
+    const bookMatch = text.match(bookPattern);
+    const wantPattern = /(?:我要看|想看|看下?|查下?|搜下?|找下?)\s*[《]?(.+?)[》]?(?:\s*(?:有哪些|在哪里|哪个|哪些|什么).*(?:影院|电影院|影城|放映|上映|场次|排片)|$)/;
+    const wantMatch = text.match(wantPattern);
+
+    let filmName: string | null = null;
+    if (bookMatch) {
+      filmName = bookMatch[1].trim();
+    } else if (wantMatch) {
+      filmName = wantMatch[1].trim();
+    }
+
+    if (!filmName || filmName.length < 1 || filmName.length > 50) return false;
+
+    // 搜索影片
+    try {
+      const baseUrl = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8123/api';
+      // ★ 直接用 fetch 调接口，避免 typed API 函数的参数处理问题
+      const filmResp = await fetch(`${baseUrl}/film/search?keyword=${encodeURIComponent(filmName)}&pageNum=1&pageSize=10`, { credentials: 'include' });
+      const filmJson = await filmResp.json();
+      const films: any[] = filmJson?.data?.records || [];
+      if (films.length === 0) return false;
+
+      // 模糊匹配
+      let matched: any = null;
+      for (const f of films) {
+        const n = f.name || '';
+        if (n === filmName || n.includes(filmName) || filmName.includes(n)) { matched = f; break; }
+      }
+      if (!matched) matched = films[0];
+
+      const fid = matched.id || matched.filmId;
+      if (!fid) return false;
+
+      currentFilmIdRef.current = String(fid);
+      const fname = matched.name;
+
+      // 查排片 → 去重得影院
+      const schResp = await fetch(`${baseUrl}/schedule/list?filmId=${fid}`, { credentials: 'include' });
+      const schJson = await schResp.json();
+      const allData: any[] = schJson?.data || [];
+      const validData = allData.filter((s: any) => Number(s.availableSeats) > 0 || s.availableSeats == null);
+      const cinemaMap = new Map<string, any>();
+      validData.forEach((s: any) => {
+        const cid = String(s.cinemaId || '');
+        if (!cinemaMap.has(cid)) {
+          cinemaMap.set(cid, {
+            cinemaId: cid,
+            name: s.cinemaName || `影院${cid}`,
+            address: s.cinemaAddress || '',
+            basePrice: s.price,
+            tags: s.cinemaTags || '',
+            filmId: String(s.filmId || ''),  // ★ 带上 filmId，供 handleCinemaSelect 兜底
+          });
+        }
+      });
+      const cinemaList = Array.from(cinemaMap.values());
+
+      if (cinemaList.length === 0) {
+        setMessages((prev) => [...prev, { role: 'ai', content: `😔 暂无影院放映《${fname}》，换一部试试～`, timestamp: Date.now(), cards: [] }]);
+      } else {
+        const cardPayload = { type: 'card', cardType: 'cinema_list', data: { cinemas: cinemaList, total: cinemaList.length } };
+        setMessages((prev) => [...prev, { role: 'ai', content: `✅ 共${cinemaList.length}家影院放映《${fname}》，选一家看场次吧～`, timestamp: Date.now(), cards: [cardPayload] }]);
+      }
+      setSending(false);
+      return true; // 已本地处理，不走后端 AI
+    } catch {
+      return false; // 失败则回退到后端 AI
+    }
+  }, []);
+
   // 发送消息（统一用流式 smart-stream）
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
@@ -418,6 +562,9 @@ const AiChatPage: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInputValue('');
     setSending(true);
+
+    // ★ 本地处理：影片+影院搜索 直接调 API，不靠后端 AI
+    if (await tryLocalFilmSearch(trimmed)) return;
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -514,9 +661,51 @@ const AiChatPage: React.FC = () => {
   // 记录当前影片卡片中的 filmId，用于后续影院→场次查询
   const currentFilmIdRef = useRef<string>('');
 
+  // ★ 影片卡片点选：直接调 listSchedule API 查有排片的影院（绕过 AI，确保只展示真正有该片的影院）
+  const handleFilmSelect = useCallback(async (filmId: string, filmName: string) => {
+    currentFilmIdRef.current = filmId;
+    const userMsg: ChatMessage = { role: 'user', content: `我要看《${filmName}》，有哪些影院放映`, timestamp: Date.now() };
+    setMessages((prev) => [...prev, userMsg]);
+    setSending(true);
+    try {
+      const baseUrl = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8123/api';
+      const resp = await fetch(`${baseUrl}/schedule/list?filmId=${filmId}`, { credentials: 'include' });
+      const json = await resp.json();
+      const allData: any[] = json?.data || [];
+      // 有可用座位的排片才纳入
+      const validData = allData.filter((s: any) => Number(s.availableSeats) > 0 || s.availableSeats == null);
+      // 按影院去重
+      const cinemaMap = new Map<string, any>();
+      validData.forEach((s: any) => {
+        const cid = String(s.cinemaId || '');
+        if (!cinemaMap.has(cid)) {
+          cinemaMap.set(cid, {
+            cinemaId: cid,
+            name: s.cinemaName || `影院${cid}`,
+            address: s.cinemaAddress || '',
+            basePrice: s.price,
+            tags: s.cinemaTags || '',
+            filmId: String(s.filmId || ''),  // ★ 带上 filmId，供 handleCinemaSelect 兜底
+          });
+        }
+      });
+      const cinemaList = Array.from(cinemaMap.values());
+      if (cinemaList.length === 0) {
+        setMessages((prev) => [...prev, { role: 'ai', content: `😔 暂无影院放映《${filmName}》，换一部试试～`, timestamp: Date.now(), cards: [] }]);
+      } else {
+        const cardPayload = { type: 'card', cardType: 'cinema_list', data: { cinemas: cinemaList, total: cinemaList.length } };
+        setMessages((prev) => [...prev, { role: 'ai', content: `✅ 共${cinemaList.length}家影院放映《${filmName}》，选一家看场次吧～`, timestamp: Date.now(), cards: [cardPayload] }]);
+      }
+    } catch {
+      setMessages((prev) => [...prev, { role: 'ai', content: '😵 加载影院失败，请重试', timestamp: Date.now(), cards: [] }]);
+    } finally {
+      setSending(false);
+    }
+  }, []);
+
   // 影院卡片点击：直接调 listSchedule API，绕过后端 AI 避免查全量
-  const handleCinemaSelect = useCallback(async (cinemaId: string, cinemaName: string) => {
-    const fid = currentFilmIdRef.current;
+  const handleCinemaSelect = useCallback(async (cinemaId: string, cinemaName: string, cardFilmId?: string) => {
+    const fid = currentFilmIdRef.current || cardFilmId;
     if (!fid) {
       sendMessage(`就选这家影院：${cinemaName}，影院ID=${cinemaId}`);
       return;
@@ -524,8 +713,12 @@ const AiChatPage: React.FC = () => {
     const userMsg: ChatMessage = { role: 'user', content: `就选这家影院：${cinemaName}`, timestamp: Date.now() };
     setMessages((prev) => [...prev, userMsg]);
     try {
-      const res = await listSchedule({ filmId: fid, cinemaId } as any);
-      const rawData = (res as any)?.data || [];
+      // ★ 直接用 fetch 调接口，避免 typed API 函数的参数处理问题
+      const baseUrl = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8123/api';
+      const url = `${baseUrl}/schedule/list?filmId=${fid}&cinemaId=${cinemaId}`;
+      const resp = await fetch(url, { credentials: 'include' });
+      const json = await resp.json();
+      const rawData = json?.data || [];
       // 去重+有座位+排序+限30条（日期过滤由后端 queryScheduleList 处理）
       const seen = new Set<string>();
       const data = rawData
@@ -539,7 +732,7 @@ const AiChatPage: React.FC = () => {
         .sort((a: any, b: any) => (a.showDate + a.startTime).localeCompare(b.showDate + b.startTime))
         .slice(0, 30);
       if (data.length === 0) {
-        setMessages((prev) => [...prev, { role: 'ai', content: `😔 ${cinemaName}暂无《流浪地球》的排期，换一家试试～`, timestamp: Date.now(), cards: [] }]);
+        setMessages((prev) => [...prev, { role: 'ai', content: `😔 ${cinemaName}暂无该影片的排期，换一家试试～`, timestamp: Date.now(), cards: [] }]);
         return;
       }
       const cardPayload = { type: 'card', cardType: 'schedule_list', data: { sessions: data, total: data.length } };
@@ -556,8 +749,10 @@ const AiChatPage: React.FC = () => {
     const userMsg: ChatMessage = { role: 'user', content: `选这个场次：${label}`, timestamp: Date.now() };
     setMessages((prev) => [...prev, userMsg]);
     try {
-      const res = await getSeatMap({ scheduleId: String(sid) } as any);
-      const data = (res as any)?.data;
+      const baseUrl2 = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8123/api';
+      const resp2 = await fetch(`${baseUrl2}/seat/seatmap/${sid}`, { credentials: 'include' });
+      const json2 = await resp2.json();
+      const data = json2?.data;
       if (!data || !data.seats || data.seats.length === 0) {
         setMessages((prev) => [...prev, { role: 'ai', content: `😔 ${label} 暂无可用座位`, timestamp: Date.now(), cards: [] }]);
         return;
@@ -568,6 +763,91 @@ const AiChatPage: React.FC = () => {
       setMessages((prev) => [...prev, { role: 'ai', content: '😵 加载座位图失败，请重试', timestamp: Date.now(), cards: [] }]);
     }
   }, []);
+
+  // ★ 选座确认：直接调 lockSeat + createOrder API，不走后端 AI
+  const [lockingSeats, setLockingSeats] = useState(false);
+  const handleSeatConfirm = useCallback(async (scheduleId: number, seatIds: number[], seatData: any) => {
+    if (!currentUser?.id) {
+      message.warning('请先登录后再购票');
+      history.push('/user/login');
+      return;
+    }
+    setLockingSeats(true);
+    try {
+      // Step 1: 锁座
+      const lockRes = await lockSeat({ scheduleId, seatIds } as any);
+      const lockOk = (lockRes as any)?.data === true || (lockRes as any)?.code === 0;
+      if (!lockOk) {
+        const errMsg = (lockRes as any)?.message || (lockRes as any)?.data?.message || '座位已被抢走，请重新选择';
+        setMessages((prev) => [...prev, { role: 'ai', content: `😔 ${errMsg}`, timestamp: Date.now(), cards: [] }]);
+        setLockingSeats(false);
+        return;
+      }
+
+      // Step 2: 锁座成功 → 创建订单
+      const orderRes = await createOrder({ scheduleId, seatIds } as any);
+      const orderData = (orderRes as any)?.data;
+      if (orderData) {
+        const seatLabels = orderData.seatLabels || [];
+        const totalPrice = orderData.totalPrice || 0;
+        const cardPayload = { type: 'card', cardType: 'order_confirm', data: orderData };
+        setMessages((prev) => [...prev, {
+          role: 'ai',
+          content: `🔒 已锁定 ${seatLabels.join('、')}，共 ¥${Number(totalPrice).toFixed(2)}。订单已生成，请在15分钟内完成支付哦～`,
+          timestamp: Date.now(),
+          cards: [cardPayload],
+        }]);
+        setFlow((prev) => ({ ...prev, step: 5, order: orderData }));
+      } else {
+        setMessages((prev) => [...prev, {
+          role: 'ai', content: `🔒 座位已锁定！请发送"确认下单"来创建订单～`,
+          timestamp: Date.now(),
+          cards: [{ type: 'card', cardType: 'seats_confirmed', data: { scheduleId, seatIds } }],
+        }]);
+      }
+    } catch (e: any) {
+      setMessages((prev) => [...prev, { role: 'ai', content: `😵 操作失败：${e?.message || '请重试'}`, timestamp: Date.now(), cards: [] }]);
+    } finally {
+      setLockingSeats(false);
+    }
+  }, [currentUser?.id]);
+
+  // ★ 支付订单：直接调 payOrder API
+  const [payingOrder, setPayingOrder] = useState(false);
+  const handlePayOrder = useCallback(async (orderId: number) => {
+    setPayingOrder(true);
+    try {
+      const res = await payOrder({ orderId } as any);
+      const payData = (res as any)?.data;
+      if (payData?.payForm) {
+        // 显示支付表单
+        const cardPayload = { type: 'card', cardType: 'payment_form', data: payData };
+        setMessages((prev) => [...prev, {
+          role: 'ai',
+          content: `💳 请完成支付，金额 ¥${payData.totalPrice || ''}`,
+          timestamp: Date.now(),
+          cards: [cardPayload],
+        }]);
+      } else {
+        // 尝试模拟支付
+        const mockRes = await mockPay({ orderId } as any);
+        const mockData = (mockRes as any)?.data;
+        if (mockData && mockData.status === 'paid') {
+          setMessages((prev) => [...prev, {
+            role: 'ai',
+            content: `✅ 支付成功！${mockData.filmName} ${mockData.seatLabels?.join('、')}，祝您观影愉快～🎉`,
+            timestamp: Date.now(),
+            cards: [],
+          }]);
+          setFlow((prev) => ({ ...prev, step: 6, order: mockData }));
+        }
+      }
+    } catch (e: any) {
+      setMessages((prev) => [...prev, { role: 'ai', content: `😵 支付失败：${e?.message || '请重试'}`, timestamp: Date.now(), cards: [] }]);
+    } finally {
+      setPayingOrder(false);
+    }
+  }, [currentUser?.id]);
 
   // 渲染卡片
   const renderCards = (cards: any[]) => {
@@ -586,15 +866,42 @@ const AiChatPage: React.FC = () => {
         if (items[0]?.filmId) currentFilmIdRef.current = String(items[0].filmId);
         return (
           <div key={i}>
-            <FilmCards items={items} onSelect={(name) => sendMessage(`我要看《${name}》，有哪些影院放映`)} />
-            {items.length === 1 && (
-              <button
-                style={{ marginTop: 8, height: 32, padding: '0 14px', borderRadius: 6, border: '1px solid #FF4D4F', background: '#fff', color: '#FF4D4F', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}
-                onClick={() => sendMessage(`帮我查《${items[0].name}》在哪些影院上映`)}
-              >
-                🎬 查看放映影院 →
-              </button>
-            )}
+            <FilmCards items={items} onSelect={handleFilmSelect} />
+            {items.length === 1 && (() => {
+              const fid = items[0]?.filmId || items[0]?.id;
+              const fname = items[0]?.name;
+              return (
+                <button
+                  style={{ marginTop: 8, height: 32, padding: '0 14px', borderRadius: 6, border: '1px solid #FF4D4F', background: '#fff', color: '#FF4D4F', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}
+                  onClick={async () => {
+                    if (!fid) { sendMessage(`帮我查《${fname}》在哪些影院上映`); return; }
+                    currentFilmIdRef.current = String(fid);
+                    setMessages((prev) => [...prev, { role: 'user', content: `查看《${fname}》放映影院`, timestamp: Date.now() }]);
+                    try {
+                      const baseUrl2 = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8123/api';
+                      const resp2 = await fetch(`${baseUrl2}/schedule/list?filmId=${fid}`, { credentials: 'include' });
+                      const json2 = await resp2.json();
+                      const allData: any[] = json2?.data || [];
+                      const cinemaMap = new Map<string, any>();
+                      allData.forEach((s: any) => {
+                        const cid = String(s.cinemaId || '');
+                        if (!cinemaMap.has(cid)) {
+                          cinemaMap.set(cid, { cinemaId: cid, name: s.cinemaName || `影院${cid}`, address: s.cinemaAddress || '', basePrice: s.price });
+                        }
+                      });
+                      const cinemaList = Array.from(cinemaMap.values());
+                      if (cinemaList.length === 0) {
+                        setMessages((prev) => [...prev, { role: 'ai', content: `😔 暂无影院放映《${fname}》`, timestamp: Date.now(), cards: [] }]);
+                      } else {
+                        setMessages((prev) => [...prev, { role: 'ai', content: `✅ 共${cinemaList.length}家影院放映《${fname}》，选一家看场次吧～`, timestamp: Date.now(), cards: [{ type: 'card', cardType: 'cinema_list', data: { cinemas: cinemaList, total: cinemaList.length } }] }]);
+                      }
+                    } catch { setMessages((prev) => [...prev, { role: 'ai', content: '😵 加载失败，请重试', timestamp: Date.now(), cards: [] }]); }
+                  }}
+                >
+                  🎬 查看放映影院 →
+                </button>
+              );
+            })()}
           </div>
         );
       }
@@ -618,11 +925,60 @@ const AiChatPage: React.FC = () => {
       }
 
       if (ct === 'seat_map') {
-        return <SeatMapCard key={i} data={data} onSelectSeats={(scheduleId, seatIds) => sendMessage(`确认选座，场次ID=${scheduleId}，座位ID=${seatIds.join(',')}`)} />;
+        return <SeatMapCard key={i} data={data} onSelectSeats={handleSeatConfirm} />;
       }
 
-      if (ct === 'order_confirm' || ct === 'order') {
-        return <OrderCard key={i} data={data} onPay={() => sendMessage('确认下单，帮我创建订单')} />;
+      if (ct === 'order_confirm' || ct === 'order' || ct === 'order_detail') {
+        return <OrderCard key={i} data={data} onPay={handlePayOrder} paying={payingOrder} />;
+      }
+
+      if (ct === 'payment_form') {
+        const payForm = data?.payForm;
+        const orderNo = data?.orderNo;
+        return (
+          <div key={i} className="ai-order-card" style={{ marginTop: 10 }}>
+            <div style={{ marginBottom: 8, fontWeight: 600 }}>💳 支付宝支付 - 订单 {orderNo}</div>
+            {payForm ? (
+              <div dangerouslySetInnerHTML={{ __html: payForm }} />
+            ) : (
+              <div style={{ color: '#999', fontSize: 13 }}>支付页面加载中...</div>
+            )}
+          </div>
+        );
+      }
+
+      if (ct === 'seats_confirmed') {
+        const sid = data?.scheduleId;
+        const sids = data?.seatIds;
+        const tp = data?.totalPrice;
+        const cnt = data?.count;
+        return (
+          <div key={i} style={{ marginTop: 10 }}>
+            <button
+              className="btn-solid"
+              style={{ height: 40, padding: '0 28px', borderRadius: 8, border: 'none', background: '#FF4D4F', color: '#fff', cursor: 'pointer', fontSize: 15, fontWeight: 600, fontFamily: 'inherit' }}
+              onClick={async () => {
+                if (!sid || !sids?.length) return;
+                try {
+                  const orderRes = await createOrder({ scheduleId: sid, seatIds: sids } as any);
+                  const orderData = (orderRes as any)?.data;
+                  if (orderData) {
+                    const cardPayload = { type: 'card', cardType: 'order_confirm', data: orderData };
+                    setMessages((prev) => [...prev, {
+                      role: 'ai',
+                      content: `✅ 订单已生成！请在15分钟内完成支付哦～`,
+                      timestamp: Date.now(),
+                      cards: [cardPayload],
+                    }]);
+                    setFlow((prev) => ({ ...prev, step: 5, order: orderData }));
+                  }
+                } catch { /* ignore */ }
+              }}
+            >
+              📋 确认下单 {tp ? `¥${Number(tp).toFixed(2)}` : ''}{cnt ? ` (${cnt}张)` : ''}
+            </button>
+          </div>
+        );
       }
 
       return null;

@@ -49,7 +49,12 @@ const WechatLogin: React.FC<WechatLoginProps> = ({
       const res = await createQrCode();
       if (res.data?.ticket && res.data?.qrCodeUrl) {
         setTicket(res.data.ticket);
-        setQrCodeUrl(res.data.qrCodeUrl);
+        // ★ 对 ticket 做 URL 编码，防止特殊字符导致图片加载失败
+        const encodedUrl = res.data.qrCodeUrl.replace(
+          /ticket=([^&]+)/,
+          (_, t) => 'ticket=' + encodeURIComponent(t)
+        );
+        setQrCodeUrl(encodedUrl);
         setStatus('waiting');
       } else {
         setStatus('error');
@@ -65,23 +70,36 @@ const WechatLogin: React.FC<WechatLoginProps> = ({
   const startPolling = useCallback(
     (ticket: string) => {
       stopPolling();
+      let loginCalled = false; // 防止重复调用登录接口
       timerRef.current = setInterval(async () => {
+        if (loginCalled) return; // 已经在处理登录，不再重复轮询
         try {
           const res = await checkLogin({ ticket });
           if (res.data?.scanned && res.data?.openid) {
             // 扫码成功！
+            loginCalled = true;
             stopPolling();
             setStatus('scanned');
 
             // 调用后端完成登录
-            const loginRes = await weixinLogin({ openid: res.data.openid });
-            if (loginRes.data) {
-              message.success('微信登录成功');
-              const target =
-                loginRes.data.userRole === 'admin'
-                  ? '/admin/dashboard'
-                  : redirect;
-              onLoginSuccess(loginRes.data, target);
+            try {
+              const loginRes = await weixinLogin({ openid: res.data.openid });
+              if (loginRes.data) {
+                const target =
+                  loginRes.data.userRole === 'admin'
+                    ? '/admin/dashboard'
+                    : redirect;
+                onLoginSuccess(loginRes.data, target);
+              } else {
+                // weixinLogin 返回了但没有 data，稍后重试
+                setStatus('error');
+                setErrorMsg('登录校验失败，请刷新二维码重试');
+              }
+            } catch (loginErr: any) {
+              // weixinLogin 失败，可能是网络问题，稍后重试
+              console.warn('微信登录接口调用失败，将重试:', loginErr);
+              loginCalled = false; // 允许重试
+              // 不改变 status，继续等待
             }
           }
         } catch (e: any) {

@@ -216,6 +216,8 @@
 
 /* ===== 场次列表卡片 ===== */
 .ai-session-list { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.ai-session-date-group { margin-bottom: 6px; }
+.ai-session-date-header { font-weight: 700; font-size: 13px; color: #FF4D4F; padding: 6px 0; margin-bottom: 6px; border-bottom: 1px dashed #ffd8d8; }
 .ai-session-group { background: #fff; border-radius: 10px; border: 1px solid #f0f0f0; padding: 12px 14px; }
 .ai-session-cinema { margin-bottom: 8px; display: flex; gap: 10px; align-items: baseline; }
 .ai-cinema-name { font-weight: 700; font-size: 14px; color: #303133; }
@@ -260,7 +262,19 @@
 .ai-order-total { text-align: right; padding: 10px 0 6px; font-size: 14px; color: #303133; border-top: 1px solid #f5f5f5; margin-top: 8px; }
 .ai-order-total span { font-size: 22px; color: #FF4D4F; font-weight: 700; }
 .ai-order-actions { display: flex; gap: 8px; margin-top: 10px; }
-.ai-order-actions button { flex: 1; height: 36px; border-radius: 8px; border: none; font-size: 14px; cursor: pointer; color: #fff; font-family: inherit; }
+.ai-order-actions button { flex: 1; height: 36px; border-radius: 8px; border: none; font-size: 14px; cursor: pointer; font-family: inherit; }
+.ai-order-actions .btn-solid { background: #FF4D4F; color: #fff; }
+.ai-order-actions .btn-solid:hover { background: #e53e3e; }
+.ai-order-actions .btn-solid:disabled { opacity: 0.5; cursor: not-allowed; }
+.ai-order-actions .btn-ghost { background: #f5f7fa; color: #606266; border: 1px solid #e8e8e8; }
+.ai-order-actions .btn-ghost:hover { border-color: #c0c4cc; color: #303133; }
+.ai-order-countdown { text-align: center; padding: 6px 0; font-size: 13px; color: #e6a23c; }
+.ai-order-countdown.urgent { color: #FF4D4F; font-weight: 700; animation: countdown-pulse 1s infinite; }
+.ai-order-countdown b { font-weight: 700; }
+@keyframes countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
 
 /* ===== 重置按钮 ===== */
 .reset-btn {
