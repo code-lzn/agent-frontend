@@ -213,7 +213,8 @@ const ScheduleFormPage: React.FC = () => {
               optionFilterProp="label"
               onChange={handleFilmChange}
               options={films
-                .filter((f) => f.status === 'published' || f.status === 'draft')
+                // 可上映状态才可排片：正在上映 / 热映 / 准备上映（草稿、已下线不排）
+                .filter((f) => f.status === 'published' || f.status === 'hot' || f.status === 'upcoming')
                 .map((f) => ({
                   label: `${f.name}（${f.duration}分钟）`,
                   value: f.id,

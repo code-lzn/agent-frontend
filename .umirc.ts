@@ -14,6 +14,13 @@ export default defineConfig({
     title: '妙语购票',
   },
   routes: [
+    // ===== 根路径：按角色重定向（管理员→后台管理，普通用户/游客→首页） =====
+    {
+      path: '/',
+      component: './Redirect',
+      layout: false,
+      hideInMenu: true,
+    },
     // ===== 登录页（独立全屏，不走 UserLayout） =====
     {
       name: '用户登录',
@@ -28,7 +35,6 @@ export default defineConfig({
       component: '@/layouts/UserLayout',
       layout: false,
       routes: [
-        { path: '/', redirect: '/home' },
         {
           name: '首页',
           path: '/home',
