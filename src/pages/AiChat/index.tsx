@@ -175,7 +175,7 @@ const CinemaCards: React.FC<{ items: any[]; filmId?: string; onSelectCinema: (ci
 );
 
 // ====== 座位图卡片 ======
-const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, seatIds: number[], seatData: any) => void }> = ({ data, onSelectSeats }) => {
+const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, seatIds: number[], seatData: any) => void; locking?: boolean }> = ({ data, onSelectSeats, locking }) => {
   const seats: any[] = data?.seats || [];
   const hallName = data?.hallName || '';
   const scheduleId = data?.scheduleId;
@@ -226,10 +226,11 @@ const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, sea
       {selected.length > 0 && (
         <div style={{ marginTop: 12, textAlign: 'right' }}>
           <button
-            style={{ height: 36, padding: '0 24px', borderRadius: 8, border: 'none', background: '#FF4D4F', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ height: 36, padding: '0 24px', borderRadius: 8, border: 'none', background: locking ? '#ccc' : '#FF4D4F', color: '#fff', cursor: locking ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' }}
             onClick={() => onSelectSeats(scheduleId, selected, data)}
+            disabled={locking}
           >
-            确认选座（{selected.length}座 ¥{(selected.length * price).toFixed(2)}）
+            {locking ? '锁定中...' : `确认选座（${selected.length}座 ¥${(selected.length * price).toFixed(2)}）`}
           </button>
         </div>
       )}
@@ -812,7 +813,7 @@ const AiChatPage: React.FC = () => {
     }
   }, [currentUser?.id]);
 
-  // ★ 支付订单：直接调 payOrder API
+  // ★ 支付订单：自动提交支付宝表单（和订单列表支付逻辑一致）
   const [payingOrder, setPayingOrder] = useState(false);
   const handlePayOrder = useCallback(async (orderId: number) => {
     setPayingOrder(true);
@@ -820,16 +821,23 @@ const AiChatPage: React.FC = () => {
       const res = await payOrder({ orderId } as any);
       const payData = (res as any)?.data;
       if (payData?.payForm) {
-        // 显示支付表单
-        const cardPayload = { type: 'card', cardType: 'payment_form', data: payData };
-        setMessages((prev) => [...prev, {
-          role: 'ai',
-          content: `💳 请完成支付，金额 ¥${payData.totalPrice || ''}`,
-          timestamp: Date.now(),
-          cards: [cardPayload],
-        }]);
+        // 自动提交支付表单，跳转到支付宝
+        const div = document.createElement('div');
+        div.style.display = 'none';
+        div.innerHTML = payData.payForm;
+        document.body.appendChild(div);
+        const form = div.querySelector('form');
+        if (form) {
+          form.submit();
+          setMessages((prev) => [...prev, {
+            role: 'ai',
+            content: `💳 已跳转支付宝支付，订单号 ${payData.orderNo || orderId}，支付完成后票会自动出现在订单列表中～`,
+            timestamp: Date.now(),
+            cards: [],
+          }]);
+        }
       } else {
-        // 尝试模拟支付
+        // 没有 payForm → 尝试模拟支付
         const mockRes = await mockPay({ orderId } as any);
         const mockData = (mockRes as any)?.data;
         if (mockData && mockData.status === 'paid') {
@@ -925,7 +933,7 @@ const AiChatPage: React.FC = () => {
       }
 
       if (ct === 'seat_map') {
-        return <SeatMapCard key={i} data={data} onSelectSeats={handleSeatConfirm} />;
+        return <SeatMapCard key={i} data={data} onSelectSeats={handleSeatConfirm} locking={lockingSeats} />;
       }
 
       if (ct === 'order_confirm' || ct === 'order' || ct === 'order_detail') {
