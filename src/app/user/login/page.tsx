@@ -120,6 +120,11 @@ const UserLoginPage: React.FC = () => {
    * 微信登录成功回调（与邮箱登录 handleLoginSuccess 对齐）
    */
   const onWechatLoginSuccess = (user: any, target: string) => {
+    // ★ 将 JWT Token 存入 localStorage，后续请求通过 Authorization header 携带
+    // 解决跨域 Cookie 无法传递导致登录态丢失的问题
+    if (user.token) {
+      localStorage.setItem('token', user.token);
+    }
     (setInitialState as any)((prev: any) => ({ ...prev, currentUser: user }));
     // 规范化跳转路径（与邮箱登录一致）
     const finalTarget =
