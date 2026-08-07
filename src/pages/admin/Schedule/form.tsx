@@ -43,7 +43,7 @@ const ScheduleFormPage: React.FC = () => {
   const [allHalls, setAllHalls] = useState<API.Hall[]>([]);
 
   const [selectedFilm, setSelectedFilm] = useState<API.Film | null>(null);
-  const [selectedCinemaId, setSelectedCinemaId] = useState<number>();
+  const [selectedCinemaId, setSelectedCinemaId] = useState<string>();
   const [showConflict, setShowConflict] = useState(false);
   const [conflictMsg, setConflictMsg] = useState('');
 
@@ -98,7 +98,7 @@ const ScheduleFormPage: React.FC = () => {
     setCinemas((cinemaRes as any)?.data || []);
   };
 
-  const handleCinemaChange = async (cinemaId: number) => {
+  const handleCinemaChange = async (cinemaId: string) => {
     setSelectedCinemaId(cinemaId);
     try {
       const res = await listByCinema({ cinemaId });
@@ -109,7 +109,7 @@ const ScheduleFormPage: React.FC = () => {
     form.setFieldValue('hallId', undefined);
   };
 
-  const handleFilmChange = (filmId: number) => {
+  const handleFilmChange = (filmId: string) => {
     const film = films.find((f) => f.id === filmId) || null;
     setSelectedFilm(film);
     // 自动计算散场时间

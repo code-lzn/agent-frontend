@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 const { Text } = Typography;
 
 interface SeatViewModalProps {
-  scheduleId?: number;
+  scheduleId?: string;
   scheduleDesc?: string;
   open: boolean;
   onClose: () => void;

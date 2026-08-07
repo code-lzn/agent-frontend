@@ -18,7 +18,7 @@ const SchedulePage: React.FC = () => {
 
   // 游客点击场次：先弹登录确认框
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [pendingSchedule, setPendingSchedule] = useState<number | null>(null);
+  const [pendingSchedule, setPendingSchedule] = useState<string | null>(null);
 
   const [film, setFilm] = useState<Film | null>(null);
   const [schedules, setSchedules] = useState<ScheduleVO[]>([]);
@@ -71,7 +71,7 @@ const SchedulePage: React.FC = () => {
   });
 
   /** 点击场次：游客先弹登录确认框，登录后回到选座 */
-  const handleShowtimeClick = (scheduleId: number) => {
+  const handleShowtimeClick = (scheduleId: string) => {
     if (!currentUser) {
       setPendingSchedule(scheduleId);
       setLoginModalOpen(true);

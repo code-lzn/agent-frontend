@@ -66,7 +66,7 @@ interface PreviewItem {
   endTime: string;
   filmName: string;
   hallName: string;
-  hallId: number;
+  hallId: string;
   conflict: boolean | null; // null=待检查, true=冲突, false=无冲突
 }
 
@@ -79,7 +79,7 @@ const ScheduleBatchPage: React.FC = () => {
   const [cinemas, setCinemas] = useState<API.Cinema[]>([]);
   const [halls, setHalls] = useState<API.Hall[]>([]);
   const [selectedFilm, setSelectedFilm] = useState<API.Film | null>(null);
-  const [selectedCinemaId, setSelectedCinemaId] = useState<number>();
+  const [selectedCinemaId, setSelectedCinemaId] = useState<string>();
 
   // 提交状态
   const [submitting, setSubmitting] = useState(false);
@@ -102,7 +102,7 @@ const ScheduleBatchPage: React.FC = () => {
     }
   };
 
-  const handleCinemaChange = async (cinemaId: number) => {
+  const handleCinemaChange = async (cinemaId: string) => {
     setSelectedCinemaId(cinemaId);
     try {
       const res = await listByCinema({ cinemaId });
@@ -114,7 +114,7 @@ const ScheduleBatchPage: React.FC = () => {
     setPreview([]);
   };
 
-  const handleFilmChange = (filmId: number) => {
+  const handleFilmChange = (filmId: string) => {
     const film = films.find((f) => f.id === filmId) || null;
     setSelectedFilm(film);
     setPreview([]);
@@ -201,7 +201,7 @@ const ScheduleBatchPage: React.FC = () => {
           endTime: calcEndTime(timeStr, film.duration || 0),
           filmName: film.name || '',
           hallName: hall?.name || '',
-          hallId: hall?.id || 0,
+          hallId: hall?.id || '',
           conflict: null,
         });
       }

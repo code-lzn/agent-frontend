@@ -40,8 +40,12 @@ const FilmListPage: React.FC = () => {
     try {
       const res = await listAll2();
       const list = (res as any)?.data || [];
-      // 新增的影片放最前面（按 id 倒序，雪花/自增 id 均按创建时间递增）
-      (list as API.Film[]).sort((a: API.Film, b: API.Film) => Number(b.id) - Number(a.id));
+      // 新增的影片放最前面（按 id 倒序，雪花/自增 id 均按创建时间递增；雪花 id 不可 Number()）
+      (list as API.Film[]).sort((a: API.Film, b: API.Film) => {
+        const aid = String(a.id), bid = String(b.id);
+        if (aid.length !== bid.length) return bid.length - aid.length;
+        return bid.localeCompare(aid);
+      });
       setFilms(list);
     } catch {
       message.error('加载影片列表失败');
@@ -62,7 +66,7 @@ const FilmListPage: React.FC = () => {
   }, []);
 
   /** 切换状态 */
-  const handleStatus = (id: number, status: string) => {
+  const handleStatus = (id: string, status: string) => {
     confirm({
       title: '确认操作',
       icon: <ExclamationCircleOutlined />,
@@ -80,7 +84,7 @@ const FilmListPage: React.FC = () => {
   };
 
   /** 删除 */
-  const handleDelete = (id: number, name: string) => {
+  const handleDelete = (id: string, name: string) => {
     confirm({
       title: '确认删除',
       icon: <ExclamationCircleOutlined />,

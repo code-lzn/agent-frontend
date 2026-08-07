@@ -120,7 +120,7 @@ const FilmDetailPage: React.FC = () => {
 
           <Divider style={{ margin: '16px 0' }} />
 
-          <Descriptions column={{ xs: 1, sm: 2 }} size="small" labelStyle={{ color: '#999' }}>
+          <Descriptions column={{ xs: 1, sm: 2 }} size="small" styles={{ label: { color: '#999' } }}>
             <Descriptions.Item label="上映日期">{film.releaseDate || '-'}</Descriptions.Item>
             <Descriptions.Item label="导演">{film.director || '-'}</Descriptions.Item>
             <Descriptions.Item label="主演" span={2}>

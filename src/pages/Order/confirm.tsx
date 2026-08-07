@@ -134,7 +134,7 @@ const OrderConfirmPage: React.FC = () => {
       <Row gutter={24}>
         <Col xs={24} lg={16}>
           <Card title="确认订单信息">
-            <Descriptions column={1} size="small" labelStyle={{ color: '#999', width: 60 }}>
+            <Descriptions column={1} size="small" styles={{ label: { color: '#999', width: 60 } }}>
               <Descriptions.Item label="影片">
                 <Text strong>{film?.name || '加载中...'}</Text>
               </Descriptions.Item>

@@ -111,7 +111,7 @@ const HallManager: React.FC<HallManagerProps> = ({ cinemaId }) => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await remove5({ id });
       message.success('删除成功');

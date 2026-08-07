@@ -54,8 +54,12 @@ const CinemaListPage: React.FC = () => {
     try {
       const res = await list4();
       const list = (res as any)?.data || [];
-      // 新增的影院放最前面（按 id 倒序）
-      list.sort((a: API.Cinema, b: API.Cinema) => Number(b.id) - Number(a.id));
+      // 新增的影院放最前面（按 id 倒序；雪花 id 不可 Number()，用长度+字典序比较保证数值序）
+      list.sort((a: API.Cinema, b: API.Cinema) => {
+        const aid = String(a.id), bid = String(b.id);
+        if (aid.length !== bid.length) return bid.length - aid.length;
+        return bid.localeCompare(aid);
+      });
       setCinemas(list);
     } catch {
       message.error('加载影院列表失败');
@@ -98,7 +102,7 @@ const CinemaListPage: React.FC = () => {
     setFormVisible(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     confirm({
       title: '确认删除',
       icon: <ExclamationCircleOutlined />,

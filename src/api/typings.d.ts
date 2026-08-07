@@ -1,10 +1,10 @@
 declare namespace API {
   type adminCancelParams = {
-    id: number;
+    id: string;
   };
 
   type adminDetailParams = {
-    id: number;
+    id: string;
   };
 
   type adminListParams = {
@@ -12,18 +12,18 @@ declare namespace API {
     pageSize?: number;
     status?: string;
     orderNo?: string;
-    userId?: number;
+    userId?: string;
     filmName?: string;
     cinemaName?: string;
     hallName?: string;
   };
 
   type adminRefundParams = {
-    id: number;
+    id: string;
   };
 
   type adminResetPasswordParams = {
-    id: number;
+    id: string;
   };
 
   type BaseResponseBoolean = {
@@ -285,7 +285,7 @@ declare namespace API {
   };
 
   type cancelOrderParams = {
-    id: number;
+    id: string;
   };
 
   type ChangePasswordRequest = {
@@ -295,11 +295,11 @@ declare namespace API {
   };
 
   type ChatHistory = {
-    id?: number;
+    id?: string;
     message?: string;
     messageType?: string;
-    sessionId?: number;
-    userId?: number;
+    sessionId?: string;
+    userId?: string;
     createTime?: string;
     updateTime?: string;
     isDelete?: number;
@@ -310,16 +310,16 @@ declare namespace API {
     pageSize?: number;
     sortField?: string;
     sortOrder?: string;
-    id?: number;
-    sessionId?: number;
+    id?: string;
+    sessionId?: string;
     messageType?: string;
-    userId?: number;
+    userId?: string;
   };
 
   type ChatSession = {
-    id?: number;
+    id?: string;
     sessionName?: string;
-    userId?: number;
+    userId?: string;
     editTime?: string;
     createTime?: string;
     updateTime?: string;
@@ -331,7 +331,7 @@ declare namespace API {
   };
 
   type Cinema = {
-    id?: number;
+    id?: string;
     name?: string;
     address?: string;
     city?: string;
@@ -348,24 +348,24 @@ declare namespace API {
   };
 
   type cinemaFilmsParams = {
-    cinemaId: number;
+    cinemaId: string;
   };
 
   type ConflictCheckRequest = {
-    hallId?: number;
+    hallId?: string;
     showDate?: string;
     startTime?: string;
     endTime?: string;
-    excludeScheduleId?: number;
+    excludeScheduleId?: string;
   };
 
   type CreateOrderRequest = {
-    scheduleId?: number;
-    seatIds?: number[];
+    scheduleId?: string;
+    seatIds?: string[];
   };
 
   type createParams = {
-    userId: number;
+    userId: string;
   };
 
   type DashboardVO = {
@@ -378,34 +378,34 @@ declare namespace API {
   };
 
   type deleteOrderParams = {
-    id: number;
+    id: string;
   };
 
   type DeleteRequest = {
-    id?: number;
+    id?: string;
   };
 
   type doChatStream1Params = {
     message: string;
     conversationId: string;
-    userId?: number;
+    userId?: string;
   };
 
   type doChatStreamParams = {
     message: string;
     conversationId: string;
-    userId?: number;
+    userId?: string;
   };
 
   type doSmartStreamParams = {
     message: string;
     conversationId: string;
-    userId?: number;
+    userId?: string;
     city?: string;
   };
 
   type Film = {
-    id?: number;
+    id?: string;
     name?: string;
     englishName?: string;
     type?: string;
@@ -434,7 +434,7 @@ declare namespace API {
   };
 
   type freezeUserParams = {
-    id: number;
+    id: string;
     status: number;
   };
 
@@ -447,76 +447,76 @@ declare namespace API {
   };
 
   type getByUserParams = {
-    userId: number;
+    userId: string;
   };
 
   type getCurrentSessionParams = {
-    userId: number;
+    userId: string;
   };
 
   type getFilmParams = {
-    id: number;
+    id: string;
   };
 
   type getInfo1Params = {
-    id: number;
+    id: string;
   };
 
   type getInfo2Params = {
-    id: number;
+    id: string;
   };
 
   type getInfo3Params = {
-    id: number;
+    id: string;
   };
 
   type getInfo4Params = {
-    id: number;
+    id: string;
   };
 
   type getInfo5Params = {
-    id: number;
+    id: string;
   };
 
   type getInfo6Params = {
-    id: number;
+    id: string;
   };
 
   type getInfo7Params = {
-    id: number;
+    id: string;
   };
 
   type getInfo8Params = {
-    id: number;
+    id: string;
   };
 
   type getInfo9Params = {
-    id: number;
+    id: string;
   };
 
   type getInfoParams = {
-    id: number;
+    id: string;
   };
 
   type getOrderDetailParams = {
-    id: number;
+    id: string;
   };
 
   type getSeatMapParams = {
-    scheduleId: number;
+    scheduleId: string;
   };
 
   type getUserByIdParams = {
-    id: number;
+    id: string;
   };
 
   type getUserVOByIdParams = {
-    id: number;
+    id: string;
   };
 
   type Hall = {
-    id?: number;
-    cinemaId?: number;
+    id?: string;
+    cinemaId?: string;
     name?: string;
     hallType?: string;
     rowCount?: number;
@@ -528,15 +528,15 @@ declare namespace API {
   };
 
   type listByCinemaParams = {
-    cinemaId: number;
+    cinemaId: string;
   };
 
   type listBySessionParams = {
-    sessionId: number;
+    sessionId: string;
   };
 
   type listByUserParams = {
-    userId: number;
+    userId: string;
   };
 
   type listFilmParams = {
@@ -550,18 +550,18 @@ declare namespace API {
   };
 
   type listScheduleParams = {
-    filmId?: number;
-    cinemaId?: number;
+    filmId?: string;
+    cinemaId?: string;
     showDate?: string;
   };
 
   type LockSeatRequest = {
-    scheduleId?: number;
-    seatIds?: number[];
+    scheduleId?: string;
+    seatIds?: string[];
   };
 
   type LoginUserVO = {
-    id?: number;
+    id?: string;
     userAccount?: string;
     userName?: string;
     userAvatar?: string;
@@ -581,7 +581,7 @@ declare namespace API {
   type MovieChatRequest = {
     message?: string;
     conversationId?: string;
-    userId?: number;
+    userId?: string;
   };
 
   type nowShowingParams = {
@@ -589,10 +589,10 @@ declare namespace API {
   };
 
   type Order = {
-    id?: number;
+    id?: string;
     orderNo?: string;
-    userId?: number;
-    scheduleId?: number;
+    userId?: string;
+    scheduleId?: string;
     filmName?: string;
     cinemaName?: string;
     scheduleTime?: string;
@@ -615,9 +615,9 @@ declare namespace API {
   };
 
   type OrderSeat = {
-    id?: number;
-    orderId?: number;
-    seatId?: number;
+    id?: string;
+    orderId?: string;
+    seatId?: string;
     seatLabel?: string;
     isUsed?: boolean;
     isDelete?: boolean;
@@ -626,10 +626,10 @@ declare namespace API {
   };
 
   type OrderVO = {
-    id?: number;
+    id?: string;
     orderNo?: string;
-    userId?: number;
-    scheduleId?: number;
+    userId?: string;
+    scheduleId?: string;
     filmName?: string;
     posterUrl?: string;
     cinemaName?: string;
@@ -791,11 +791,12 @@ declare namespace API {
   };
 
   type payFormParams = {
-    orderId: number;
+    orderId: string;
   };
 
   type PayOrderRequest = {
-    orderId?: number;
+    orderId?: string;
+    returnUrl?: string;
   };
 
   type PayOrderVO = {
@@ -804,7 +805,7 @@ declare namespace API {
   };
 
   type payPageParams = {
-    orderId: number;
+    orderId: string;
   };
 
   type placeSearchParams = {
@@ -829,56 +830,56 @@ declare namespace API {
   };
 
   type refundOrderParams = {
-    id: number;
+    id: string;
   };
 
   type remove1Params = {
-    id: number;
+    id: string;
   };
 
   type remove2Params = {
-    id: number;
+    id: string;
   };
 
   type remove3Params = {
-    id: number;
+    id: string;
   };
 
   type remove4Params = {
-    id: number;
+    id: string;
   };
 
   type remove5Params = {
-    id: number;
+    id: string;
   };
 
   type remove6Params = {
-    id: number;
+    id: string;
   };
 
   type remove7Params = {
-    id: number;
+    id: string;
   };
 
   type remove8Params = {
-    id: number;
+    id: string;
   };
 
   type remove9Params = {
-    id: number;
+    id: string;
   };
 
   type removeParams = {
-    id: number;
+    id: string;
   };
 
   type renameParams = {
-    id: number;
+    id: string;
     name: string;
   };
 
   type resetByUserParams = {
-    userId: number;
+    userId: string;
   };
 
   type resetConversation1Params = {
@@ -908,10 +909,10 @@ declare namespace API {
   };
 
   type Schedule = {
-    id?: number;
-    filmId?: number;
-    cinemaId?: number;
-    hallId?: number;
+    id?: string;
+    filmId?: string;
+    cinemaId?: string;
+    hallId?: string;
     showDate?: string;
     startTime?: string;
     endTime?: string;
@@ -924,10 +925,10 @@ declare namespace API {
   };
 
   type ScheduleVO = {
-    id?: number;
-    filmId?: number;
-    cinemaId?: number;
-    hallId?: number;
+    id?: string;
+    filmId?: string;
+    cinemaId?: string;
+    hallId?: string;
     showDate?: string;
     startTime?: string;
     endTime?: string;
@@ -954,9 +955,9 @@ declare namespace API {
   };
 
   type Seat = {
-    id?: number;
-    scheduleId?: number;
-    hallId?: number;
+    id?: string;
+    scheduleId?: string;
+    hallId?: string;
     rowNum?: number;
     colNum?: number;
     seatLabel?: string;
@@ -968,7 +969,7 @@ declare namespace API {
   };
 
   type SeatMapVO = {
-    hallId?: number;
+    hallId?: string;
     hallName?: string;
     hallType?: string;
     rowCount?: number;
@@ -976,7 +977,7 @@ declare namespace API {
     aisleRows?: number[];
     aisleCols?: number[];
     rowOverrides?: Record<string, any>;
-    scheduleId?: number;
+    scheduleId?: string;
     price?: number;
     vipPrice?: number;
     seats?: Seat[];
@@ -995,7 +996,7 @@ declare namespace API {
   };
 
   type SystemConfig = {
-    id?: number;
+    id?: string;
     configKey?: string;
     configValue?: string;
     description?: string;
@@ -1009,10 +1010,10 @@ declare namespace API {
   };
 
   type TicketVO = {
-    id?: number;
-    orderId?: number;
-    scheduleId?: number;
-    seatId?: number;
+    id?: string;
+    orderId?: string;
+    scheduleId?: string;
+    seatId?: string;
     seatLabel?: string;
     ticketCode?: string;
     status?: number;
@@ -1027,7 +1028,7 @@ declare namespace API {
   };
 
   type updateStatusParams = {
-    id: number;
+    id: string;
     status: string;
   };
 
@@ -1040,7 +1041,7 @@ declare namespace API {
   };
 
   type User = {
-    id?: number;
+    id?: string;
     userAccount?: string;
     userPassword?: string;
     userName?: string;
@@ -1063,12 +1064,12 @@ declare namespace API {
   };
 
   type UserPreference = {
-    id?: number;
-    userId?: number;
+    id?: string;
+    userId?: string;
     preferredTypes?: string;
     preferredHallType?: string;
     budgetMax?: number;
-    frequentCinemaId?: number;
+    frequentCinemaId?: string;
     preferredSeatZone?: string;
     isDelete?: boolean;
     createTime?: string;
@@ -1080,7 +1081,7 @@ declare namespace API {
     pageSize?: number;
     sortField?: string;
     sortOrder?: string;
-    id?: number;
+    id?: string;
     userName?: string;
     userAccount?: string;
     userProfile?: string;
@@ -1094,7 +1095,7 @@ declare namespace API {
   };
 
   type UserUpdateRequest = {
-    id?: number;
+    id?: string;
     userName?: string;
     userAvatar?: string;
     userProfile?: string;
@@ -1102,7 +1103,7 @@ declare namespace API {
   };
 
   type UserVO = {
-    id?: number;
+    id?: string;
     userAccount?: string;
     userName?: string;
     userAvatar?: string;

@@ -50,7 +50,7 @@ const OrderListPage: React.FC = () => {
     loadOrders(1, statusFilter);
   }, [statusFilter, loadOrders]);
 
-  const handleCancelOrder = (orderId: number | string) => {
+  const handleCancelOrder = (orderId: string) => {
     confirm({
       title: '确认取消订单？',
       icon: <ExclamationCircleOutlined />,
@@ -70,7 +70,7 @@ const OrderListPage: React.FC = () => {
     });
   };
 
-  const handlePay = async (orderId: number | string) => {
+  const handlePay = async (orderId: string) => {
     try {
       const res = await payOrder({ orderId: orderId as any });
       if ((res as any)?.data?.payForm) {
@@ -87,7 +87,7 @@ const OrderListPage: React.FC = () => {
     }
   };
 
-  const handleRefundOrder = (orderId: number | string, totalPrice?: number) => {
+  const handleRefundOrder = (orderId: string, totalPrice?: number) => {
     confirm({
       title: '确认退款？',
       icon: <ExclamationCircleOutlined />,
