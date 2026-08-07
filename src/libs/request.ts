@@ -11,6 +11,12 @@ const myAxios = axios.create({
 // 请求拦截器
 myAxios.interceptors.request.use(
   function (config) {
+    // ★ 从 localStorage 读取 JWT Token，通过 Authorization header 携带
+    // 解决微信登录跨域 Cookie 无法传递的问题（替代 Cookie/Session 认证）
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = 'Bearer ' + token;
+    }
     return config;
   },
   function (error) {
@@ -33,6 +39,8 @@ myAxios.interceptors.response.use(
     const { data } = response;
     // 未登录
     if (data.code === 40100) {
+      // 清除过期的 JWT Token
+      localStorage.removeItem('token');
       const route = getCurrentRoute();
       // getLoginUser 和登录页/个人中心自身：直接返回让调用方自行判断，避免跳转循环
       if (

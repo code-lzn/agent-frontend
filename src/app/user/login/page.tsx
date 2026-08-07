@@ -17,8 +17,17 @@ const UserLoginPage: React.FC = () => {
   const [countdown, setCountdown] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
-  const searchParams = new URLSearchParams(location.search);
-  const redirect = searchParams.get('redirect') || '/';
+  // ★ 兼容 hash 路由：优先从 hash 中解析 query 参数
+  const getRedirectFromHash = (): string => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('?')) {
+      const queryStr = hash.split('?')[1];
+      return new URLSearchParams(queryStr).get('redirect') || '/';
+    }
+    // 兜底：从 search 参数获取（history 路由）
+    return new URLSearchParams(window.location.search).get('redirect') || '/';
+  };
+  const redirect = getRedirectFromHash();
 
   // 清理定时器
   useEffect(() => {
@@ -111,8 +120,12 @@ const UserLoginPage: React.FC = () => {
    * 微信登录成功回调（与邮箱登录 handleLoginSuccess 对齐）
    */
   const onWechatLoginSuccess = (user: any, target: string) => {
+    // ★ 将 JWT Token 存入 localStorage，后续请求通过 Authorization header 携带
+    // 解决跨域 Cookie 无法传递导致登录态丢失的问题
+    if (user.token) {
+      localStorage.setItem('token', user.token);
+    }
     (setInitialState as any)((prev: any) => ({ ...prev, currentUser: user }));
-    message.success('登录成功');
     // 规范化跳转路径（与邮箱登录一致）
     const finalTarget =
       user.userRole === 'admin'
@@ -122,9 +135,18 @@ const UserLoginPage: React.FC = () => {
         : target === '/' || target === ''
         ? '/film'
         : target;
+    // ★ 使用两层保障：先尝试 history.push，500ms 后用 window.location.href 兜底
     setTimeout(() => {
       history.push(finalTarget);
     }, 100);
+    // 兜底：如果 500ms 后还在登录页，直接跳转
+    setTimeout(() => {
+      const hash = window.location.hash;
+      const currentPath = hash ? hash.replace(/^#/, '') : window.location.pathname;
+      if (currentPath.includes('/user/login')) {
+        window.location.href = '/#' + finalTarget;
+      }
+    }, 600);
   };
 
   return (
