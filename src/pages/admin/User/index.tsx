@@ -397,7 +397,7 @@ const UserListPage: React.FC = () => {
         {prefLoading ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>加载中...</div>
         ) : prefData ? (
-          <Descriptions column={1} size="small" labelStyle={{ color: '#999', width: 110 }}>
+          <Descriptions column={1} size="small" styles={{ label: { color: '#999', width: 110 } }}>
             <Descriptions.Item label="偏好影片类型">
               {prefData.preferredTypes || '未设置'}
             </Descriptions.Item>

@@ -47,9 +47,9 @@ const isPastSchedule = (s: API.Schedule): boolean => {
 const ScheduleListPage: React.FC = () => {
   const [schedules, setSchedules] = useState<API.Schedule[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filmMap, setFilmMap] = useState<Record<number, API.Film>>({});
-  const [cinemaMap, setCinemaMap] = useState<Record<number, API.Cinema>>({});
-  const [hallMap, setHallMap] = useState<Record<number, API.Hall>>({});
+  const [filmMap, setFilmMap] = useState<Record<string, API.Film>>({});
+  const [cinemaMap, setCinemaMap] = useState<Record<string, API.Cinema>>({});
+  const [hallMap, setHallMap] = useState<Record<string, API.Hall>>({});
   const [seatView, setSeatView] = useState<API.Schedule | null>(null);
 
   // 影片/影院名称模糊搜索（客户端过滤，参照影院列表）
@@ -86,17 +86,17 @@ const ScheduleListPage: React.FC = () => {
       });
       setSchedules(schedules);
 
-      const fMap: Record<number, API.Film> = {};
+      const fMap: Record<string, API.Film> = {};
       const films: API.Film[] = (filmRes as any)?.data || filmRes || [];
       films.forEach((f) => { if (f.id) fMap[f.id] = f; });
       setFilmMap(fMap);
 
-      const cMap: Record<number, API.Cinema> = {};
+      const cMap: Record<string, API.Cinema> = {};
       const cinemas: API.Cinema[] = (cinemaRes as any)?.data || cinemaRes || [];
       cinemas.forEach((c) => { if (c.id) cMap[c.id] = c; });
       setCinemaMap(cMap);
 
-      const hMap: Record<number, API.Hall> = {};
+      const hMap: Record<string, API.Hall> = {};
       const halls: API.Hall[] = (hallRes as any)?.data || hallRes || [];
       halls.forEach((h) => { if (h.id) hMap[h.id] = h; });
       setHallMap(hMap);
@@ -111,7 +111,7 @@ const ScheduleListPage: React.FC = () => {
     loadData();
   }, []);
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     confirm({
       title: '确认删除',
       icon: <ExclamationCircleOutlined />,

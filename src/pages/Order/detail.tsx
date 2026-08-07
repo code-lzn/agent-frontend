@@ -80,6 +80,7 @@ const OrderDetailPage: React.FC = () => {
     if (!order?.id) return;
     setPaying(true);
     try {
+      // 支付成功回跳地址由后端根据前端 origin 动态生成（web 端无 payment-success 页，交由 H5 页展示）
       const res = await payOrder({ orderId: order.id as any });
       if ((res as any)?.data?.payForm) {
         const div = document.createElement('div');

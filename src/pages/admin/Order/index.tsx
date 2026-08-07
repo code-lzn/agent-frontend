@@ -137,7 +137,7 @@ const OrderListPage: React.FC = () => {
   };
 
   /** 取消订单 */
-  const handleCancel = (id: number) => {
+  const handleCancel = (id: string) => {
     confirm({
       title: '确认取消',
       icon: <ExclamationCircleOutlined />,
@@ -207,7 +207,7 @@ const OrderListPage: React.FC = () => {
               pageSize: params.pageSize || 10,
               orderNo: params.orderNo as string | undefined,
               status: params.status as string | undefined,
-              userId: params.userId ? Number(params.userId) : undefined,
+              userId: params.userId ? String(params.userId) : undefined,
               filmName: params.filmName as string | undefined,
               cinemaName: params.cinemaName as string | undefined,
               hallName: params.hallName as string | undefined,

@@ -26,9 +26,9 @@ interface TicketFlow {
 }
 
 interface SessionItem {
-  id: number;
+  id: string;
   sessionName: string;
-  userId: number;
+  userId: string;
   editTime: string;
   createTime: string;
 }
@@ -148,12 +148,12 @@ const CinemaCards: React.FC<{ items: any[]; filmId?: string; onSelectCinema: (ci
 );
 
 // ====== 座位图卡片 ======
-const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, seatIds: number[]) => void }> = ({ data, onSelectSeats }) => {
+const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: string, seatIds: string[]) => void }> = ({ data, onSelectSeats }) => {
   const seats: any[] = data?.seats || [];
   const hallName = data?.hallName || '';
   const scheduleId = data?.scheduleId;
   const price = data?.price ?? 0;
-  const [selected, setSelected] = useState<number[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
 
   const rows: Record<number, any[]> = {};
   seats.forEach((s: any) => {
@@ -162,7 +162,7 @@ const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: number, sea
     rows[r].push(s);
   });
 
-  const toggleSeat = (seatId: number, status: string) => {
+  const toggleSeat = (seatId: string, status: string) => {
     if (status === 'sold' || status === 'locked') return;
     setSelected((prev) => (prev.includes(seatId) ? prev.filter((id) => id !== seatId) : [...prev, seatId]));
   };
@@ -245,7 +245,7 @@ const AiChatPage: React.FC = () => {
 
   // 登录用户的会话管理
   const isLoggedIn = !!currentUser?.id;
-  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -287,10 +287,10 @@ const AiChatPage: React.FC = () => {
     if (!isLoggedIn) return;
     (async () => {
       try {
-        const resList = await listSessions({ userId: currentUser!.id });
+        const resList = await listSessions({ userId: currentUser!.id! });
         const list = (resList as any)?.data || [];
         setSessions(list);
-        const resCur = await getCurrentSession({ userId: currentUser!.id });
+        const resCur = await getCurrentSession({ userId: currentUser!.id! });
         const cur = (resCur as any)?.data;
         if (cur?.id) {
           setSessionId(cur.id);
@@ -301,7 +301,7 @@ const AiChatPage: React.FC = () => {
   }, [isLoggedIn]);
 
   // ---- 加载历史消息 ----
-  const loadHistory = useCallback(async (sid: number) => {
+  const loadHistory = useCallback(async (sid: string) => {
     setLoadingHistory(true);
     // 优先用 sessionStorage 缓存（含卡片数据）
     const cacheKey2 = `ai_msgs_${currentUser?.id || guestConvId}`;
@@ -339,20 +339,20 @@ const AiChatPage: React.FC = () => {
     if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
     setSending(false);
     try {
-      const res = await createSession({ userId: currentUser!.id });
+      const res = await createSession({ userId: currentUser!.id! });
       const s = (res as any)?.data;
       if (s?.id) {
         setSessionId(s.id);
         setMessages([{ role: 'ai', content: '新对话已创建，有什么想看的？', timestamp: Date.now(), cards: [] }]);
         setFlow({ step: 0 });
         setHistoryOpen(false);
-        const listRes = await listSessions({ userId: currentUser!.id });
+        const listRes = await listSessions({ userId: currentUser!.id! });
         setSessions((listRes as any)?.data || []);
       }
     } catch { message.error('创建会话失败'); }
   }, [isLoggedIn, currentUser]);
 
-  const switchSession = useCallback(async (sid: number) => {
+  const switchSession = useCallback(async (sid: string) => {
     if (sid === sessionId) { setHistoryOpen(false); return; }
     if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
     setSessionId(sid);
@@ -362,10 +362,10 @@ const AiChatPage: React.FC = () => {
     await loadHistory(sid);
   }, [sessionId, loadHistory]);
 
-  const deleteSession = useCallback(async (sid: number) => {
+  const deleteSession = useCallback(async (sid: string) => {
     try {
       await removeSession({ id: sid });
-      const listRes = await listSessions({ userId: currentUser!.id });
+      const listRes = await listSessions({ userId: currentUser!.id! });
       const list = (listRes as any)?.data || [];
       setSessions(list);
       if (sid === sessionId) {
@@ -497,7 +497,7 @@ const AiChatPage: React.FC = () => {
       // 刷新会话列表
       if (isLoggedIn) {
         try {
-          const listRes = await listSessions({ userId: currentUser!.id });
+          const listRes = await listSessions({ userId: currentUser!.id! });
           setSessions((listRes as any)?.data || []);
         } catch { /* ignore */ }
       }
@@ -657,7 +657,7 @@ const AiChatPage: React.FC = () => {
             const weekAgo = new Date(today.getTime() - 7 * 86400000);
 
             const groups: { label: string; items: SessionItem[] }[] = [];
-            const grouped = new Set<number>();
+            const grouped = new Set<string>();
 
             const addGroup = (label: string, filter: (d: Date) => boolean) => {
               const items = sessions.filter((s) => {
