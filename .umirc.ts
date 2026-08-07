@@ -196,5 +196,16 @@ export default defineConfig({
     },
   ],
   npmClient: 'pnpm',
+  // ★ 代理：让其他人访问时也能把 API 请求转发到本机后端
+  proxy: {
+    '/api': {
+      target: 'http://localhost:8123',
+      changeOrigin: true,
+    },
+    '/uploads': {
+      target: 'http://localhost:8123/api',
+      changeOrigin: true,
+    },
+  },
   utoopack: {},
 });
