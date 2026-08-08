@@ -172,20 +172,36 @@ const FilmDetailPage: React.FC = () => {
             </div>
           </Card>
 
-          <Button
-            type="primary"
-            size="large"
-            onClick={() => history.push(`/schedule?filmId=${film.id}`)}
-            style={{
-              borderRadius: 8,
-              height: 48,
-              padding: '0 40px',
-              fontSize: 16,
-              fontWeight: 600,
-            }}
-          >
-            选择场次购票
-          </Button>
+          {film.status === 'upcoming' ? (
+            <Button
+              type="default"
+              size="large"
+              style={{
+                borderRadius: 8,
+                height: 48,
+                padding: '0 40px',
+                fontSize: 16,
+                fontWeight: 600,
+              }}
+            >
+              想看
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => history.push(`/schedule?filmId=${film.id}`)}
+              style={{
+                borderRadius: 8,
+                height: 48,
+                padding: '0 40px',
+                fontSize: 16,
+                fontWeight: 600,
+              }}
+            >
+              选择场次购票
+            </Button>
+          )}
         </Col>
       </Row>
     </div>

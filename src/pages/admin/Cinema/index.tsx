@@ -154,7 +154,9 @@ const CinemaListPage: React.FC = () => {
     setAddressSearchLoading(true);
     addressSearchTimer.current = setTimeout(async () => {
       try {
-        const res = await placeSearch({ keyword: kw, page: 1, pageSize: 10 });
+        // ★ 限定城市搜索，避免下拉结果混入外市同名影院（如北京/无锡的万达影城）
+        const city = cinemaForm.getFieldValue('city') || '洛阳';
+        const res = await placeSearch({ keyword: kw, city, page: 1, pageSize: 10 });
         const pois: any[] = (res as any)?.data || [];
         setAddressOptions(
           pois.map((p) => ({
@@ -199,7 +201,9 @@ const CinemaListPage: React.FC = () => {
     }
     setGeoLoading(true);
     try {
-      const res = await geocode({ address: address.trim() });
+      // ★ 反查坐标限定城市，避免模糊地址被高德匹配到外市（如"万达影城泉舜店"→无锡）
+      const city = cinemaForm.getFieldValue('city') || '洛阳';
+      const res = await geocode({ address: address.trim(), city });
       const data = (res as any)?.data;
       if (data?.found) {
         cinemaForm.setFieldsValue({

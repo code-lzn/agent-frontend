@@ -333,10 +333,13 @@ const ScheduleBatchPage: React.FC = () => {
               placeholder="搜索并选择影片"
               optionFilterProp="label"
               onChange={handleFilmChange}
-              options={films.map((f) => ({
-                label: `${f.name}（${f.duration}分钟）`,
-                value: f.id,
-              }))}
+              options={films
+                // 可上映状态才可排片：正在上映 / 热映（草稿、即将上映、已下线不排）
+                .filter((f) => f.status === 'published' || f.status === 'hot')
+                .map((f) => ({
+                  label: `${f.name}（${f.duration}分钟）`,
+                  value: f.id,
+                }))}
               style={{ maxWidth: 400 }}
             />
           </Form.Item>

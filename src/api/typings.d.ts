@@ -440,6 +440,7 @@ declare namespace API {
 
   type geocodeParams = {
     address: string;
+    city?: string;
   };
 
   type getByKeyParams = {
