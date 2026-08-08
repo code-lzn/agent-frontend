@@ -126,6 +126,7 @@ const UserLoginPage: React.FC = () => {
       localStorage.setItem('token', user.token);
     }
     (setInitialState as any)((prev: any) => ({ ...prev, currentUser: user }));
+    message.success('登录成功');
     // 规范化跳转路径（与邮箱登录一致）
     const finalTarget =
       user.userRole === 'admin'
@@ -135,18 +136,18 @@ const UserLoginPage: React.FC = () => {
         : target === '/' || target === ''
         ? '/film'
         : target;
-    // ★ 使用两层保障：先尝试 history.push，500ms 后用 window.location.href 兜底
+    // ★ 使用两层保障：先尝试 history.push，再用 window.location.replace 兜底
     setTimeout(() => {
       history.push(finalTarget);
     }, 100);
-    // 兜底：如果 500ms 后还在登录页，直接跳转
+    // 兜底：500ms 后还在登录页，直接用 replace 跳转（避免回退到登录页）
     setTimeout(() => {
       const hash = window.location.hash;
       const currentPath = hash ? hash.replace(/^#/, '') : window.location.pathname;
       if (currentPath.includes('/user/login')) {
-        window.location.href = '/#' + finalTarget;
+        window.location.replace('/#' + finalTarget);
       }
-    }, 600);
+    }, 500);
   };
 
   return (

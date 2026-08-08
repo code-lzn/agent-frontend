@@ -17,11 +17,15 @@ import {
   Select,
   Tag,
   Typography,
+  Card,
 } from 'antd';
 import {
   EditOutlined,
   LockOutlined,
   LogoutOutlined,
+  SettingOutlined,
+  ShoppingCartOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import type { UserPreference } from '@/api/typings';
@@ -170,6 +174,61 @@ const ProfilePage: React.FC = () => {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* ★ 快捷入口卡片 */}
+      <div className="card">
+        <div className="cardTitle">快捷入口</div>
+        <Row gutter={[12, 12]}>
+          <Col xs={12} sm={6}>
+            <Card
+              hoverable
+              size="small"
+              onClick={() => history.push('/order/list')}
+              style={{ textAlign: 'center', borderRadius: 12 }}
+            >
+              <ShoppingCartOutlined style={{ fontSize: 28, color: '#FF4D4F' }} />
+              <div style={{ marginTop: 6, fontWeight: 600, fontSize: 13 }}>我的订单</div>
+              <div style={{ fontSize: 11, color: '#999' }}>查看购票记录</div>
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card
+              hoverable
+              size="small"
+              onClick={() => history.push('/user/settings')}
+              style={{ textAlign: 'center', borderRadius: 12 }}
+            >
+              <SettingOutlined style={{ fontSize: 28, color: '#1677ff' }} />
+              <div style={{ marginTop: 6, fontWeight: 600, fontSize: 13 }}>账号设置</div>
+              <div style={{ fontSize: 11, color: '#999' }}>密码与安全</div>
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card
+              hoverable
+              size="small"
+              onClick={() => history.push('/film')}
+              style={{ textAlign: 'center', borderRadius: 12 }}
+            >
+              <div style={{ fontSize: 28 }}>🎬</div>
+              <div style={{ marginTop: 6, fontWeight: 600, fontSize: 13 }}>浏览影片</div>
+              <div style={{ fontSize: 11, color: '#999' }}>发现好电影</div>
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card
+              hoverable
+              size="small"
+              onClick={() => history.push('/ai-chat')}
+              style={{ textAlign: 'center', borderRadius: 12 }}
+            >
+              <TrophyOutlined style={{ fontSize: 28, color: '#fa8c16' }} />
+              <div style={{ marginTop: 6, fontWeight: 600, fontSize: 13 }}>AI 助手</div>
+              <div style={{ fontSize: 11, color: '#999' }}>智能选片购票</div>
+            </Card>
+          </Col>
+        </Row>
       </div>
 
       {/* 观影偏好 */}

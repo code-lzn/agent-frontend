@@ -175,7 +175,7 @@ const CinemaCards: React.FC<{ items: any[]; filmId?: string; onSelectCinema: (ci
 );
 
 // ====== 座位图卡片 ======
-const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: string, seatIds: string[]) => void }> = ({ data, onSelectSeats }) => {
+const SeatMapCard: React.FC<{ data: any; onSelectSeats: (scheduleId: any, seatIds: any[], seatData: any) => void; locking?: boolean }> = ({ data, onSelectSeats, locking }) => {
   const seats: any[] = data?.seats || [];
   const hallName = data?.hallName || '';
   const scheduleId = data?.scheduleId;
