@@ -296,7 +296,7 @@ const OrderDetailPage: React.FC = () => {
               ) : (
                 <div className="ticket-box">
                   <div className="tl">取票码</div>
-                  <div className="tc">{order.orderNo}</div>
+                  <div className="tc">票生成中，请稍后刷新</div>
                 </div>
               )}
             </div>
