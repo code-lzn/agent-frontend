@@ -1,9 +1,8 @@
 import { adminResetPassword, deleteUser, freezeUser, listUserVoByPage, updateUser } from '@/api/userController';
-import { getByUser, resetByUser } from '@/api/userPreferenceController';
 import { ExclamationCircleOutlined, PlusOutlined, ReloadOutlined, UserOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Avatar, Badge, Button, Card, Descriptions, Form, Image, Input, message, Modal, Select, Space, Tooltip, Upload } from 'antd';
+import { Avatar, Badge, Button, Card, Form, Image, Input, message, Modal, Select, Space, Tooltip, Upload } from 'antd';
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs from 'dayjs';
@@ -23,12 +22,6 @@ const UserListPage: React.FC = () => {
   const [editingUser, setEditingUser] = useState<API.UserVO | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [editForm] = Form.useForm();
-
-  // 偏好画像弹窗
-  const [prefOpen, setPrefOpen] = useState(false);
-  const [prefUser, setPrefUser] = useState<API.UserVO | null>(null);
-  const [prefData, setPrefData] = useState<API.UserPreference | null>(null);
-  const [prefLoading, setPrefLoading] = useState(false);
 
   const columns: ProColumns<API.UserVO>[] = [
     { title: 'ID', dataIndex: 'id', width: 70, search: false },
@@ -93,9 +86,6 @@ const UserListPage: React.FC = () => {
           <Button type="link" size="small" onClick={() => handleEdit(record)}>
             编辑
           </Button>
-          <Button type="link" size="small" onClick={() => handlePreference(record)}>
-            画像
-          </Button>
           <Button type="link" size="small" onClick={() => handleResetPassword(record)}>
             重置密码
           </Button>
@@ -155,43 +145,6 @@ const UserListPage: React.FC = () => {
       if (e.errorFields) return;
       message.error('更新失败：' + (e.message || ''));
     }
-  };
-
-  /** 查看偏好画像 */
-  const handlePreference = async (record: API.UserVO) => {
-    setPrefUser(record);
-    setPrefData(null);
-    setPrefOpen(true);
-    setPrefLoading(true);
-    try {
-      const res = await getByUser({ userId: record.id! });
-      setPrefData((res as any)?.data ?? null);
-    } catch {
-      setPrefData(null);
-    } finally {
-      setPrefLoading(false);
-    }
-  };
-
-  /** 重置偏好画像（二次确认） */
-  const handleResetPreference = () => {
-    if (!prefUser?.id) return;
-    confirm({
-      title: '确认重置偏好画像？',
-      icon: <ExclamationCircleOutlined />,
-      content: `将清空用户「${prefUser.userName || prefUser.userAccount}」的全部观影偏好数据，重置后 AI 推荐将不再参考历史偏好。`,
-      okText: '确认重置',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          await resetByUser({ userId: prefUser.id! });
-          message.success('偏好画像已重置');
-          setPrefData(null);
-        } catch (e: any) {
-          message.error('重置失败：' + (e?.message || ''));
-        }
-      },
-    });
   };
 
   /** 重置密码（二次确认） */
@@ -378,48 +331,6 @@ const UserListPage: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 偏好画像弹窗 */}
-      <Modal
-        title={`偏好画像 - ${prefUser?.userName || prefUser?.userAccount || ''}`}
-        open={prefOpen}
-        onCancel={() => setPrefOpen(false)}
-        footer={
-          <Space>
-            <Button onClick={() => setPrefOpen(false)}>关闭</Button>
-            <Button danger onClick={handleResetPreference} disabled={!prefData}>
-              一键重置画像
-            </Button>
-          </Space>
-        }
-        width={520}
-        destroyOnClose
-      >
-        {prefLoading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>加载中...</div>
-        ) : prefData ? (
-          <Descriptions column={1} size="small" styles={{ label: { color: '#999', width: 110 } }}>
-            <Descriptions.Item label="偏好影片类型">
-              {prefData.preferredTypes || '未设置'}
-            </Descriptions.Item>
-            <Descriptions.Item label="偏好厅型">
-              {prefData.preferredHallType || '未设置'}
-            </Descriptions.Item>
-            <Descriptions.Item label="票价预算上限">
-              {prefData.budgetMax != null ? `¥${prefData.budgetMax}` : '未设置'}
-            </Descriptions.Item>
-            <Descriptions.Item label="常用座位区域">
-              {prefData.preferredSeatZone || '未设置'}
-            </Descriptions.Item>
-            <Descriptions.Item label="常去影院ID">
-              {prefData.frequentCinemaId != null ? prefData.frequentCinemaId : '未设置'}
-            </Descriptions.Item>
-          </Descriptions>
-        ) : (
-          <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
-            该用户暂无偏好画像数据
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };

@@ -194,11 +194,6 @@ export default defineConfig({
           path: '/admin/user',
           component: './admin/User/index',
         },
-        {
-          name: '系统配置',
-          path: '/admin/config',
-          component: './admin/Config/index',
-        },
       ],
     },
   ],

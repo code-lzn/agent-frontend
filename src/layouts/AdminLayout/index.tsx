@@ -6,7 +6,6 @@ import {
   HomeOutlined,
   LogoutOutlined,
   OrderedListOutlined,
-  SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { history, Outlet, useLocation, useModel } from '@umijs/max';
@@ -25,7 +24,6 @@ const menuItems = [
   { key: '/admin/order', icon: <OrderedListOutlined />, label: '订单管理' },
   { key: '/admin/ticket', icon: <AuditOutlined />, label: '票务核销' },
   { key: '/admin/user', icon: <UserOutlined />, label: '用户管理' },
-  { key: '/admin/config', icon: <SettingOutlined />, label: '系统配置' },
 ];
 
 const pageTitleMap: Record<string, string> = {
@@ -36,7 +34,6 @@ const pageTitleMap: Record<string, string> = {
   '/admin/order': '订单管理',
   '/admin/ticket': '票务核销',
   '/admin/user': '用户管理',
-  '/admin/config': '系统配置',
 };
 
 const AdminLayout: React.FC = () => {

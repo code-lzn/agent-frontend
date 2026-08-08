@@ -3,20 +3,16 @@ import {
   updateMyProfile,
   userLogout,
 } from '@/api/userController';
-import { getMyPreference, saveMyPreference } from '@/api/userPreferenceController';
 import { history, useModel } from '@umijs/max';
 import {
   Button,
   Col,
   Form,
   Input,
-  InputNumber,
   message,
   Modal,
   Row,
-  Select,
   Tag,
-  Typography,
   Card,
 } from 'antd';
 import {
@@ -28,10 +24,7 @@ import {
   TrophyOutlined,
 } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
-import type { UserPreference } from '@/api/typings';
 import './index.css';
-
-const { Text } = Typography;
 
 const ProfilePage: React.FC = () => {
   const { initialState, loading, setInitialState } = useModel('@@initialState');
@@ -40,21 +33,9 @@ const ProfilePage: React.FC = () => {
   // ===== 个人资料状态 =====
   const [profileVisible, setProfileVisible] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [preference, setPreference] = useState<UserPreference | null>(null);
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
-  const [prefForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
-
-  // 加载偏好
-  useEffect(() => {
-    if (!currentUser) return;
-    getMyPreference()
-      .then((res: any) => {
-        if (res && res.id) setPreference(res);
-      })
-      .catch(() => {});
-  }, [currentUser]);
 
   // ===== 修改资料 =====
   const handleUpdateProfile = async (values: any) => {
@@ -83,20 +64,6 @@ const ProfilePage: React.FC = () => {
       passwordForm.resetFields();
     } catch (e: any) {
       message.error('修改失败：' + (e?.message || ''));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ===== 保存偏好 =====
-  const handleSavePreference = async (values: any) => {
-    setSaving(true);
-    try {
-      await saveMyPreference(values);
-      setPreference(values);
-      message.success('偏好已保存');
-    } catch (e: any) {
-      message.error('保存失败：' + (e?.message || ''));
     } finally {
       setSaving(false);
     }
@@ -229,67 +196,6 @@ const ProfilePage: React.FC = () => {
             </Card>
           </Col>
         </Row>
-      </div>
-
-      {/* 观影偏好 */}
-      <div className="card">
-        <div className="cardTitle">观影偏好</div>
-        <Form
-          form={prefForm}
-          layout="vertical"
-          onFinish={handleSavePreference}
-          initialValues={preference || {}}
-        >
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item name="preferredTypes" label="偏好影片类型">
-                <Input placeholder="如：科幻,喜剧,动画（逗号分隔）" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="preferredHallType" label="偏好厅型">
-                <Select
-                  placeholder="选择偏好厅型"
-                  allowClear
-                  options={[
-                    { label: 'IMAX', value: 'IMAX' },
-                    { label: '杜比', value: '杜比' },
-                    { label: '普通', value: '普通' },
-                    { label: '4DX', value: '4DX' },
-                    { label: 'VIP', value: 'VIP' },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="budgetMax" label="单张票价预算上限（元）">
-                <InputNumber
-                  placeholder="如：100"
-                  min={0}
-                  style={{ width: '100%' }}
-                  prefix="¥"
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="preferredSeatZone" label="常用座位区域">
-                <Select
-                  placeholder="选择偏好区域"
-                  allowClear
-                  options={[
-                    { label: '中间', value: '中间' },
-                    { label: '靠前', value: '靠前' },
-                    { label: '靠后', value: '靠后' },
-                    { label: '靠边', value: '靠边' },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Button type="primary" htmlType="submit" loading={saving}>
-            保存偏好
-          </Button>
-        </Form>
       </div>
 
       {/* 账号操作 */}
