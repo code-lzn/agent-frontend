@@ -1,6 +1,6 @@
 import { nowShowing, recommended } from '@/api/filmController';
 import { history } from '@umijs/max';
-import { Button, Card, Empty, Space, Spin } from 'antd';
+import { Button, Card, Col, Empty, Row, Space, Spin } from 'antd';
 import { RobotOutlined, RightOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import type { Film } from '@/api/typings';
@@ -101,27 +101,27 @@ const HomePage: React.FC = () => {
 
       {/* 快捷入口 */}
       <div className="home-section">
-        <div className="quick-actions">
+        <Row gutter={[16, 16]}>
           {[
             { emoji: '🤖', label: 'AI 购票', desc: '一句话搞定选座购票', path: '/ai-chat', color: '#FF4D4F' },
             { emoji: '🔥', label: '正在热映', desc: '查看热映好片', path: '/film', color: '#fa8c16' },
             { emoji: '🏢', label: '附近影院', desc: '发现周边影院', path: '/cinema', color: '#1677ff' },
             { emoji: '🎫', label: '我的订单', desc: '查看购票记录', path: '/order/list', color: '#722ed1' },
           ].map((action) => (
-            <Card
-              key={action.path}
-              hoverable
-              size="small"
-              className="quick-action-card"
-              onClick={() => history.push(action.path)}
-              style={{ borderRadius: 12, textAlign: 'center' }}
-            >
-              <div style={{ fontSize: 32, marginBottom: 4 }}>{action.emoji}</div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: action.color }}>{action.label}</div>
-              <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{action.desc}</div>
-            </Card>
+            <Col xs={12} sm={6} key={action.path}>
+              <Card
+                hoverable
+                size="small"
+                onClick={() => history.push(action.path)}
+                style={{ borderRadius: 12, textAlign: 'center' }}
+              >
+                <div style={{ fontSize: 32, marginBottom: 4 }}>{action.emoji}</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: action.color }}>{action.label}</div>
+                <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{action.desc}</div>
+              </Card>
+            </Col>
           ))}
-        </div>
+        </Row>
       </div>
 
       {/* 正在热映 */}
