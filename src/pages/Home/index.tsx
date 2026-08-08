@@ -80,23 +80,49 @@ const HomePage: React.FC = () => {
       <Card className="home-hero-card">
         <div className="hero-content">
           <div>
-            <div className="hero-title">妙语购票</div>
-            <div className="hero-desc">一句话购票 · 也可以自己慢慢挑</div>
+            <div className="hero-title">🎬 妙语购票</div>
+            <div className="hero-desc">AI 智能选片 · 可视化选座 · 即时出票</div>
           </div>
           <Space>
             <Button
               type="primary"
               icon={<RobotOutlined />}
               onClick={() => history.push('/ai-chat')}
+              size="large"
             >
               问问 AI
             </Button>
-            <Button onClick={() => history.push('/film')}>
+            <Button onClick={() => history.push('/film')} size="large">
               浏览影片 <RightOutlined />
             </Button>
           </Space>
         </div>
       </Card>
+
+      {/* 快捷入口 */}
+      <div className="home-section">
+        <div className="quick-actions">
+          {[
+            { emoji: '🤖', label: 'AI 购票', desc: '一句话搞定选座购票', path: '/ai-chat', color: '#FF4D4F' },
+            { emoji: '🔥', label: '正在热映', desc: '查看热映好片', path: '/film', color: '#fa8c16' },
+            { emoji: '🏢', label: '附近影院', desc: '发现周边影院', path: '/cinema', color: '#1677ff' },
+            { emoji: '🎫', label: '我的订单', desc: '查看购票记录', path: '/order/list', color: '#722ed1' },
+          ].map((action) => (
+            <Card
+              key={action.path}
+              hoverable
+              size="small"
+              className="quick-action-card"
+              onClick={() => history.push(action.path)}
+              style={{ borderRadius: 12, textAlign: 'center' }}
+            >
+              <div style={{ fontSize: 32, marginBottom: 4 }}>{action.emoji}</div>
+              <div style={{ fontWeight: 600, fontSize: 14, color: action.color }}>{action.label}</div>
+              <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{action.desc}</div>
+            </Card>
+          ))}
+        </div>
+      </div>
 
       {/* 正在热映 */}
       <div className="home-section">

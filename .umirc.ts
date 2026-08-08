@@ -107,6 +107,13 @@ export default defineConfig({
           path: '/user/profile',
           component: './User/Profile',
         },
+        {
+          name: '账号设置',
+          path: '/user/settings',
+          component: './User/Settings',
+          hideInMenu: true,
+          wrappers: ['@/wrappers/AuthGuard'],
+        },
       ],
     },
     // ===== 后台管理路由 =====
