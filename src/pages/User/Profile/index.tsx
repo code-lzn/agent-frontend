@@ -73,11 +73,17 @@ const ProfilePage: React.FC = () => {
   const handleLogout = async () => {
     try {
       await userLogout();
-      message.success('已退出登录');
-      setInitialState((pre: any) => ({ ...pre, currentUser: undefined }));
-    } catch {
-      message.error('退出失败');
+    } catch (e: any) {
+      // Session 过期时后端返回"未登录"，实际上已经是登出状态，不算失败
+      if (!e?.message?.includes('未登录')) {
+        message.error(e?.message || '退出失败');
+      }
     }
+    // 无论后端是否成功，前端都清空登录态
+    localStorage.removeItem('token');
+    setInitialState((pre: any) => ({ ...pre, currentUser: undefined }));
+    message.success('已退出登录');
+    history.push('/user/login');
   };
 
   // ========== 未登录：跳转统一登录页 ==========

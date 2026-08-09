@@ -82,6 +82,7 @@ const UserLoginPage: React.FC = () => {
     }
     setCodeSending(true);
     try {
+      const email = codeForm.getFieldValue('email');
       await sendMailCode({ email });
       message.success('验证码已发送');
       setCountdown(60);

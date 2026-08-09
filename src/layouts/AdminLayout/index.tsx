@@ -64,12 +64,18 @@ const AdminLayout: React.FC = () => {
       onOk: async () => {
         try {
           await userLogout();
-          setInitialState((prev: any) => ({ ...prev, currentUser: undefined }));
-          message.success('已退出');
-          history.push('/user/login');
-        } catch {
-          message.error('退出失败');
+        } catch (e: any) {
+          // Session 过期时后端返回"未登录"，实际上已经是登出状态
+          if (!e?.message?.includes('未登录')) {
+            message.error(e?.message || '退出失败');
+            return;
+          }
         }
+        // 无论后端是否成功，前端都清空登录态
+        localStorage.removeItem('token');
+        setInitialState((prev: any) => ({ ...prev, currentUser: undefined }));
+        message.success('已退出');
+        history.push('/user/login');
       },
     });
   };
