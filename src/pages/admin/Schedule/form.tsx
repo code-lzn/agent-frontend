@@ -147,6 +147,15 @@ const ScheduleFormPage: React.FC = () => {
   };
 
   const handleSubmit = async (values: any) => {
+    // 跨天场次拦截：开场 + 片长 + 15分钟散场 达到或超过 24:00 不允许添加（与后端一致）
+    const startMin = values.startTime ? values.startTime.hour() * 60 + values.startTime.minute() : 0;
+    const dur = selectedFilm?.duration || 0;
+    if (startMin + dur + 15 >= 24 * 60) {
+      message.error(
+        `散场时间超过午夜，不允许添加跨天场次（开场 ${values.startTime?.format('HH:mm')} + 片长 ${dur} 分钟 + 15 分钟散场）`,
+      );
+      return;
+    }
     // 先检查冲突
     const hasConflict = await doCheckConflict(values);
     if (hasConflict) return;

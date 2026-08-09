@@ -264,6 +264,12 @@ const ScheduleBatchPage: React.FC = () => {
       message.warning('冲突检查尚未完成，请稍候');
       return;
     }
+    // 跨天场次拦截：散场时间（片长 + 15分钟）超过 24:00 不允许添加
+    const crossingItems = validItems.filter((p) => p.endTime && Number(p.endTime.split(':')[0]) >= 24);
+    if (crossingItems.length > 0) {
+      message.error(`有 ${crossingItems.length} 个场次散场时间超过午夜（如 ${crossingItems[0].startTime} → ${crossingItems[0].endTime}），不允许添加跨天场次`);
+      return;
+    }
 
     setSubmitting(true);
     try {
