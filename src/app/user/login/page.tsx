@@ -52,6 +52,11 @@ const UserLoginPage: React.FC = () => {
 
   /** 更新全局用户状态 + 按角色跳转 */
   const handleLoginSuccess = (user: any) => {
+    // ★ 所有登录方式统一：将 JWT Token 存入 localStorage，后续请求通过 Authorization header 携带
+    // 解决同域多前端共享 Cookie/Session 导致用户身份串号的问题
+    if (user.token) {
+      localStorage.setItem('token', user.token);
+    }
     (setInitialState as any)((prev: any) => ({ ...prev, currentUser: user }));
     message.success('登录成功');
 
