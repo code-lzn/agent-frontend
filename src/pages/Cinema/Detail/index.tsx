@@ -1,12 +1,11 @@
 import { getInfo7 } from '@/api/cinemaController';
 import { listSchedule } from '@/api/scheduleController';
-import { listAll2 } from '@/api/filmController';
 import { useModel } from '@umijs/max';
 import { Button, Card, Empty, Image, Modal, Radio, Spin, Tag, Typography, message } from 'antd';
 import { EnvironmentOutlined, PhoneOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from '@umijs/max';
-import type { Cinema, Film, ScheduleVO } from '@/api/typings';
+import type { Cinema, ScheduleVO } from '@/api/typings';
 import './index.css';
 
 const { Text, Title } = Typography;
@@ -63,32 +62,12 @@ const CinemaDetailPage: React.FC = () => {
       })
       .catch(() => message.error('加载影院信息失败'));
 
-    // 加载排期：查全部影片（含offline），再逐部查该影院排期
+    // 加载排期：直接查该影院全部排期（ScheduleVO 含 filmId/filmName/poster 等，前端按影片分组）
+    // ★ 不再用 listAll2() 遍历全部影片逐部查排期——既 N+1 低效，又会因 film/listAll 加管理员权限后失效
     setLoading(true);
-    listAll2()
+    listSchedule({ cinemaId } as any)
       .then((res) => {
-        const films: Film[] = (res as any)?.data || [];
-        if (films.length === 0) {
-          setSchedules([]);
-          setLoading(false);
-          return;
-        }
-        // 并行请求每部影片在该影院的排期
-        return Promise.all(
-          films.map((film) =>
-            listSchedule({ filmId: film.id!, cinemaId } as any)
-              .then((sRes) => (sRes as any)?.data || [])
-              .catch((e) => {
-                console.error(`[CinemaDetail] 影片${film.name} 排期查询失败:`, e);
-                return [];
-              }),
-          ),
-        ).then((results) => {
-          // 合并所有排期
-          const all: ScheduleVO[] = [];
-          results.forEach((arr) => all.push(...arr));
-          setSchedules(all);
-        });
+        setSchedules((res as any)?.data || []);
       })
       .catch(() => message.error('加载排期失败'))
       .finally(() => setLoading(false));

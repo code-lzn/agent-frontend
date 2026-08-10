@@ -34,6 +34,10 @@ const FilmFormPage: React.FC = () => {
   const [posterUrl, setPosterUrl] = useState<string>('');
   const isEdit = !!id && id !== 'add';
 
+  // 上映日期未到 → 禁用「热映」选项（未到上映日期不能设为热映中，与后端校验一致）
+  const watchedReleaseDate = Form.useWatch('releaseDate', form);
+  const notYetReleased = watchedReleaseDate != null && watchedReleaseDate.isAfter(dayjs().startOf('day'), 'day');
+
   useEffect(() => {
     if (isEdit) {
       loadFilm();
@@ -152,11 +156,15 @@ const FilmFormPage: React.FC = () => {
             <TextArea rows={4} placeholder="影片简介（最多500字）" maxLength={500} showCount />
           </Form.Item>
 
-          <Form.Item name="status" label="发布状态">
+          <Form.Item
+            name="status"
+            label="发布状态"
+            extra={notYetReleased ? '上映日期未到，暂不能设置为「热映」' : undefined}
+          >
             <Radio.Group>
               <Radio value="draft">草稿</Radio>
               <Radio value="upcoming">准备上映</Radio>
-              <Radio value="hot">热映</Radio>
+              <Radio value="hot" disabled={notYetReleased}>热映</Radio>
               <Radio value="published">正在上映</Radio>
               <Radio value="offline">已下线</Radio>
             </Radio.Group>
@@ -167,11 +175,11 @@ const FilmFormPage: React.FC = () => {
             <Space align="start" size={16}>
               <Upload
                 name="file"
-                action="http://localhost:8123/api/file/upload"
+                action="/api/file/upload"
+                headers={{ Authorization: 'Bearer ' + (localStorage.getItem('token') || '') }}
                 data={{ biz: 'film_poster' }}
                 withCredentials={true}
                 maxCount={1}
-                listType="picture-card"
                 showUploadList={false}
                 onChange={handleUploadChange}
                 accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -184,7 +192,21 @@ const FilmFormPage: React.FC = () => {
                     preview={{ mask: '替换' }}
                   />
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '8px 0' }}>
+                  <div
+                    style={{
+                      width: 120,
+                      height: 168,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 4,
+                      border: '1px dashed #d9d9d9',
+                      borderRadius: 4,
+                      background: '#fafafa',
+                      cursor: 'pointer',
+                    }}
+                  >
                     <PlusOutlined style={{ fontSize: 24, color: '#999' }} />
                     <span style={{ fontSize: 12, color: '#999' }}>上传海报</span>
                   </div>

@@ -54,6 +54,15 @@ myAxios.interceptors.response.use(
       window.location.href = `/user/login?redirect=${encodeURIComponent(route)}`;
       return Promise.reject(new Error('请先登录'));
     }
+    // ★ 已登录但无权限（普通用户直连 B 端管理接口返回 40101）：直接降级跳普通用户首页
+    if (data.code === 40101) {
+      if (route.startsWith('/home') || route.startsWith('/user/login')) {
+        // 已经在首页/登录页：不再跳转，避免死循环，把错误交给调用方
+        return Promise.reject(new Error('无权限访问'));
+      }
+      window.location.href = '/home';
+      return Promise.reject(new Error('无权限访问'));
+    }
     // 其他业务错误
     if (data.code !== 0) {
       throw new Error(data.message || '服务器错误');

@@ -237,7 +237,7 @@ const ScheduleListPage: React.FC = () => {
             showTotal: (t) => `共 ${t} 场`,
             pageSizeOptions: ['15', '30', '50'],
           }}
-          scroll={{ x: 1000 }}
+          scroll={{ x: 1100 }}
           locale={{
             emptyText: (
               <div className="empty-state">
