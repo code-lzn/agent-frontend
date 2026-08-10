@@ -281,7 +281,8 @@ const UserListPage: React.FC = () => {
             <Space align="start" size={16}>
               <Upload
                 name="file"
-                action="http://localhost:8123/api/file/upload"
+                action="/api/file/upload"
+                headers={{ Authorization: 'Bearer ' + (localStorage.getItem('token') || '') }}
                 data={{ biz: 'user_avatar' }}
                 withCredentials={true}
                 maxCount={1}

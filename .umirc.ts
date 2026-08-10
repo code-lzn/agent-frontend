@@ -117,11 +117,12 @@ export default defineConfig({
       ],
     },
     // ===== 后台管理路由 =====
+    // ★ 非管理员降级由 AdminLayout 内部判断（history.replace('/home')），
+    //   不再用 access 插件（access 只渲染 403 页面、不跳转，且不保护接口）
     {
       path: '/admin',
       component: '@/layouts/AdminLayout',
       layout: false,
-      access: 'canSeeAdmin',
       routes: [
         { path: '/admin', redirect: '/admin/dashboard' },
         {

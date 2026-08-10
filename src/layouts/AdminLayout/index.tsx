@@ -51,9 +51,15 @@ const AdminLayout: React.FC = () => {
   });
 
   // 未登录时重定向到登录页（同步执行，不会闪现）
+  // ★ 非管理员访问 B 端：直接降级跳转普通用户首页（不再停留后台空页面）
   useLayoutEffect(() => {
     if (initialState && !currentUser) {
       history.replace('/user/login?redirect=' + encodeURIComponent(location.pathname));
+      return;
+    }
+    if (initialState && currentUser && currentUser.userRole !== 'admin') {
+      history.replace('/home');
+      return;
     }
   }, [initialState, currentUser, location.pathname]);
 
